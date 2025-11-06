@@ -43,9 +43,9 @@
 
         .header-logo {
             width: 120px;
-            height: 120px;
-            filter: brightness(0) invert(1);
-            opacity: 0.9;
+            height: auto;
+            max-height: 100px;
+            object-fit: contain;
         }
 
         .header-content {
@@ -768,34 +768,6 @@
                         <input type="text" id="baseSalary" value="700.000" oninput="formatInput(this); calculate()">
                     </div>
 
-                    <h3>🎯 Skin in the Game</h3>
-                    <div class="input-group">
-                        <label>Investment (N$): <span class="range-value" id="investmentValue">0</span>
-                            <span class="tooltip">?
-                                <span class="tooltiptext">Eigenes Investment des Managers in die Farm (max. 140.000 N$). Erhöht den Bonus-Multiplikator und wird verzinst.</span>
-                            </span>
-                        </label>
-                        <input type="range" id="investment" min="0" max="200000" step="10000" value="0" oninput="updateValue('investment'); calculate()">
-                    </div>
-
-                    <div class="input-group">
-                        <label>Max Multiplikator: <span class="range-value" id="multiplierMaxValue">1.6x</span>
-                            <span class="tooltip">?
-                                <span class="tooltiptext">Maximaler Bonus-Multiplikator bei vollem Investment (140.000 N$). Bei 0 Investment = 1,0×.</span>
-                            </span>
-                        </label>
-                        <input type="range" id="multiplierMax" min="1" max="3" step="0.1" value="1.6" oninput="updateValue('multiplierMax'); calculate()">
-                    </div>
-
-                    <div class="input-group">
-                        <label>Basis-Zinssatz: <span class="range-value" id="baseInterestValue">8%</span>
-                            <span class="tooltip">?
-                                <span class="tooltiptext">Jährliche Verzinsung des Manager-Investments. Wird zusätzlich zum Bonus ausgezahlt.</span>
-                            </span>
-                        </label>
-                        <input type="range" id="baseInterest" min="0" max="15" step="0.5" value="8" oninput="updateValue('baseInterest'); calculate()">
-                    </div>
-
                     <h3>🏦 Auszahlungsstruktur</h3>
                     <div class="input-group">
                         <label>Sofort-Auszahlung: <span class="range-value" id="immediatePaymentValue">60%</span>
@@ -884,32 +856,6 @@
                             <strong>ℹ️ Berechnung:</strong> Bei Faktor 1,0 sind 30% vom ungewichteten EBIT-Bonus der Produktivitätsbonus. 
                             Der Faktor wird basierend auf dem Produktivitätsindex angewendet (0× / 1× / 1,5× / 2×).
                         </div>
-                    </div>
-                    
-                    <div class="result-box">
-                        <h4>🎯 Skin in the Game Effekt</h4>
-                        <table>
-                            <tr>
-                                <td>Basis-Bonus (EBIT 70% + Prod 30%)</td>
-                                <td style="text-align: right;" id="subtotal">0 N$</td>
-                            </tr>
-                            <tr>
-                                <td>Investment</td>
-                                <td style="text-align: right;" id="investmentDisplay">0 N$</td>
-                            </tr>
-                            <tr>
-                                <td>Multiplikator</td>
-                                <td style="text-align: right;" id="multiplierCalc">1.0x</td>
-                            </tr>
-                            <tr style="background: #f0f8ff;">
-                                <td><strong>Bonus nach Multiplikator</strong></td>
-                                <td style="text-align: right;"><strong id="multiplierBonus">0 N$</strong></td>
-                            </tr>
-                            <tr>
-                                <td>+ Zinsen auf Investment</td>
-                                <td style="text-align: right;" id="interestAmount">0 N$</td>
-                            </tr>
-                        </table>
                     </div>
                     
                     <div class="highlight-box">
@@ -1240,75 +1186,6 @@
                     </div>
                 </div>
 
-                <!-- Skin in the Game -->
-                <div class="result-box">
-                    <h4>🎯 Skin in the Game (Bonus-Multiplikator)</h4>
-
-                    <div style="background: #e3f2fd; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
-                        <strong>📌 Kernkonzept:</strong><br>
-                        Manager sollen "Haut im Spiel" haben - eigenes Kapital riskieren. Dies aligned Interessen zwischen
-                        Eigentümer und Manager und reduziert moralisches Risiko (Moral Hazard).
-                    </div>
-
-                    <p style="margin-bottom: 10px;"><strong>Funktionsweise:</strong></p>
-                    <div style="background: #f5f5f5; padding: 10px; border-left: 4px solid #9c27b0; margin-bottom: 15px;">
-                        • Manager investiert eigenes Geld in die Farm<br>
-                        • Investment erhöht den Bonus-Multiplikator<br>
-                        • Bei 0 N$: Multiplikator = 1,0× (keine Änderung)<br>
-                        • Bei 140.000 N$: Multiplikator = Maximum (z.B. 1,6×)<br>
-                        • Dazwischen: Linear skaliert
-                    </div>
-
-                    <p style="margin-bottom: 10px;"><strong>Multiplikator-Formel:</strong></p>
-                    <div style="background: #f5f5f5; padding: 10px; border-left: 4px solid #9c27b0; margin-bottom: 15px;">
-                        Multiplikator = 1,0 + (Max - 1,0) × (Investment ÷ 140.000)<br>
-                        <span style="font-size: 0.9em; color: #6c757d;">
-                        Investment wird auf max. 140.000 N$ begrenzt
-                        </span>
-                    </div>
-
-                    <p style="margin-bottom: 10px;"><strong>Verzinsung:</strong></p>
-                    <div style="background: #f5f5f5; padding: 10px; border-left: 4px solid #9c27b0; margin-bottom: 15px;">
-                        Das Investment wird zusätzlich verzinst (z.B. 8% p.a.)<br>
-                        Zinsen = Investment × Zinssatz
-                    </div>
-
-                    <div style="background: #fff3cd; padding: 15px; border-radius: 8px; border-left: 4px solid #ffc107;">
-                        <strong>💡 Rechenbeispiel:</strong> Investment = 70.000 N$, Max-Mult. = 1,6×<br><br>
-                        <table style="width: 100%; font-size: 0.95em;">
-                            <tr>
-                                <td>Basis-Bonus:</td>
-                                <td style="text-align: right;">144.200 + 92.700</td>
-                                <td style="text-align: right;"><strong>= 236.900 N$</strong></td>
-                            </tr>
-                            <tr>
-                                <td>Investment-Anteil:</td>
-                                <td style="text-align: right;">70.000 ÷ 140.000</td>
-                                <td style="text-align: right;"><strong>= 50%</strong></td>
-                            </tr>
-                            <tr>
-                                <td>Multiplikator:</td>
-                                <td style="text-align: right;">1,0 + (0,6 × 0,5)</td>
-                                <td style="text-align: right;"><strong>= 1,3×</strong></td>
-                            </tr>
-                            <tr>
-                                <td>Bonus × Mult.:</td>
-                                <td style="text-align: right;">236.900 × 1,3</td>
-                                <td style="text-align: right;"><strong>= 307.970 N$</strong></td>
-                            </tr>
-                            <tr>
-                                <td>+ Zinsen (8%):</td>
-                                <td style="text-align: right;">70.000 × 0,08</td>
-                                <td style="text-align: right;"><strong>= 5.600 N$</strong></td>
-                            </tr>
-                            <tr style="background: #d4edda; border-top: 2px solid #dee2e6;">
-                                <td colspan="2"><strong>Gesamtbonus:</strong></td>
-                                <td style="text-align: right;"><strong>313.570 N$</strong></td>
-                            </tr>
-                        </table>
-                    </div>
-                </div>
-
                 <!-- Auszahlungsstruktur -->
                 <div class="result-box">
                     <h4>🏦 Auszahlungsstruktur</h4>
@@ -1350,8 +1227,6 @@
                     <ul style="margin-bottom: 15px; line-height: 1.8;">
                         <li>EBIT: 1.500.000 N$</li>
                         <li>Produktivitätsindex: 23 (Gut)</li>
-                        <li>Investment: 70.000 N$ (Max-Multiplikator: 1,6×)</li>
-                        <li>Zinssatz: 8%</li>
                         <li>Auszahlung: 60% sofort / 40% Bank</li>
                     </ul>
 
@@ -1372,39 +1247,22 @@
                             <td style="text-align: right;">61.800 × 1,5</td>
                             <td style="text-align: right;"><strong>92.700 N$</strong></td>
                         </tr>
-                        <tr style="background: #fff3cd;">
-                            <td colspan="2"><strong>Basis-Bonus (Säule 1 + 2):</strong></td>
-                            <td style="text-align: right;"><strong>236.900 N$</strong></td>
-                        </tr>
-                        <tr style="background: #e3f2fd;">
-                            <td colspan="3"><strong>Schritt 3: Skin in the Game</strong></td>
-                        </tr>
-                        <tr>
-                            <td>Multiplikator</td>
-                            <td style="text-align: right;">1,3×</td>
-                            <td style="text-align: right;"><strong>307.970 N$</strong></td>
-                        </tr>
-                        <tr>
-                            <td>+ Zinsen</td>
-                            <td style="text-align: right;">70.000 × 8%</td>
-                            <td style="text-align: right;"><strong>5.600 N$</strong></td>
-                        </tr>
                         <tr style="background: #d4edda; font-size: 1.1em;">
                             <td colspan="2"><strong>GESAMTBONUS:</strong></td>
-                            <td style="text-align: right;"><strong>313.570 N$</strong></td>
+                            <td style="text-align: right;"><strong>236.900 N$</strong></td>
                         </tr>
                         <tr style="background: #e8f5e9;">
-                            <td colspan="3"><strong>Schritt 4: Auszahlung</strong></td>
+                            <td colspan="3"><strong>Schritt 3: Auszahlung</strong></td>
                         </tr>
                         <tr>
                             <td>Sofort (60%)</td>
-                            <td style="text-align: right;">313.570 × 0,6</td>
-                            <td style="text-align: right;"><strong>188.142 N$</strong></td>
+                            <td style="text-align: right;">236.900 × 0,6</td>
+                            <td style="text-align: right;"><strong>142.140 N$</strong></td>
                         </tr>
                         <tr>
                             <td>Bonus Bank (40%)</td>
-                            <td style="text-align: right;">313.570 × 0,4</td>
-                            <td style="text-align: right;"><strong>125.428 N$</strong></td>
+                            <td style="text-align: right;">236.900 × 0,4</td>
+                            <td style="text-align: right;"><strong>94.760 N$</strong></td>
                         </tr>
                     </table>
                 </div>
@@ -1510,9 +1368,6 @@
                 tier4Rate: document.getElementById('tier4Rate').value,
                 ebitCap: document.getElementById('ebitCap').value,
                 baseSalary: document.getElementById('baseSalary').value,
-                investment: document.getElementById('investment').value,
-                multiplierMax: document.getElementById('multiplierMax').value,
-                baseInterest: document.getElementById('baseInterest').value,
                 immediatePayment: document.getElementById('immediatePayment').value,
                 timestamp: new Date().toISOString()
             };
@@ -1560,9 +1415,6 @@
                     tier4Rate: document.getElementById('tier4Rate').value,
                     ebitCap: document.getElementById('ebitCap').value,
                     baseSalary: document.getElementById('baseSalary').value,
-                    investment: document.getElementById('investment').value,
-                    multiplierMax: document.getElementById('multiplierMax').value,
-                    baseInterest: document.getElementById('baseInterest').value,
                     immediatePayment: document.getElementById('immediatePayment').value
                 }
             };
@@ -1664,10 +1516,6 @@
 
             const prodBonusBase = ebitBonusRaw * 0.3;
             const prodBonus = prodBonusBase * prodFactor;
-            const investment = parseFloat(document.getElementById('investment').value) || 0;
-            const multiplier = parseFloat(document.getElementById('multiplierCalc').textContent.replace('x', ''));
-            const baseInterest = parseFloat(document.getElementById('baseInterest').value) / 100;
-            const interestAmount = investment * baseInterest;
             const immediateRate = parseFloat(document.getElementById('immediatePayment').value) / 100;
             const immediateAmount = totalBonus * immediateRate;
             const bankAmount = totalBonus * (1 - immediateRate);
@@ -1914,42 +1762,8 @@
             doc.text(formatNumber(prodBonus) + ' N$', rightMargin - 3, y + 5, { align: 'right' });
             y += 12;
 
-            // Subtotal
-            const subtotal = ebitBonusWeighted + prodBonus;
-            doc.setTextColor(0, 0, 0);
-            doc.setFontSize(10);
-            doc.setFillColor(245, 245, 245);
-            doc.rect(leftMargin, y, 180, 7, 'F');
-            doc.setFont(undefined, 'bold');
-            doc.text('Basis-Bonus (Säule 1 + Säule 2)', leftMargin + 2, y + 5);
-            doc.text(formatNumber(subtotal) + ' N$', rightMargin - 3, y + 5, { align: 'right' });
-            y += 12;
-
-            // Skin in the Game
-            doc.setFontSize(11);
-            doc.setTextColor(46, 117, 182);
-            doc.setFont(undefined, 'bold');
-            doc.text('Skin in the Game Effekt', leftMargin + 3, y);
-            y += 6;
-
-            doc.setFontSize(9);
-            doc.setTextColor(0, 0, 0);
-            doc.setFont(undefined, 'normal');
-            doc.text('Investment:', leftMargin + 5, y);
-            doc.text(formatNumber(investment) + ' N$', rightMargin - 3, y, { align: 'right' });
-            y += 5;
-            doc.text('Multiplikator:', leftMargin + 5, y);
-            doc.text(multiplier.toFixed(2) + '×', rightMargin - 3, y, { align: 'right' });
-            y += 5;
-            doc.text('Basis-Bonus × Multiplikator:', leftMargin + 5, y);
-            const bonusAfterMult = subtotal * multiplier;
-            doc.text(formatNumber(bonusAfterMult) + ' N$', rightMargin - 3, y, { align: 'right' });
-            y += 5;
-            doc.text(`+ Zinsen (${(baseInterest * 100).toFixed(1)}%):`, leftMargin + 5, y);
-            doc.text(formatNumber(interestAmount) + ' N$', rightMargin - 3, y, { align: 'right' });
-            y += 8;
-
             // ========== GESAMTBONUS HIGHLIGHT ==========
+            y += 5;
             doc.setFillColor(102, 126, 234);
             doc.roundedRect(leftMargin, y, rightMargin - leftMargin, 25, 3, 3, 'F');
             doc.setTextColor(255, 255, 255);
@@ -2126,14 +1940,6 @@
                 recommendations += '<div class="info-box" style="margin-bottom: 15px;"><strong>💡 Fast Top:</strong> Produktivitätsindex auf >25 erhöhen für 2× Faktor (Exzellent). Noch ' + formatNumber(kgFor25 - totalSlaughterWeight) + ' kg verkauftes Gewicht benötigt.</div>';
             } else {
                 recommendations += '<div class="success" style="margin-bottom: 15px;"><strong>⭐ Exzellent!</strong> Produktivitätsindex im Top-Bereich - maximaler Produktivitätsbonus (2× Faktor).</div>';
-            }
-
-            const investment = parseFloat(document.getElementById('investment').value) || 0;
-            if (investment < 140000) {
-                const remaining = 140000 - investment;
-                recommendations += '<div class="info-box"><strong>💰 Skin in the Game:</strong> Aktuelles Investment: ' + formatNumber(investment) + ' N$. Für maximalen Multiplikator noch ' + formatNumber(remaining) + ' N$ investieren.</div>';
-            } else {
-                recommendations += '<div class="success"><strong>✅ Maximum erreicht:</strong> Skin in the Game Investment vollständig - maximaler Multiplikator aktiv!</div>';
             }
 
             document.getElementById('recommendations').innerHTML = recommendations;
@@ -2314,22 +2120,8 @@
             const prodBonusBase = ebitBonusRaw * 0.3; // 30% vom ungewichteten EBIT-Bonus
             const prodBonusTotal = prodBonusBase * prodBonusFactor; // mal Faktor
             
-            // Subtotal
-            const subtotal = ebitBonusTotal + prodBonusTotal;
-            
-            // Skin in the Game
-            const investment = parseFloat(document.getElementById('investment').value) || 0;
-            const multiplierMax = parseFloat(document.getElementById('multiplierMax').value);
-            const investmentRatio = Math.min(investment / 140000, 1.0); // Cap at 1.0
-            const multiplier = 1 + (multiplierMax - 1) * investmentRatio;
-            const bonusWithMultiplier = subtotal * multiplier;
-            
-            // Interest
-            const baseInterest = parseFloat(document.getElementById('baseInterest').value) / 100;
-            const interestAmount = investment * baseInterest;
-            
-            // Total
-            const totalBonus = bonusWithMultiplier + interestAmount;
+            // Total Bonus (without Skin in the Game)
+            const totalBonus = ebitBonusTotal + prodBonusTotal;
             const baseSalary = parseInput(document.getElementById('baseSalary'));
             const bonusPercentage = (totalBonus / baseSalary * 100) || 0;
             
@@ -2391,11 +2183,7 @@
             document.getElementById('prodBonusBase').textContent = formatNumber(prodBonusBase) + ' N$';
             document.getElementById('prodFactorCalc').textContent = '× ' + prodBonusFactor.toFixed(1);
             document.getElementById('prodBonus').textContent = formatNumber(prodBonusTotal) + ' N$';
-            
-            document.getElementById('subtotal').textContent = formatNumber(subtotal) + ' N$';
-            document.getElementById('multiplierCalc').textContent = multiplier.toFixed(2) + 'x';
-            document.getElementById('multiplierBonus').textContent = formatNumber(bonusWithMultiplier) + ' N$';
-            document.getElementById('interestAmount').textContent = formatNumber(interestAmount) + ' N$';
+
             document.getElementById('totalBonus').textContent = formatNumber(totalBonus) + ' N$';
             document.getElementById('bonusPercentage').textContent = bonusPercentage.toFixed(1) + '% vom Grundgehalt';
             document.getElementById('immediateAmount').textContent = formatNumber(immediateAmount) + ' N$';
@@ -2617,8 +2405,7 @@
 
             // Update all range value displays
             ['tier1Rate', 'tier2Rate', 'tier3Rate', 'tier4Rate', 'ebitCap',
-             'investment', 'multiplierMax', 'baseInterest', 'immediatePayment',
-             'herdSize', 'slaughterWeight', 'salesRate'].forEach(id => {
+             'immediatePayment', 'herdSize', 'slaughterWeight', 'salesRate'].forEach(id => {
                 updateValue(id);
             });
 
