@@ -1,0 +1,1638 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Farm Bonussystem - Komplett - Namibia Rinderfarm</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #1F4E78 0%, #2E75B6 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        
+        .tabs {
+            display: flex;
+            background: #f8f9fa;
+            border-bottom: 2px solid #dee2e6;
+        }
+        
+        .tab {
+            flex: 1;
+            padding: 20px;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #495057;
+            transition: all 0.3s;
+            border-bottom: 3px solid transparent;
+        }
+        
+        .tab:hover {
+            background: rgba(68, 114, 196, 0.1);
+        }
+        
+        .tab.active {
+            color: #2E75B6;
+            background: white;
+            border-bottom: 3px solid #2E75B6;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            padding: 30px;
+        }
+        
+        .input-section, .output-section {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 15px;
+            border: 1px solid #dee2e6;
+        }
+        
+        h2 {
+            color: #2E75B6;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #2E75B6;
+            font-size: 1.5em;
+        }
+        
+        h3 {
+            color: #4472C4;
+            margin-top: 20px;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+        
+        .input-group {
+            margin-bottom: 20px;
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid #e0e0e0;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #495057;
+            font-weight: 600;
+            font-size: 0.95em;
+        }
+        
+        input[type="number"], input[type="range"], select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ced4da;
+            border-radius: 6px;
+            font-size: 1em;
+            transition: all 0.3s;
+        }
+        
+        input[type="number"]:focus, select:focus {
+            outline: none;
+            border-color: #4472C4;
+            box-shadow: 0 0 0 3px rgba(68, 114, 196, 0.1);
+        }
+        
+        input[type="range"] {
+            -webkit-appearance: none;
+            height: 8px;
+            background: #ddd;
+            outline: none;
+            border: none;
+            padding: 0;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            background: #4472C4;
+            cursor: pointer;
+            border-radius: 50%;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        
+        input[type="range"]::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            background: #4472C4;
+            cursor: pointer;
+            border-radius: 50%;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        
+        .range-value {
+            display: inline-block;
+            margin-left: 10px;
+            padding: 5px 10px;
+            background: #4472C4;
+            color: white;
+            border-radius: 4px;
+            font-weight: bold;
+            min-width: 60px;
+            text-align: center;
+        }
+        
+        .result-box {
+            background: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 10px;
+            border-left: 5px solid #4472C4;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .result-box h4 {
+            color: #2E75B6;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+        }
+        
+        .result-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 10px;
+        }
+        
+        .result-item {
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 5px;
+        }
+        
+        .result-label {
+            color: #6c757d;
+            font-size: 0.9em;
+            margin-bottom: 5px;
+        }
+        
+        .result-value {
+            color: #2E75B6;
+            font-size: 1.3em;
+            font-weight: bold;
+        }
+        
+        .highlight-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .highlight-box h4 {
+            margin-bottom: 10px;
+            font-size: 1.2em;
+        }
+        
+        .total-bonus {
+            font-size: 2em;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        
+        .percentage {
+            font-size: 1.5em;
+            opacity: 0.9;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        th {
+            background: #4472C4;
+            color: white;
+            font-weight: 600;
+        }
+        
+        tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .success {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            border-left: 4px solid #28a745;
+        }
+        
+        .warning {
+            background: #fff3cd;
+            color: #856404;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            border-left: 4px solid #ffc107;
+        }
+        
+        .chart-container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid #e0e0e0;
+            margin-bottom: 30px;
+            height: 500px;
+        }
+        
+        .control-panel {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 15px;
+            border: 1px solid #dee2e6;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 1.8em;
+            font-weight: bold;
+            margin: 5px 0;
+        }
+        
+        .stat-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+        
+        .info-box {
+            background: #e7f3ff;
+            border-left: 4px solid #2196F3;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+        
+        .info-box strong {
+            color: #1976D2;
+        }
+
+        .export-controls {
+            display: flex;
+            gap: 10px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-bottom: 2px solid #dee2e6;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+            transform: translateY(-2px);
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #218838;
+            transform: translateY(-2px);
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        @media (max-width: 1024px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🐂 Farm Bonussystem Komplett</h1>
+            <p>Rinderfarm Namibia - Integriertes Bonus-Analyse System</p>
+        </div>
+        
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('ebit')">📊 EBIT Berechnung</button>
+            <button class="tab" onclick="switchTab('bonus')">💰 Bonusberechnung</button>
+            <button class="tab" onclick="switchTab('dashboard')">📈 Analyse Dashboard</button>
+        </div>
+
+        <div class="export-controls">
+            <button class="btn btn-primary" onclick="exportToJSON()">💾 JSON Export</button>
+            <button class="btn btn-secondary" onclick="document.getElementById('jsonFileInput').click()">📁 JSON Import</button>
+            <input type="file" id="jsonFileInput" accept=".json" onchange="importFromJSON(event)">
+            <button class="btn btn-success" onclick="exportToPDF()">📄 PDF Export</button>
+            <div style="flex: 1;"></div>
+            <span style="display: flex; align-items: center; color: #6c757d; font-size: 0.9em;">
+                💾 Auto-Save aktiv
+            </span>
+        </div>
+        
+        <!-- TAB 1: EBIT BERECHNUNG -->
+        <div id="ebit" class="tab-content active">
+            <div class="main-content">
+                <div class="input-section">
+                    <h2>📥 EBIT Berechnung - Eingaben</h2>
+                    
+                    <h3>🐄 Herdenparameter</h3>
+                    <div class="input-group">
+                        <label>Herdengröße: <span class="range-value" id="herdSizeValue">800</span></label>
+                        <input type="range" id="herdSize" min="400" max="1500" value="800" oninput="updateValue('herdSize'); calculate()">
+                    </div>
+                    
+                    <div class="input-group">
+                        <label>Schlachtgewicht pro Tier (kg): <span class="range-value" id="slaughterWeightValue">225</span></label>
+                        <input type="range" id="slaughterWeight" min="180" max="280" value="225" oninput="updateValue('slaughterWeight'); calculate()">
+                    </div>
+                    
+                    <div class="input-group">
+                        <label>Verkaufsrate (%): <span class="range-value" id="salesRateValue">26%</span></label>
+                        <input type="range" id="salesRate" min="15" max="40" value="26" step="0.5" oninput="updateValue('salesRate'); calculate()">
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="pricePerKg">Preis pro kg Schlachtgewicht (N$)</label>
+                        <input type="number" id="pricePerKg" value="60" step="1" oninput="calculate()">
+                    </div>
+                    
+                    <h3>💰 Sonstige Einnahmen</h3>
+                    <div class="input-group">
+                        <label for="huntingRevenue">Jagd Einnahmen (N$)</label>
+                        <input type="text" id="huntingRevenue" value="0" oninput="formatInput(this); calculate()">
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="rentRevenue">Pacht Einnahmen (N$)</label>
+                        <input type="text" id="rentRevenue" value="0" oninput="formatInput(this); calculate()">
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="otherRevenue">Sonstige Einnahmen (N$)</label>
+                        <input type="text" id="otherRevenue" value="0" oninput="formatInput(this); calculate()">
+                    </div>
+                    
+                    <h3>💸 Kosten</h3>
+                    <div class="input-group">
+                        <label for="baseCosts">Betriebskosten (N$)</label>
+                        <input type="text" id="baseCosts" value="2.000.000" oninput="formatInput(this); calculate()">
+                    </div>
+                </div>
+                
+                <div class="output-section">
+                    <h2>📊 EBIT Ergebnisse</h2>
+                    
+                    <div class="result-box">
+                        <h4>🐄 Herdenkennzahlen</h4>
+                        <div class="result-grid">
+                            <div class="result-item">
+                                <div class="result-label">Herdengröße</div>
+                                <div class="result-value" id="displayHerdSize">800 Tiere</div>
+                            </div>
+                            <div class="result-item">
+                                <div class="result-label">Verkaufte Tiere</div>
+                                <div class="result-value" id="soldAnimals">208</div>
+                            </div>
+                            <div class="result-item">
+                                <div class="result-label">Schlachtgewicht Total</div>
+                                <div class="result-value" id="totalWeight">46.800 kg</div>
+                            </div>
+                            <div class="result-item">
+                                <div class="result-label">Ø Schlachtgewicht/Tier</div>
+                                <div class="result-value" id="avgWeight">225 kg</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="result-box">
+                        <h4>💵 Einnahmen & Kosten</h4>
+                        <table>
+                            <tr>
+                                <td><strong>Viehverkauf</strong></td>
+                                <td style="text-align: right;"><strong id="cattleRevenue">0 N$</strong></td>
+                            </tr>
+                            <tr>
+                                <td>└ Verkaufte Tiere</td>
+                                <td style="text-align: right; font-size: 0.9em; color: #6c757d;" id="soldAnimalsDetail">0 × 225 kg × 60 N$/kg</td>
+                            </tr>
+                            <tr>
+                                <td>Jagd Einnahmen</td>
+                                <td style="text-align: right;" id="displayHunting">0 N$</td>
+                            </tr>
+                            <tr>
+                                <td>Pacht Einnahmen</td>
+                                <td style="text-align: right;" id="displayRent">0 N$</td>
+                            </tr>
+                            <tr>
+                                <td>Sonstige Einnahmen</td>
+                                <td style="text-align: right;" id="displayOther">0 N$</td>
+                            </tr>
+                            <tr style="background: #e8f5e9; font-weight: bold;">
+                                <td><strong>Gesamteinnahmen</strong></td>
+                                <td style="text-align: right;"><strong id="totalRevenue">0 N$</strong></td>
+                            </tr>
+                            <tr>
+                                <td colspan="2" style="height: 10px;"></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Betriebskosten</strong></td>
+                                <td style="text-align: right;" id="totalCost">0 N$</td>
+                            </tr>
+                            <tr>
+                                <td colspan="2" style="height: 10px; border-bottom: 2px solid #dee2e6;"></td>
+                            </tr>
+                            <tr style="background: #fff3cd; font-weight: bold; font-size: 1.2em;">
+                                <td><strong>EBIT</strong></td>
+                                <td style="text-align: right; color: #28a745;"><strong id="ebitAmount">0 N$</strong></td>
+                            </tr>
+                        </table>
+                    </div>
+                    
+                    <div class="info-box">
+                        <strong>ℹ️ EBIT Berechnung:</strong> EBIT (Earnings Before Interest and Taxes) = Gesamteinnahmen - Betriebskosten. 
+                        Dies ist die Grundlage für die Bonusberechnung im nächsten Tab.
+                    </div>
+                    
+                    <div id="statusMessageEbit" class="success">
+                        <strong>✅ Status:</strong> EBIT Berechnung aktualisiert
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- TAB 2: BONUSBERECHNUNG -->
+        <div id="bonus" class="tab-content">
+            <div class="main-content">
+                <div class="input-section">
+                    <h2>⚙️ Bonus Parameter</h2>
+                    
+                    <div class="result-box" style="background: #e3f2fd; border-left: 5px solid #2196F3;">
+                        <h4>💵 Aktueller EBIT</h4>
+                        <div style="font-size: 2em; font-weight: bold; color: #1976D2; text-align: center; padding: 10px;" id="ebitDisplayBonus">0 N$</div>
+                    </div>
+                    
+                    <h3>📊 EBIT Bonus-Staffelung (70% Gewichtung)</h3>
+                    <div class="input-group">
+                        <label>Stufe 1 (0-100k): <span class="range-value" id="tier1RateValue">8%</span></label>
+                        <input type="range" id="tier1Rate" min="0" max="20" step="0.5" value="8" oninput="updateValue('tier1Rate'); calculate()">
+                    </div>
+                    
+                    <div class="input-group">
+                        <label>Stufe 2 (100k-500k): <span class="range-value" id="tier2RateValue">12%</span></label>
+                        <input type="range" id="tier2Rate" min="0" max="25" step="0.5" value="12" oninput="updateValue('tier2Rate'); calculate()">
+                    </div>
+                    
+                    <div class="input-group">
+                        <label>Stufe 3 (500k-2M): <span class="range-value" id="tier3RateValue">15%</span></label>
+                        <input type="range" id="tier3Rate" min="0" max="30" step="0.5" value="15" oninput="updateValue('tier3Rate'); calculate()">
+                    </div>
+                    
+                    <div class="input-group">
+                        <label>Stufe 4 (2M+): <span class="range-value" id="tier4RateValue">20%</span></label>
+                        <input type="range" id="tier4Rate" min="0" max="35" step="0.5" value="20" oninput="updateValue('tier4Rate'); calculate()">
+                    </div>
+                    
+                    <div class="input-group">
+                        <label>EBIT Cap (Mio N$): <span class="range-value" id="ebitCapValue">4.0M</span></label>
+                        <input type="range" id="ebitCap" min="1" max="10" step="0.5" value="4" oninput="updateValue('ebitCap'); calculate()">
+                    </div>
+                    
+                    <h3>📊 Produktivitätsindex (30% Gewichtung)</h3>
+                    
+                    <div class="result-box" style="background: #fff3e0; border-left: 5px solid #ff9800;">
+                        <h4>📈 Automatische Berechnung</h4>
+                        <div style="padding: 10px; background: white; border-radius: 5px; margin-top: 10px;">
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+                                <div>
+                                    <div style="font-size: 0.9em; color: #6c757d;">kg Schlachtgewicht verkauft</div>
+                                    <div style="font-size: 1.2em; font-weight: bold; color: #ff9800;" id="totalKgSold">0 kg</div>
+                                </div>
+                                <div>
+                                    <div style="font-size: 0.9em; color: #6c757d;">Gesamtkosten</div>
+                                    <div style="font-size: 1.2em; font-weight: bold; color: #ff9800;" id="totalCostsProd">0 N$</div>
+                                </div>
+                            </div>
+                            <div style="text-align: center; padding: 15px; background: #fff3e0; border-radius: 5px;">
+                                <div style="font-size: 0.9em; color: #6c757d; margin-bottom: 5px;">Produktivitätsindex</div>
+                                <div style="font-size: 2em; font-weight: bold; color: #ff6f00;" id="prodIndexValue">0.0</div>
+                                <div style="font-size: 0.85em; color: #6c757d; margin-top: 5px;">kg pro 1.000 N$ Kosten</div>
+                            </div>
+                            <div style="margin-top: 10px; padding: 10px; background: #e8f5e9; border-radius: 5px; text-align: center;">
+                                <div style="font-size: 0.9em; color: #6c757d;">Bewertung</div>
+                                <div style="font-size: 1.1em; font-weight: bold; color: #2e7d32;" id="prodRating">-</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="info-box" style="background: #e3f2fd; border-left: 4px solid #2196f3;">
+                        <strong>ℹ️ Richtwerte Namibia:</strong><br>
+                        &lt; 15 = Kritisch (Verlustzone)<br>
+                        15-20 = Basis (Verbesserung nötig)<br>
+                        20-25 = Gut (Namibia-Standard)<br>
+                        &gt; 25 = Exzellent (Top 20%)
+                    </div>
+                    
+                    <h3>👥 Personal</h3>
+                    <div class="input-group">
+                        <label for="baseSalary">Grundgehalt Verwalter (N$)</label>
+                        <input type="text" id="baseSalary" value="700.000" oninput="formatInput(this); calculate()">
+                    </div>
+                    
+                    <h3>🎯 Skin in the Game</h3>
+                    <div class="input-group">
+                        <label>Investment (N$): <span class="range-value" id="investmentValue">0</span></label>
+                        <input type="range" id="investment" min="0" max="200000" step="10000" value="0" oninput="updateValue('investment'); calculate()">
+                    </div>
+                    
+                    <div class="input-group">
+                        <label>Max Multiplikator: <span class="range-value" id="multiplierMaxValue">1.6x</span></label>
+                        <input type="range" id="multiplierMax" min="1" max="3" step="0.1" value="1.6" oninput="updateValue('multiplierMax'); calculate()">
+                    </div>
+                    
+                    <div class="input-group">
+                        <label>Basis-Zinssatz: <span class="range-value" id="baseInterestValue">8%</span></label>
+                        <input type="range" id="baseInterest" min="0" max="15" step="0.5" value="8" oninput="updateValue('baseInterest'); calculate()">
+                    </div>
+                    
+                    <h3>🏦 Auszahlungsstruktur</h3>
+                    <div class="input-group">
+                        <label>Sofort-Auszahlung: <span class="range-value" id="immediatePaymentValue">60%</span></label>
+                        <input type="range" id="immediatePayment" min="0" max="100" step="5" value="60" oninput="updateValue('immediatePayment'); calculate()">
+                    </div>
+                </div>
+                
+                <div class="output-section">
+                    <h2>💰 Bonus Ergebnisse</h2>
+                    
+                    <div class="result-box">
+                        <h4>💎 EBIT Bonus - Säule 1 (Progressive Berechnung)</h4>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Stufe</th>
+                                    <th>EBIT Betrag</th>
+                                    <th>Rate</th>
+                                    <th>Bonus</th>
+                                </tr>
+                            </thead>
+                            <tbody id="ebitBreakdown">
+                            </tbody>
+                        </table>
+                        <div style="margin-top: 15px; padding-top: 15px; border-top: 2px solid #dee2e6;">
+                            <table>
+                                <tr style="background: #f0f8ff;">
+                                    <td><strong>EBIT Bonus Total (ungewichtet)</strong></td>
+                                    <td style="text-align: right;"><strong id="ebitBonusRaw">0 N$</strong></td>
+                                </tr>
+                                <tr style="background: #e3f2fd; font-weight: bold;">
+                                    <td><strong>EBIT Bonus (70% gewichtet)</strong></td>
+                                    <td style="text-align: right;"><strong id="ebitBonus">0 N$</strong></td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="info-box">
+                            <strong>ℹ️ Progressive Berechnung:</strong> Der Bonus wird stufeweise berechnet, ähnlich wie Einkommenssteuer. 
+                            Jede EBIT-Stufe wird mit ihrem eigenen Prozentsatz berechnet, dann mit 70% gewichtet.
+                        </div>
+                    </div>
+                    
+                    <div class="result-box">
+                        <h4>📊 Produktivitätsbonus - Säule 2</h4>
+                        <div style="margin-bottom: 15px; padding: 15px; background: #fff3e0; border-radius: 5px;">
+                            <table style="width: 100%;">
+                                <tr>
+                                    <td>Produktivitätsindex</td>
+                                    <td style="text-align: right;"><strong id="prodIndexDisplay">0.0</strong></td>
+                                </tr>
+                                <tr>
+                                    <td>Bewertung</td>
+                                    <td style="text-align: right;" id="prodRatingDisplay">-</td>
+                                </tr>
+                                <tr>
+                                    <td>Bonus-Faktor</td>
+                                    <td style="text-align: right;"><strong id="prodFactorDisplay">0.0x</strong></td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div style="margin-top: 15px; padding-top: 15px; border-top: 2px solid #dee2e6;">
+                            <table>
+                                <tr style="background: #f0f8ff;">
+                                    <td><strong>EBIT Bonus Total (ungewichtet)</strong></td>
+                                    <td style="text-align: right;"><strong id="ebitBonusRawProd">0 N$</strong></td>
+                                </tr>
+                                <tr>
+                                    <td>30% Basis (bei Faktor 1,0)</td>
+                                    <td style="text-align: right;" id="prodBonusBase">0 N$</td>
+                                </tr>
+                                <tr>
+                                    <td>× Produktivitäts-Faktor</td>
+                                    <td style="text-align: right;" id="prodFactorCalc">× 0.0</td>
+                                </tr>
+                                <tr style="background: #e3f2fd; font-weight: bold;">
+                                    <td><strong>Produktivitätsbonus (gewichtet)</strong></td>
+                                    <td style="text-align: right;"><strong id="prodBonus">0 N$</strong></td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="info-box">
+                            <strong>ℹ️ Berechnung:</strong> Bei Faktor 1,0 sind 30% vom ungewichteten EBIT-Bonus der Produktivitätsbonus. 
+                            Der Faktor wird basierend auf dem Produktivitätsindex angewendet (0× / 1× / 1,5× / 2×).
+                        </div>
+                    </div>
+                    
+                    <div class="result-box">
+                        <h4>🎯 Skin in the Game Effekt</h4>
+                        <table>
+                            <tr>
+                                <td>Basis-Bonus (EBIT 70% + Prod 30%)</td>
+                                <td style="text-align: right;" id="subtotal">0 N$</td>
+                            </tr>
+                            <tr>
+                                <td>Investment</td>
+                                <td style="text-align: right;" id="investmentDisplay">0 N$</td>
+                            </tr>
+                            <tr>
+                                <td>Multiplikator</td>
+                                <td style="text-align: right;" id="multiplierCalc">1.0x</td>
+                            </tr>
+                            <tr style="background: #f0f8ff;">
+                                <td><strong>Bonus nach Multiplikator</strong></td>
+                                <td style="text-align: right;"><strong id="multiplierBonus">0 N$</strong></td>
+                            </tr>
+                            <tr>
+                                <td>+ Zinsen auf Investment</td>
+                                <td style="text-align: right;" id="interestAmount">0 N$</td>
+                            </tr>
+                        </table>
+                    </div>
+                    
+                    <div class="highlight-box">
+                        <h4>💰 GESAMTBONUS</h4>
+                        <div class="total-bonus" id="totalBonus">0 N$</div>
+                        <div class="percentage" id="bonusPercentage">0% vom Grundgehalt</div>
+                        <hr style="margin: 15px 0; border: none; border-top: 1px solid rgba(255,255,255,0.3);">
+                        <div class="result-grid">
+                            <div>
+                                <div style="opacity: 0.9; font-size: 0.9em;">Sofort-Auszahlung</div>
+                                <div style="font-size: 1.5em; font-weight: bold;" id="immediateAmount">0 N$</div>
+                            </div>
+                            <div>
+                                <div style="opacity: 0.9; font-size: 0.9em;">Bonus Bank (3 Jahre)</div>
+                                <div style="font-size: 1.5em; font-weight: bold;" id="bankAmount">0 N$</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="statusMessage" class="success">
+                        <strong>✅ Status:</strong> Bonus-Berechnung aktualisiert
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- TAB 2: DASHBOARD -->
+        <div id="dashboard" class="tab-content">
+            <div style="padding: 30px;">
+                <h2>📊 Bonus-Analyse Dashboard</h2>
+                
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">Bonus bei 1M EBIT</div>
+                        <div class="stat-value" id="bonus1M">-</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Bonus bei 2M EBIT</div>
+                        <div class="stat-value" id="bonus2M">-</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Max. Bonus</div>
+                        <div class="stat-value" id="maxBonus">-</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Break-Even EBIT</div>
+                        <div class="stat-value" id="breakEven">-</div>
+                    </div>
+                </div>
+                
+                <div class="chart-container">
+                    <canvas id="bonusChart"></canvas>
+                </div>
+                
+                <div class="chart-container">
+                    <canvas id="comparisonChart"></canvas>
+                </div>
+                
+                <h3>📋 Detaillierte Bonus-Tabelle</h3>
+                <div style="background: white; padding: 20px; border-radius: 10px; overflow-x: auto;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>EBIT</th>
+                                <th>Basis-Bonus</th>
+                                <th>% vom Gehalt</th>
+                                <th>Effektive Rate</th>
+                                <th>Mit Skin in Game</th>
+                            </tr>
+                        </thead>
+                        <tbody id="detailTable">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let bonusChart = null;
+        let comparisonChart = null;
+
+        // ===== LocalStorage Functions =====
+        function saveToLocalStorage() {
+            const data = {
+                herdSize: document.getElementById('herdSize').value,
+                slaughterWeight: document.getElementById('slaughterWeight').value,
+                salesRate: document.getElementById('salesRate').value,
+                pricePerKg: document.getElementById('pricePerKg').value,
+                huntingRevenue: document.getElementById('huntingRevenue').value,
+                rentRevenue: document.getElementById('rentRevenue').value,
+                otherRevenue: document.getElementById('otherRevenue').value,
+                baseCosts: document.getElementById('baseCosts').value,
+                tier1Rate: document.getElementById('tier1Rate').value,
+                tier2Rate: document.getElementById('tier2Rate').value,
+                tier3Rate: document.getElementById('tier3Rate').value,
+                tier4Rate: document.getElementById('tier4Rate').value,
+                ebitCap: document.getElementById('ebitCap').value,
+                baseSalary: document.getElementById('baseSalary').value,
+                investment: document.getElementById('investment').value,
+                multiplierMax: document.getElementById('multiplierMax').value,
+                baseInterest: document.getElementById('baseInterest').value,
+                immediatePayment: document.getElementById('immediatePayment').value,
+                timestamp: new Date().toISOString()
+            };
+            localStorage.setItem('farmBonusData', JSON.stringify(data));
+        }
+
+        function loadFromLocalStorage() {
+            const savedData = localStorage.getItem('farmBonusData');
+            if (savedData) {
+                const data = JSON.parse(savedData);
+                // Restore all values
+                Object.keys(data).forEach(key => {
+                    if (key !== 'timestamp') {
+                        const element = document.getElementById(key);
+                        if (element) {
+                            element.value = data[key];
+                            if (element.type === 'range') {
+                                updateValue(key);
+                            }
+                        }
+                    }
+                });
+                return true;
+            }
+            return false;
+        }
+
+        // ===== JSON Export/Import Functions =====
+        function exportToJSON() {
+            const data = {
+                version: '1.0',
+                exportDate: new Date().toISOString(),
+                parameters: {
+                    herdSize: document.getElementById('herdSize').value,
+                    slaughterWeight: document.getElementById('slaughterWeight').value,
+                    salesRate: document.getElementById('salesRate').value,
+                    pricePerKg: document.getElementById('pricePerKg').value,
+                    huntingRevenue: document.getElementById('huntingRevenue').value,
+                    rentRevenue: document.getElementById('rentRevenue').value,
+                    otherRevenue: document.getElementById('otherRevenue').value,
+                    baseCosts: document.getElementById('baseCosts').value,
+                    tier1Rate: document.getElementById('tier1Rate').value,
+                    tier2Rate: document.getElementById('tier2Rate').value,
+                    tier3Rate: document.getElementById('tier3Rate').value,
+                    tier4Rate: document.getElementById('tier4Rate').value,
+                    ebitCap: document.getElementById('ebitCap').value,
+                    baseSalary: document.getElementById('baseSalary').value,
+                    investment: document.getElementById('investment').value,
+                    multiplierMax: document.getElementById('multiplierMax').value,
+                    baseInterest: document.getElementById('baseInterest').value,
+                    immediatePayment: document.getElementById('immediatePayment').value
+                }
+            };
+
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `farm-bonus-${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function importFromJSON(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    if (data.parameters) {
+                        Object.keys(data.parameters).forEach(key => {
+                            const element = document.getElementById(key);
+                            if (element) {
+                                element.value = data.parameters[key];
+                                if (element.type === 'range') {
+                                    updateValue(key);
+                                }
+                            }
+                        });
+                        calculate();
+                        alert('✅ Daten erfolgreich importiert!');
+                    }
+                } catch (error) {
+                    alert('❌ Fehler beim Importieren: ' + error.message);
+                }
+            };
+            reader.readAsText(file);
+            // Reset file input
+            event.target.value = '';
+        }
+
+        // ===== PDF Export Function =====
+        function parseDisplayValue(element) {
+            // Parse displayed value by removing currency, spaces, and dots (German format)
+            const text = element.textContent || element.innerText || '0';
+            return parseFloat(text.replace(/[^\d,.-]/g, '').replace(/\./g, '').replace(',', '.')) || 0;
+        }
+
+        function exportToPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('p', 'mm', 'a4');
+
+            // Get current values
+            const herdSize = parseFloat(document.getElementById('herdSize').value);
+            const slaughterWeight = parseFloat(document.getElementById('slaughterWeight').value);
+            const salesRate = parseFloat(document.getElementById('salesRate').value);
+            const pricePerKg = parseFloat(document.getElementById('pricePerKg').value);
+            const soldAnimals = Math.round(herdSize * salesRate / 100);
+            const totalWeight = soldAnimals * slaughterWeight;
+            const cattleRevenue = totalWeight * pricePerKg;
+            const huntingRevenue = parseInput(document.getElementById('huntingRevenue'));
+            const rentRevenue = parseInput(document.getElementById('rentRevenue'));
+            const otherRevenue = parseInput(document.getElementById('otherRevenue'));
+            const baseCosts = parseInput(document.getElementById('baseCosts'));
+            const totalRevenue = cattleRevenue + huntingRevenue + rentRevenue + otherRevenue;
+            const ebit = totalRevenue - baseCosts;
+            const totalBonus = parseDisplayValue(document.getElementById('totalBonus'));
+            const baseSalary = parseInput(document.getElementById('baseSalary'));
+            const bonusPercentage = (totalBonus / baseSalary * 100).toFixed(1);
+
+            // Calculate productivity index (with division by zero protection)
+            const productivityIndex = (baseCosts > 0) ? (totalWeight / baseCosts) * 1000 : 0;
+            let prodRating = "";
+            if (baseCosts <= 0) prodRating = "Nicht berechenbar";
+            else if (productivityIndex < 15) prodRating = "Kritisch";
+            else if (productivityIndex < 20) prodRating = "Basis";
+            else if (productivityIndex < 25) prodRating = "Gut";
+            else prodRating = "Exzellent";
+
+            let y = 20;
+
+            // Header
+            doc.setFillColor(31, 78, 120);
+            doc.rect(0, 0, 210, 40, 'F');
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(24);
+            doc.text('Farm Bonussystem Bericht', 105, 20, { align: 'center' });
+            doc.setFontSize(12);
+            doc.text('Namibia Rinderfarm', 105, 28, { align: 'center' });
+            doc.text(`Erstellt am: ${new Date().toLocaleDateString('de-DE')}`, 105, 35, { align: 'center' });
+
+            y = 50;
+            doc.setTextColor(0, 0, 0);
+
+            // Section 1: Herdenkennzahlen
+            doc.setFontSize(16);
+            doc.setTextColor(46, 117, 182);
+            doc.text('Herdenkennzahlen', 20, y);
+            y += 10;
+
+            doc.setFontSize(11);
+            doc.setTextColor(0, 0, 0);
+            doc.text(`Herdengröße: ${formatNumber(herdSize)} Tiere`, 20, y);
+            y += 6;
+            doc.text(`Verkaufte Tiere: ${formatNumber(soldAnimals)} (${salesRate}%)`, 20, y);
+            y += 6;
+            doc.text(`Ø Schlachtgewicht: ${formatNumber(slaughterWeight)} kg/Tier`, 20, y);
+            y += 6;
+            doc.text(`Total Schlachtgewicht: ${formatNumber(totalWeight)} kg`, 20, y);
+            y += 6;
+            doc.text(`Preis: ${formatNumber(pricePerKg)} N$/kg`, 20, y);
+            y += 12;
+
+            // Section 2: EBIT Berechnung
+            doc.setFontSize(16);
+            doc.setTextColor(46, 117, 182);
+            doc.text('EBIT Berechnung', 20, y);
+            y += 10;
+
+            doc.setFontSize(11);
+            doc.setTextColor(0, 0, 0);
+            doc.text(`Viehverkauf: ${formatNumber(cattleRevenue)} N$`, 25, y);
+            y += 6;
+            doc.text(`Jagd Einnahmen: ${formatNumber(huntingRevenue)} N$`, 25, y);
+            y += 6;
+            doc.text(`Pacht Einnahmen: ${formatNumber(rentRevenue)} N$`, 25, y);
+            y += 6;
+            doc.text(`Sonstige Einnahmen: ${formatNumber(otherRevenue)} N$`, 25, y);
+            y += 6;
+            doc.setFont(undefined, 'bold');
+            doc.text(`Gesamteinnahmen: ${formatNumber(totalRevenue)} N$`, 25, y);
+            y += 8;
+            doc.setFont(undefined, 'normal');
+            doc.text(`Betriebskosten: ${formatNumber(baseCosts)} N$`, 25, y);
+            y += 8;
+            doc.setFontSize(14);
+            doc.setFont(undefined, 'bold');
+            doc.setTextColor(40, 167, 69);
+            doc.text(`EBIT: ${formatNumber(ebit)} N$`, 25, y);
+            y += 12;
+
+            // Section 3: Produktivitätsindex
+            doc.setFontSize(16);
+            doc.setTextColor(46, 117, 182);
+            doc.text('Produktivitätsindex', 20, y);
+            y += 10;
+
+            doc.setFontSize(11);
+            doc.setTextColor(0, 0, 0);
+            doc.setFont(undefined, 'normal');
+            doc.text(`Index: ${productivityIndex.toFixed(1)} kg pro 1.000 N$ Kosten`, 25, y);
+            y += 6;
+            doc.text(`Bewertung: ${prodRating}`, 25, y);
+            y += 12;
+
+            // Section 4: Bonusberechnung
+            doc.setFontSize(16);
+            doc.setTextColor(46, 117, 182);
+            doc.text('Bonusberechnung', 20, y);
+            y += 10;
+
+            doc.setFontSize(11);
+            doc.setTextColor(0, 0, 0);
+            doc.text(`EBIT Bonus (70%): ${document.getElementById('ebitBonus').textContent}`, 25, y);
+            y += 6;
+            doc.text(`Produktivitätsbonus (30%): ${document.getElementById('prodBonus').textContent}`, 25, y);
+            y += 6;
+            doc.text(`Skin in the Game Multiplikator: ${document.getElementById('multiplierCalc').textContent}`, 25, y);
+            y += 6;
+            doc.text(`Zinsen auf Investment: ${document.getElementById('interestAmount').textContent}`, 25, y);
+            y += 10;
+
+            // Total Bonus - Highlighted
+            doc.setFillColor(102, 126, 234);
+            doc.roundedRect(15, y - 5, 180, 25, 3, 3, 'F');
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(14);
+            doc.setFont(undefined, 'bold');
+            doc.text('GESAMTBONUS', 20, y + 3);
+            doc.setFontSize(18);
+            doc.text(`${formatNumber(totalBonus)} N$`, 20, y + 12);
+            doc.setFontSize(12);
+            doc.text(`(${bonusPercentage}% vom Grundgehalt)`, 20, y + 19);
+            y += 30;
+
+            // Section 5: Auszahlungsstruktur
+            doc.setFontSize(16);
+            doc.setTextColor(46, 117, 182);
+            doc.text('Auszahlungsstruktur', 20, y);
+            y += 10;
+
+            doc.setFontSize(11);
+            doc.setTextColor(0, 0, 0);
+            doc.setFont(undefined, 'normal');
+            doc.text(`Sofort-Auszahlung: ${document.getElementById('immediateAmount').textContent}`, 25, y);
+            y += 6;
+            doc.text(`Bonus Bank (3 Jahre): ${document.getElementById('bankAmount').textContent}`, 25, y);
+
+            // Save PDF
+            doc.save(`farm-bonus-bericht-${new Date().toISOString().split('T')[0]}.pdf`);
+        }
+
+        function switchTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Show selected tab
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+            
+            // Update dashboard if switched to it
+            if (tabName === 'dashboard') {
+                updateDashboard();
+            }
+        }
+        
+        function formatNumber(num) {
+            return Math.round(num).toLocaleString('de-DE');
+        }
+        
+        function formatInput(input) {
+            // Get raw number value (remove all dots)
+            let value = input.value.replace(/\./g, '');
+            
+            // Remove non-digits
+            value = value.replace(/\D/g, '');
+            
+            // Convert to number and format with thousand separators
+            if (value === '') {
+                input.value = '0';
+            } else {
+                const num = parseInt(value);
+                input.value = num.toLocaleString('de-DE');
+            }
+        }
+        
+        function parseInput(input) {
+            // Parse formatted input back to number
+            return parseFloat(input.value.replace(/\./g, '')) || 0;
+        }
+        
+        function updateValue(id) {
+            const input = document.getElementById(id);
+            const value = parseFloat(input.value);
+            const display = document.getElementById(id + 'Value');
+            
+            if (id.includes('Rate') || id === 'baseInterest' || id === 'immediatePayment') {
+                display.textContent = value + '%';
+            } else if (id === 'multiplierMax') {
+                display.textContent = value.toFixed(1) + 'x';
+            } else if (id === 'ebitCap') {
+                display.textContent = value.toFixed(1) + 'M';
+            } else if (id === 'investment') {
+                display.textContent = formatNumber(value);
+            } else {
+                display.textContent = formatNumber(value);
+            }
+        }
+        
+        function calculateEbitBonus(ebit) {
+            const tier1Rate = parseFloat(document.getElementById('tier1Rate').value) / 100;
+            const tier2Rate = parseFloat(document.getElementById('tier2Rate').value) / 100;
+            const tier3Rate = parseFloat(document.getElementById('tier3Rate').value) / 100;
+            const tier4Rate = parseFloat(document.getElementById('tier4Rate').value) / 100;
+            const ebitCap = parseFloat(document.getElementById('ebitCap').value) * 1000000;
+            
+            const cappedEbit = Math.min(ebit, ebitCap);
+            let totalBonus = 0;
+            const breakdown = [];
+            
+            // Stufe 1: 0-100k
+            if (cappedEbit > 0) {
+                const amount = Math.min(cappedEbit, 100000);
+                const bonus = amount * tier1Rate;
+                totalBonus += bonus;
+                breakdown.push({
+                    stufe: 'Stufe 1 (0-100k)',
+                    betrag: amount,
+                    rate: tier1Rate * 100,
+                    bonus: bonus
+                });
+            }
+            
+            // Stufe 2: 100k-500k
+            if (cappedEbit > 100000) {
+                const amount = Math.min(cappedEbit - 100000, 400000);
+                const bonus = amount * tier2Rate;
+                totalBonus += bonus;
+                breakdown.push({
+                    stufe: 'Stufe 2 (100k-500k)',
+                    betrag: amount,
+                    rate: tier2Rate * 100,
+                    bonus: bonus
+                });
+            }
+            
+            // Stufe 3: 500k-2M
+            if (cappedEbit > 500000) {
+                const amount = Math.min(cappedEbit - 500000, 1500000);
+                const bonus = amount * tier3Rate;
+                totalBonus += bonus;
+                breakdown.push({
+                    stufe: 'Stufe 3 (500k-2M)',
+                    betrag: amount,
+                    rate: tier3Rate * 100,
+                    bonus: bonus
+                });
+            }
+            
+            // Stufe 4: 2M-4M
+            if (cappedEbit > 2000000) {
+                const amount = cappedEbit - 2000000;
+                const bonus = amount * tier4Rate;
+                totalBonus += bonus;
+                breakdown.push({
+                    stufe: 'Stufe 4 (2M+)',
+                    betrag: amount,
+                    rate: tier4Rate * 100,
+                    bonus: bonus
+                });
+            }
+            
+            return {
+                total: totalBonus,
+                breakdown: breakdown
+            };
+        }
+        
+        function calculate() {
+            // Auto-save to localStorage
+            saveToLocalStorage();
+
+            // Herdenberechnung
+            const herdSize = parseFloat(document.getElementById('herdSize').value);
+            const slaughterWeight = parseFloat(document.getElementById('slaughterWeight').value);
+            const salesRate = parseFloat(document.getElementById('salesRate').value) / 100;
+            const pricePerKg = parseFloat(document.getElementById('pricePerKg').value);
+            
+            const soldAnimals = Math.round(herdSize * salesRate);
+            const totalSlaughterWeight = soldAnimals * slaughterWeight;
+            const cattleRevenue = totalSlaughterWeight * pricePerKg;
+            
+            // Sonstige Einnahmen
+            const huntingRevenue = parseInput(document.getElementById('huntingRevenue')) || 0;
+            const rentRevenue = parseInput(document.getElementById('rentRevenue')) || 0;
+            const otherRevenue = parseInput(document.getElementById('otherRevenue')) || 0;
+            const totalRevenue = cattleRevenue + huntingRevenue + rentRevenue + otherRevenue;
+            
+            // Kosten berechnen (FIXE KOSTEN)
+            const baseCosts = parseInput(document.getElementById('baseCosts'));
+            const totalCost = baseCosts;
+            
+            // EBIT
+            const ebit = totalRevenue - totalCost;
+            
+            // Calculate EBIT Bonus (PROGRESSIVE - KORRIGIERT!)
+            const ebitBonusResult = calculateEbitBonus(ebit);
+            const ebitBonusRaw = ebitBonusResult.total;
+            const ebitBonusTotal = ebitBonusRaw * 0.7; // 70% weighting
+            
+            // Calculate Productivity Index and Bonus (KORREKT nach PDF!)
+            // Formel: (kg Schlachtgewicht verkauft ÷ Gesamtkosten) × 1000
+            // Protection against division by zero
+            const productivityIndex = (totalCost > 0) ? (totalSlaughterWeight / totalCost) * 1000 : 0;
+
+            // Bonus-Faktor basierend auf Index (laut PDF Seite 4)
+            let prodBonusFactor = 0;
+            let prodRating = "";
+            if (totalCost <= 0) {
+                prodBonusFactor = 0;
+                prodRating = "⚠️ Keine Kosten - nicht berechenbar";
+            } else if (productivityIndex < 15) {
+                prodBonusFactor = 0;
+                prodRating = "🔴 Kritisch (Verlustzone)";
+            } else if (productivityIndex < 20) {
+                prodBonusFactor = 1;
+                prodRating = "🟡 Basis (Verbesserung nötig)";
+            } else if (productivityIndex < 25) {
+                prodBonusFactor = 1.5;
+                prodRating = "🟢 Gut (Namibia-Standard)";
+            } else {
+                prodBonusFactor = 2;
+                prodRating = "⭐ Exzellent (Top 20%)";
+            }
+            
+            // KORRIGIERTE BERECHNUNG:
+            // Bei Faktor 1,0 → 30% vom ungewichteten EBIT-Bonus
+            // Bei anderen Faktoren → entsprechend skaliert
+            const prodBonusBase = ebitBonusRaw * 0.3; // 30% vom ungewichteten EBIT-Bonus
+            const prodBonusTotal = prodBonusBase * prodBonusFactor; // mal Faktor
+            
+            // Subtotal
+            const subtotal = ebitBonusTotal + prodBonusTotal;
+            
+            // Skin in the Game
+            const investment = parseFloat(document.getElementById('investment').value) || 0;
+            const multiplierMax = parseFloat(document.getElementById('multiplierMax').value);
+            const investmentRatio = Math.min(investment / 140000, 1.0); // Cap at 1.0
+            const multiplier = 1 + (multiplierMax - 1) * investmentRatio;
+            const bonusWithMultiplier = subtotal * multiplier;
+            
+            // Interest
+            const baseInterest = parseFloat(document.getElementById('baseInterest').value) / 100;
+            const interestAmount = investment * baseInterest;
+            
+            // Total
+            const totalBonus = bonusWithMultiplier + interestAmount;
+            const baseSalary = parseInput(document.getElementById('baseSalary'));
+            const bonusPercentage = (totalBonus / baseSalary * 100) || 0;
+            
+            // Payment structure
+            const immediateRate = parseFloat(document.getElementById('immediatePayment').value) / 100;
+            const immediateAmount = totalBonus * immediateRate;
+            const bankAmount = totalBonus * (1 - immediateRate);
+            
+            // Update Herdenkennzahlen
+            document.getElementById('displayHerdSize').textContent = formatNumber(herdSize) + ' Tiere';
+            document.getElementById('soldAnimals').textContent = formatNumber(soldAnimals);
+            document.getElementById('totalWeight').textContent = formatNumber(totalSlaughterWeight) + ' kg';
+            document.getElementById('avgWeight').textContent = formatNumber(slaughterWeight) + ' kg';
+            
+            // Update formula display
+            document.getElementById('soldAnimalsDetail').textContent = 
+                `${formatNumber(soldAnimals)} × ${formatNumber(slaughterWeight)} kg × ${formatNumber(pricePerKg)} N$/kg`;
+            
+            // Update EBIT Berechnung
+            document.getElementById('cattleRevenue').textContent = formatNumber(cattleRevenue) + ' N$';
+            document.getElementById('displayHunting').textContent = formatNumber(huntingRevenue) + ' N$';
+            document.getElementById('displayRent').textContent = formatNumber(rentRevenue) + ' N$';
+            document.getElementById('displayOther').textContent = formatNumber(otherRevenue) + ' N$';
+            document.getElementById('totalRevenue').textContent = formatNumber(totalRevenue) + ' N$';
+            document.getElementById('totalCost').textContent = formatNumber(totalCost) + ' N$';
+            document.getElementById('ebitAmount').textContent = formatNumber(ebit) + ' N$';
+            
+            // Update EBIT im Bonus-Tab
+            document.getElementById('ebitDisplayBonus').textContent = formatNumber(ebit) + ' N$';
+            
+            // Update Produktivitätsindex Anzeige
+            document.getElementById('totalKgSold').textContent = formatNumber(totalSlaughterWeight) + ' kg';
+            document.getElementById('totalCostsProd').textContent = formatNumber(totalCost) + ' N$';
+            document.getElementById('prodIndexValue').textContent = productivityIndex.toFixed(1);
+            document.getElementById('prodRating').textContent = prodRating;
+            
+            // EBIT Breakdown Table
+            let breakdownHTML = '';
+            ebitBonusResult.breakdown.forEach(item => {
+                breakdownHTML += `
+                    <tr>
+                        <td>${item.stufe}</td>
+                        <td>${formatNumber(item.betrag)} N$</td>
+                        <td>${item.rate.toFixed(1)}%</td>
+                        <td>${formatNumber(item.bonus)} N$</td>
+                    </tr>
+                `;
+            });
+            document.getElementById('ebitBreakdown').innerHTML = breakdownHTML;
+            
+            document.getElementById('ebitBonusRaw').textContent = formatNumber(ebitBonusRaw) + ' N$';
+            document.getElementById('ebitBonus').textContent = formatNumber(ebitBonusTotal) + ' N$';
+            
+            // Update Produktivitätsbonus Anzeige (neue Struktur)
+            document.getElementById('prodIndexDisplay').textContent = productivityIndex.toFixed(1);
+            document.getElementById('prodRatingDisplay').textContent = prodRating;
+            document.getElementById('prodFactorDisplay').textContent = prodBonusFactor.toFixed(1) + 'x';
+            document.getElementById('ebitBonusRawProd').textContent = formatNumber(ebitBonusRaw) + ' N$';
+            document.getElementById('prodBonusBase').textContent = formatNumber(prodBonusBase) + ' N$';
+            document.getElementById('prodFactorCalc').textContent = '× ' + prodBonusFactor.toFixed(1);
+            document.getElementById('prodBonus').textContent = formatNumber(prodBonusTotal) + ' N$';
+            
+            document.getElementById('subtotal').textContent = formatNumber(subtotal) + ' N$';
+            document.getElementById('multiplierCalc').textContent = multiplier.toFixed(2) + 'x';
+            document.getElementById('multiplierBonus').textContent = formatNumber(bonusWithMultiplier) + ' N$';
+            document.getElementById('interestAmount').textContent = formatNumber(interestAmount) + ' N$';
+            document.getElementById('totalBonus').textContent = formatNumber(totalBonus) + ' N$';
+            document.getElementById('bonusPercentage').textContent = bonusPercentage.toFixed(1) + '% vom Grundgehalt';
+            document.getElementById('immediateAmount').textContent = formatNumber(immediateAmount) + ' N$';
+            document.getElementById('bankAmount').textContent = formatNumber(bankAmount) + ' N$';
+            
+            // Status message
+            const statusDiv = document.getElementById('statusMessage');
+            if (ebit < 0) {
+                statusDiv.className = 'warning';
+                statusDiv.innerHTML = '<strong>⚠️ Warnung:</strong> Die Farm macht Verlust!';
+            } else if (ebit < 500000) {
+                statusDiv.className = 'warning';
+                statusDiv.innerHTML = '<strong>⚠️ Hinweis:</strong> EBIT zu niedrig für attraktiven Bonus.';
+            } else {
+                statusDiv.className = 'success';
+                statusDiv.innerHTML = '<strong>✅ Gut:</strong> Solide Performance mit fairem Bonus.';
+            }
+        }
+        
+        function updateDashboard() {
+            const baseSalary = parseInput(document.getElementById('baseSalary'));
+            const investment = parseFloat(document.getElementById('investment').value);
+            
+            // Calculate key statistics
+            const bonus1M = calculateEbitBonus(1000000).total * 0.7;
+            const bonus2M = calculateEbitBonus(2000000).total * 0.7;
+            const maxBonus = calculateEbitBonus(parseFloat(document.getElementById('ebitCap').value) * 1000000).total * 0.7;
+            
+            document.getElementById('bonus1M').textContent = formatNumber(bonus1M);
+            document.getElementById('bonus2M').textContent = formatNumber(bonus2M);
+            document.getElementById('maxBonus').textContent = formatNumber(maxBonus);
+            
+            // Find break-even (extend search to ebitCap)
+            const ebitCapValue = parseFloat(document.getElementById('ebitCap').value) * 1000000;
+            let breakEven = 0;
+            for (let ebit = 0; ebit <= ebitCapValue; ebit += 10000) {
+                if (calculateEbitBonus(ebit).total * 0.7 >= baseSalary * 0.01) {
+                    breakEven = ebit;
+                    break;
+                }
+            }
+            if (breakEven === 0 && calculateEbitBonus(ebitCapValue).total * 0.7 < baseSalary * 0.01) {
+                document.getElementById('breakEven').textContent = '> ' + formatNumber(ebitCapValue);
+            } else {
+                document.getElementById('breakEven').textContent = formatNumber(breakEven);
+            }
+            
+            // Update charts
+            updateBonusChart();
+            updateComparisonChart();
+            updateDetailTable();
+        }
+        
+        function updateBonusChart() {
+            const ctx = document.getElementById('bonusChart').getContext('2d');
+            const ebitPoints = [];
+            const bonusPoints = [];
+            
+            for (let ebit = 0; ebit <= 5000000; ebit += 250000) {
+                ebitPoints.push(ebit);
+                bonusPoints.push(calculateEbitBonus(ebit).total * 0.7);
+            }
+            
+            if (bonusChart) {
+                bonusChart.destroy();
+            }
+            
+            bonusChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ebitPoints.map(val => formatNumber(val)),
+                    datasets: [{
+                        label: 'Bonus (N$)',
+                        data: bonusPoints,
+                        borderColor: 'rgb(68, 114, 196)',
+                        backgroundColor: 'rgba(68, 114, 196, 0.1)',
+                        tension: 0.4,
+                        fill: true,
+                        borderWidth: 3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Bonus-Kurve nach EBIT (Progressive Berechnung)',
+                            font: { size: 16, weight: 'bold' }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: { display: true, text: 'Bonus (N$)' },
+                            ticks: { callback: value => formatNumber(value) }
+                        },
+                        x: {
+                            title: { display: true, text: 'EBIT (N$)' }
+                        }
+                    }
+                }
+            });
+        }
+        
+        function updateComparisonChart() {
+            const ctx = document.getElementById('comparisonChart').getContext('2d');
+            const ebitPoints = [];
+            
+            for (let ebit = 0; ebit <= 5000000; ebit += 250000) {
+                ebitPoints.push(ebit);
+            }
+            
+            const currentBonus = ebitPoints.map(ebit => calculateEbitBonus(ebit).total * 0.7);
+            
+            // Conservative scenario
+            const conservativeBonus = ebitPoints.map(ebit => {
+                const tempTiers = [0.05, 0.08, 0.10, 0.12];
+                let bonus = 0;
+                const cappedEbit = Math.min(ebit, 4000000);
+                if (cappedEbit > 0) bonus += Math.min(cappedEbit, 100000) * tempTiers[0];
+                if (cappedEbit > 100000) bonus += Math.min(cappedEbit - 100000, 400000) * tempTiers[1];
+                if (cappedEbit > 500000) bonus += Math.min(cappedEbit - 500000, 1500000) * tempTiers[2];
+                if (cappedEbit > 2000000) bonus += Math.min(cappedEbit - 2000000, 2000000) * tempTiers[3];
+                return bonus * 0.7;
+            });
+            
+            // Aggressive scenario
+            const aggressiveBonus = ebitPoints.map(ebit => {
+                const tempTiers = [0.12, 0.18, 0.22, 0.28];
+                let bonus = 0;
+                const cappedEbit = Math.min(ebit, 4000000);
+                if (cappedEbit > 0) bonus += Math.min(cappedEbit, 100000) * tempTiers[0];
+                if (cappedEbit > 100000) bonus += Math.min(cappedEbit - 100000, 400000) * tempTiers[1];
+                if (cappedEbit > 500000) bonus += Math.min(cappedEbit - 500000, 1500000) * tempTiers[2];
+                if (cappedEbit > 2000000) bonus += Math.min(cappedEbit - 2000000, 2000000) * tempTiers[3];
+                return bonus * 0.7;
+            });
+            
+            if (comparisonChart) {
+                comparisonChart.destroy();
+            }
+            
+            comparisonChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ebitPoints.map(val => formatNumber(val)),
+                    datasets: [{
+                        label: 'Aktuelle Einstellung',
+                        data: currentBonus,
+                        borderColor: 'rgb(68, 114, 196)',
+                        borderWidth: 3,
+                        fill: false
+                    }, {
+                        label: 'Konservativ',
+                        data: conservativeBonus,
+                        borderColor: 'rgb(75, 192, 192)',
+                        borderWidth: 2,
+                        borderDash: [5, 5],
+                        fill: false
+                    }, {
+                        label: 'Aggressiv',
+                        data: aggressiveBonus,
+                        borderColor: 'rgb(255, 99, 132)',
+                        borderWidth: 2,
+                        borderDash: [5, 5],
+                        fill: false
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Vergleich: Konservativ vs. Aktuell vs. Aggressiv',
+                            font: { size: 16, weight: 'bold' }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { callback: value => formatNumber(value) }
+                        }
+                    }
+                }
+            });
+        }
+        
+        function updateDetailTable() {
+            const baseSalary = parseInput(document.getElementById('baseSalary'));
+            const tbody = document.getElementById('detailTable');
+            const keyPoints = [100000, 250000, 500000, 750000, 1000000, 1500000, 2000000, 2500000, 3000000, 3500000, 4000000];
+            
+            let html = '';
+            keyPoints.forEach(ebit => {
+                const bonus = calculateEbitBonus(ebit).total * 0.7;
+                const percentage = (bonus / baseSalary * 100).toFixed(1);
+                const effectiveRate = (bonus / ebit * 100).toFixed(2);
+                
+                html += `
+                    <tr>
+                        <td>${formatNumber(ebit)}</td>
+                        <td>${formatNumber(bonus)}</td>
+                        <td>${percentage}%</td>
+                        <td>${effectiveRate}%</td>
+                        <td>-</td>
+                    </tr>
+                `;
+            });
+            
+            tbody.innerHTML = html;
+        }
+        
+        // Initialize
+        window.onload = function() {
+            // Try to load from localStorage first
+            const loaded = loadFromLocalStorage();
+
+            // Update all range value displays
+            ['tier1Rate', 'tier2Rate', 'tier3Rate', 'tier4Rate', 'ebitCap',
+             'investment', 'multiplierMax', 'baseInterest', 'immediatePayment',
+             'herdSize', 'slaughterWeight', 'salesRate'].forEach(id => {
+                updateValue(id);
+            });
+
+            // Calculate with loaded or default values
+            calculate();
+
+            if (loaded) {
+                console.log('✅ Daten aus LocalStorage geladen');
+            }
+        };
+    </script>
+</body>
+</html>
