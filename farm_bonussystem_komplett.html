@@ -675,10 +675,14 @@
                     </div>
                     
                     <div class="info-box">
-                        <strong>ℹ️ EBIT Berechnung:</strong> EBIT (Earnings Before Interest and Taxes) = Gesamteinnahmen - Betriebskosten. 
+                        <strong>ℹ️ EBIT Berechnung:</strong> EBIT (Earnings Before Interest and Taxes) = Gesamteinnahmen - Betriebskosten.
                         Dies ist die Grundlage für die Bonusberechnung im nächsten Tab.
                     </div>
-                    
+
+                    <div id="ebitCapControl" style="display: none;">
+                        <!-- Wird dynamisch befüllt -->
+                    </div>
+
                     <div id="statusMessageEbit" class="success">
                         <strong>✅ Status:</strong> EBIT Berechnung aktualisiert
                     </div>
@@ -2148,7 +2152,26 @@
             document.getElementById('totalRevenue').textContent = formatNumber(totalRevenue) + ' N$';
             document.getElementById('totalCost').textContent = formatNumber(totalCost) + ' N$';
             document.getElementById('ebitAmount').textContent = formatNumber(ebit) + ' N$';
-            
+
+            // EBIT Cap Control
+            const ebitCap = parseFloat(document.getElementById('ebitCap').value) * 1000000;
+            const ebitCapControl = document.getElementById('ebitCapControl');
+            if (ebit > ebitCap) {
+                ebitCapControl.style.display = 'block';
+                ebitCapControl.className = 'warning';
+                ebitCapControl.innerHTML = `<strong>⚠️ EBIT Cap Warnung:</strong> Ihr EBIT (${formatNumber(ebit)} N$) liegt über dem eingestellten Cap (${formatNumber(ebitCap)} N$).
+                Für die Bonusberechnung wird nur der Cap-Betrag berücksichtigt. Überschüssiger EBIT: ${formatNumber(ebit - ebitCap)} N$.`;
+            } else if (ebit > ebitCap * 0.9) {
+                ebitCapControl.style.display = 'block';
+                ebitCapControl.className = 'info-box';
+                ebitCapControl.style.background = '#fff3cd';
+                ebitCapControl.style.borderLeft = '4px solid #ffc107';
+                ebitCapControl.innerHTML = `<strong>💡 Hinweis:</strong> EBIT nähert sich dem Cap (${formatNumber(ebitCap)} N$).
+                Noch ${formatNumber(ebitCap - ebit)} N$ bis zum Maximum. Erwägen Sie eine Cap-Erhöhung falls realistisch.`;
+            } else {
+                ebitCapControl.style.display = 'none';
+            }
+
             // Update EBIT im Bonus-Tab
             document.getElementById('ebitDisplayBonus').textContent = formatNumber(ebit) + ' N$';
             
