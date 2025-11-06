@@ -4,7 +4,7 @@ Ein integriertes Bonus-Analyse System für Rinderfarmen in Namibia mit EBIT-Bere
 
 ## 🚀 Live Demo
 
-**[Zum Tool →](https://IHR-GITHUB-USERNAME.github.io/farm-bonusrechner/farm_bonussystem_komplett.html)**
+**[Zum Tool →](https://pillinio.github.io/farm-bonusrechner/farm_bonussystem_komplett.html)**
 
 ## 📊 Features
 
@@ -59,7 +59,7 @@ Erstellt professionelle Berichte mit:
 Öffnen Sie einfach die URL in Ihrem Browser - keine Installation erforderlich!
 
 ### Lokal
-1. Repository klonen: `git clone https://github.com/IHR-USERNAME/farm-bonusrechner.git`
+1. Repository klonen: `git clone https://github.com/Pillinio/farm-bonusrechner.git`
 2. HTML-Datei im Browser öffnen: `farm_bonussystem_komplett.html`
 
 ## 📱 Browser-Kompatibilität
@@ -119,7 +119,7 @@ Nach 1-2 Minuten ist die neue Version für alle Nutzer live!
 ## 📞 Support
 
 Bei Fragen oder Problemen:
-- GitHub Issues: [Issues erstellen](https://github.com/IHR-USERNAME/farm-bonusrechner/issues)
+- GitHub Issues: [Issues erstellen](https://github.com/Pillinio/farm-bonusrechner/issues)
 - Oder direkter Kontakt
 
 ## 📄 Lizenz
