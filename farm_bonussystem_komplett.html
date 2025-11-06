@@ -430,9 +430,66 @@
             display: none;
         }
 
+        .tooltip {
+            position: relative;
+            display: inline-block;
+            cursor: help;
+            margin-left: 5px;
+            width: 18px;
+            height: 18px;
+            line-height: 18px;
+            text-align: center;
+            background: #4472C4;
+            color: white;
+            border-radius: 50%;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 280px;
+            background-color: #2E75B6;
+            color: #fff;
+            text-align: left;
+            border-radius: 8px;
+            padding: 12px;
+            position: absolute;
+            z-index: 1000;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -140px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 13px;
+            line-height: 1.5;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+
+        .tooltip .tooltiptext::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -8px;
+            border-width: 8px;
+            border-style: solid;
+            border-color: #2E75B6 transparent transparent transparent;
+        }
+
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+
         @media (max-width: 1024px) {
             .main-content {
                 grid-template-columns: 1fr;
+            }
+
+            .tooltip .tooltiptext {
+                width: 220px;
+                margin-left: -110px;
             }
         }
     </style>
@@ -500,15 +557,16 @@
             <button class="tab active" onclick="switchTab('ebit')">📊 EBIT Berechnung</button>
             <button class="tab" onclick="switchTab('bonus')">💰 Bonusberechnung</button>
             <button class="tab" onclick="switchTab('overview')">🎯 Zielwert-Übersicht</button>
+            <button class="tab" onclick="switchTab('info')">ℹ️ Info & Hilfe</button>
         </div>
 
         <div class="export-controls">
-            <button class="btn btn-primary" onclick="exportToJSON()">💾 JSON Export</button>
-            <button class="btn btn-secondary" onclick="document.getElementById('jsonFileInput').click()">📁 JSON Import</button>
+            <button class="btn btn-primary" onclick="exportToJSON()" title="Speichert alle aktuellen Parameter als JSON-Datei. Perfekt um verschiedene Szenarien zu vergleichen.">💾 JSON Export</button>
+            <button class="btn btn-secondary" onclick="document.getElementById('jsonFileInput').click()" title="Lädt zuvor gespeicherte Parameter aus einer JSON-Datei.">📁 JSON Import</button>
             <input type="file" id="jsonFileInput" accept=".json" onchange="importFromJSON(event)">
-            <button class="btn btn-success" onclick="exportToPDF()">📄 PDF Export</button>
+            <button class="btn btn-success" onclick="exportToPDF()" title="Erstellt einen professionellen PDF-Bericht mit allen Berechnungen zum Ausdrucken oder Teilen.">📄 PDF Export</button>
             <div style="flex: 1;"></div>
-            <span style="display: flex; align-items: center; color: #6c757d; font-size: 0.9em;">
+            <span style="display: flex; align-items: center; color: #6c757d; font-size: 0.9em;" title="Ihre Eingaben werden automatisch im Browser gespeichert und beim nächsten Öffnen wiederhergestellt.">
                 💾 Auto-Save aktiv
             </span>
         </div>
@@ -521,44 +579,76 @@
                     
                     <h3>🐄 Herdenparameter</h3>
                     <div class="input-group">
-                        <label>Herdengröße: <span class="range-value" id="herdSizeValue">800</span></label>
+                        <label>Herdengröße: <span class="range-value" id="herdSizeValue">800</span>
+                            <span class="tooltip">?
+                                <span class="tooltiptext">Gesamtzahl der Tiere auf der Farm. Standardwert für namibische Rinderfarmen: 800-1.200 Tiere.</span>
+                            </span>
+                        </label>
                         <input type="range" id="herdSize" min="400" max="1500" value="800" oninput="updateValue('herdSize'); calculate()">
                     </div>
-                    
+
                     <div class="input-group">
-                        <label>Schlachtgewicht pro Tier (kg): <span class="range-value" id="slaughterWeightValue">225</span></label>
+                        <label>Schlachtgewicht pro Tier (kg): <span class="range-value" id="slaughterWeightValue">225</span>
+                            <span class="tooltip">?
+                                <span class="tooltiptext">Durchschnittliches Gewicht eines verkauften Tieres nach der Schlachtung. Typ. 180-280 kg in Namibia.</span>
+                            </span>
+                        </label>
                         <input type="range" id="slaughterWeight" min="180" max="280" value="225" oninput="updateValue('slaughterWeight'); calculate()">
                     </div>
-                    
+
                     <div class="input-group">
-                        <label>Verkaufsrate (%): <span class="range-value" id="salesRateValue">26%</span></label>
+                        <label>Verkaufsrate (%): <span class="range-value" id="salesRateValue">26%</span>
+                            <span class="tooltip">?
+                                <span class="tooltiptext">Prozentsatz der Herde, der jährlich verkauft wird. Typ. 20-30% für nachhaltige Bewirtschaftung.</span>
+                            </span>
+                        </label>
                         <input type="range" id="salesRate" min="15" max="40" value="26" step="0.5" oninput="updateValue('salesRate'); calculate()">
                     </div>
-                    
+
                     <div class="input-group">
-                        <label for="pricePerKg">Preis pro kg Schlachtgewicht (N$)</label>
+                        <label for="pricePerKg">Preis pro kg Schlachtgewicht (N$)
+                            <span class="tooltip">?
+                                <span class="tooltiptext">Verkaufspreis pro Kilogramm Schlachtgewicht in Namibia-Dollar. Marktpreis variiert je nach Qualität und Nachfrage.</span>
+                            </span>
+                        </label>
                         <input type="number" id="pricePerKg" value="60" step="1" oninput="calculate()">
                     </div>
                     
                     <h3>💰 Sonstige Einnahmen</h3>
                     <div class="input-group">
-                        <label for="huntingRevenue">Jagd Einnahmen (N$)</label>
+                        <label for="huntingRevenue">Jagd Einnahmen (N$)
+                            <span class="tooltip">?
+                                <span class="tooltiptext">Einnahmen aus Jagdlizenzen oder Trophäenjagd auf dem Farmgelände.</span>
+                            </span>
+                        </label>
                         <input type="text" id="huntingRevenue" value="0" oninput="formatInput(this); calculate()">
                     </div>
-                    
+
                     <div class="input-group">
-                        <label for="rentRevenue">Pacht Einnahmen (N$)</label>
+                        <label for="rentRevenue">Pacht Einnahmen (N$)
+                            <span class="tooltip">?
+                                <span class="tooltiptext">Einnahmen aus Verpachtung von Land oder Weideflächen an andere Farmer.</span>
+                            </span>
+                        </label>
                         <input type="text" id="rentRevenue" value="0" oninput="formatInput(this); calculate()">
                     </div>
-                    
+
                     <div class="input-group">
-                        <label for="otherRevenue">Sonstige Einnahmen (N$)</label>
+                        <label for="otherRevenue">Sonstige Einnahmen (N$)
+                            <span class="tooltip">?
+                                <span class="tooltiptext">Andere Einnahmen wie Verkauf von Fellen, Nebenprodukte, etc.</span>
+                            </span>
+                        </label>
                         <input type="text" id="otherRevenue" value="0" oninput="formatInput(this); calculate()">
                     </div>
-                    
+
                     <h3>💸 Kosten</h3>
                     <div class="input-group">
-                        <label for="baseCosts">Betriebskosten (N$)</label>
+                        <label for="baseCosts">Betriebskosten (N$)
+                            <span class="tooltip">?
+                                <span class="tooltiptext">Gesamte jährliche Betriebskosten: Personal, Futter, Veterinär, Instandhaltung, Wasser, Strom, etc.</span>
+                            </span>
+                        </label>
                         <input type="text" id="baseCosts" value="2.000.000" oninput="formatInput(this); calculate()">
                     </div>
                 </div>
@@ -718,29 +808,49 @@
                     
                     <h3>👥 Personal</h3>
                     <div class="input-group">
-                        <label for="baseSalary">Grundgehalt Verwalter (N$)</label>
+                        <label for="baseSalary">Grundgehalt Verwalter (N$)
+                            <span class="tooltip">?
+                                <span class="tooltiptext">Jährliches Festgehalt des Farm-Verwalters/Managers ohne Bonus.</span>
+                            </span>
+                        </label>
                         <input type="text" id="baseSalary" value="700.000" oninput="formatInput(this); calculate()">
                     </div>
-                    
+
                     <h3>🎯 Skin in the Game</h3>
                     <div class="input-group">
-                        <label>Investment (N$): <span class="range-value" id="investmentValue">0</span></label>
+                        <label>Investment (N$): <span class="range-value" id="investmentValue">0</span>
+                            <span class="tooltip">?
+                                <span class="tooltiptext">Eigenes Investment des Managers in die Farm (max. 140.000 N$). Erhöht den Bonus-Multiplikator und wird verzinst.</span>
+                            </span>
+                        </label>
                         <input type="range" id="investment" min="0" max="200000" step="10000" value="0" oninput="updateValue('investment'); calculate()">
                     </div>
-                    
+
                     <div class="input-group">
-                        <label>Max Multiplikator: <span class="range-value" id="multiplierMaxValue">1.6x</span></label>
+                        <label>Max Multiplikator: <span class="range-value" id="multiplierMaxValue">1.6x</span>
+                            <span class="tooltip">?
+                                <span class="tooltiptext">Maximaler Bonus-Multiplikator bei vollem Investment (140.000 N$). Bei 0 Investment = 1,0×.</span>
+                            </span>
+                        </label>
                         <input type="range" id="multiplierMax" min="1" max="3" step="0.1" value="1.6" oninput="updateValue('multiplierMax'); calculate()">
                     </div>
-                    
+
                     <div class="input-group">
-                        <label>Basis-Zinssatz: <span class="range-value" id="baseInterestValue">8%</span></label>
+                        <label>Basis-Zinssatz: <span class="range-value" id="baseInterestValue">8%</span>
+                            <span class="tooltip">?
+                                <span class="tooltiptext">Jährliche Verzinsung des Manager-Investments. Wird zusätzlich zum Bonus ausgezahlt.</span>
+                            </span>
+                        </label>
                         <input type="range" id="baseInterest" min="0" max="15" step="0.5" value="8" oninput="updateValue('baseInterest'); calculate()">
                     </div>
-                    
+
                     <h3>🏦 Auszahlungsstruktur</h3>
                     <div class="input-group">
-                        <label>Sofort-Auszahlung: <span class="range-value" id="immediatePaymentValue">60%</span></label>
+                        <label>Sofort-Auszahlung: <span class="range-value" id="immediatePaymentValue">60%</span>
+                            <span class="tooltip">?
+                                <span class="tooltiptext">Prozentsatz des Bonus, der sofort ausgezahlt wird. Der Rest geht in die 3-Jahres Bonus Bank.</span>
+                            </span>
+                        </label>
                         <input type="range" id="immediatePayment" min="0" max="100" step="5" value="60" oninput="updateValue('immediatePayment'); calculate()">
                     </div>
                 </div>
@@ -1001,8 +1111,124 @@
                 </div>
             </div>
         </div>
+
+        <!-- TAB 4: INFO & HILFE -->
+        <div id="info" class="tab-content">
+            <div style="padding: 30px;">
+                <h2>ℹ️ Farm Bonussystem - Info & Hilfe</h2>
+
+                <div class="result-box">
+                    <h4>📘 Wie funktioniert das Bonussystem?</h4>
+                    <p style="line-height: 1.8;">
+                        Das Farm Bonussystem basiert auf einem <strong>2-Säulen-Modell</strong>, das sowohl Profitabilität (EBIT)
+                        als auch operative Effizienz (Produktivität) belohnt. Zusätzlich können Manager durch eigenes Investment
+                        ("Skin in the Game") ihren Bonus multiplizieren.
+                    </p>
+                </div>
+
+                <div class="result-box">
+                    <h4>🏗️ Säule 1: EBIT Bonus (70% Gewichtung)</h4>
+                    <p style="margin-bottom: 15px;"><strong>Was ist EBIT?</strong><br>
+                    EBIT = Earnings Before Interest and Taxes (Gewinn vor Zinsen und Steuern)<br>
+                    Berechnung: Gesamteinnahmen - Betriebskosten</p>
+
+                    <p style="margin-bottom: 15px;"><strong>Progressive Staffelung:</strong><br>
+                    Der Bonus wird <em>progressiv</em> berechnet - wie bei der Einkommenssteuer. Jede EBIT-Stufe wird mit ihrem eigenen Prozentsatz berechnet:</p>
+
+                    <table style="margin-bottom: 15px;">
+                        <tr><th>Stufe</th><th>EBIT Bereich</th><th>Rate</th><th>Max. Bonus aus Stufe</th></tr>
+                        <tr><td><strong>1</strong></td><td>0 - 100.000 N$</td><td>8%</td><td>8.000 N$</td></tr>
+                        <tr><td><strong>2</strong></td><td>100.000 - 500.000 N$</td><td>12%</td><td>48.000 N$</td></tr>
+                        <tr><td><strong>3</strong></td><td>500.000 - 2.000.000 N$</td><td>15%</td><td>225.000 N$</td></tr>
+                        <tr><td><strong>4</strong></td><td>über 2.000.000 N$</td><td>20%</td><td>400.000 N$</td></tr>
+                    </table>
+
+                    <p><strong>Beispiel:</strong> Bei 1.500.000 N$ EBIT:<br>
+                    • Erste 100.000 N$ × 8% = 8.000 N$<br>
+                    • Nächste 400.000 N$ × 12% = 48.000 N$<br>
+                    • Verbleibende 1.000.000 N$ × 15% = 150.000 N$<br>
+                    • <strong>Total ungewichtet: 206.000 N$</strong><br>
+                    • <strong>× 70% Gewichtung = 144.200 N$</strong></p>
+                </div>
+
+                <div class="result-box">
+                    <h4>📊 Säule 2: Produktivitätsbonus (30% Gewichtung)</h4>
+                    <p style="margin-bottom: 15px;"><strong>Was ist der Produktivitätsindex?</strong><br>
+                    Misst die Effizienz: Wie viel kg Schlachtgewicht wird pro 1.000 N$ Kosten produziert?<br>
+                    <strong>Formel:</strong> (verkauftes Schlachtgewicht ÷ Gesamtkosten) × 1.000</p>
+
+                    <table style="margin-bottom: 15px;">
+                        <tr><th>Index</th><th>Bewertung</th><th>Bonus-Faktor</th></tr>
+                        <tr><td>&lt; 15</td><td>🔴 Kritisch</td><td>0× (kein Bonus)</td></tr>
+                        <tr><td>15 - 20</td><td>🟡 Basis</td><td>1× (30% vom ungew. EBIT-Bonus)</td></tr>
+                        <tr><td>20 - 25</td><td>🟢 Gut</td><td>1,5× (45% vom ungew. EBIT-Bonus)</td></tr>
+                        <tr><td>&gt; 25</td><td>⭐ Exzellent</td><td>2× (60% vom ungew. EBIT-Bonus)</td></tr>
+                    </table>
+
+                    <p><strong>Beispiel:</strong> Bei EBIT-Bonus (ungew.) von 206.000 N$ und Index 23:<br>
+                    • 30% Basis = 206.000 × 0,3 = 61.800 N$<br>
+                    • Index 23 = "Gut" = Faktor 1,5×<br>
+                    • <strong>Produktivitätsbonus: 61.800 × 1,5 = 92.700 N$</strong></p>
+                </div>
+
+                <div class="result-box">
+                    <h4>🎯 Skin in the Game (Investment-Multiplikator)</h4>
+                    <p style="margin-bottom: 15px;"><strong>Was ist das?</strong><br>
+                    Manager können eigenes Geld in die Farm investieren und erhalten dafür einen Bonus-Multiplikator.</p>
+
+                    <p style="margin-bottom: 15px;"><strong>Berechnung:</strong><br>
+                    • Bei 0 N$ Investment: Multiplikator = 1,0× (kein Effekt)<br>
+                    • Bei 140.000 N$ Investment: Multiplikator = Maximum (z.B. 1,6×)<br>
+                    • Linear skaliert dazwischen<br>
+                    • Zusätzlich: Verzinsung des Investments (z.B. 8%)</p>
+
+                    <p><strong>Beispiel:</strong><br>
+                    • Basis-Bonus: 236.900 N$ (EBIT 70% + Prod 30%)<br>
+                    • Investment: 70.000 N$ (= 50% von 140.000)<br>
+                    • Max-Multiplikator: 1,6×<br>
+                    • Tatsächlicher Multiplikator: 1,0 + (0,6 × 0,5) = 1,3×<br>
+                    • Bonus nach Mult.: 236.900 × 1,3 = 307.970 N$<br>
+                    • + Zinsen: 70.000 × 8% = 5.600 N$<br>
+                    • <strong>Total: 313.570 N$</strong></p>
+                </div>
+
+                <div class="result-box">
+                    <h4>🏦 Auszahlungsstruktur</h4>
+                    <p style="margin-bottom: 15px;"><strong>Zwei Auszahlungs-Optionen:</strong></p>
+
+                    <p><strong>1. Sofort-Auszahlung</strong> (z.B. 60%)<br>
+                    Wird direkt ausgezahlt, sofort verfügbar.</p>
+
+                    <p><strong>2. Bonus Bank</strong> (z.B. 40%)<br>
+                    Wird über 3 Jahre gesperrt. Verhindert kurzfristiges Denken und bindet den Manager langfristig.</p>
+                </div>
+
+                <div class="result-box">
+                    <h4>💾 Daten speichern & exportieren</h4>
+                    <p><strong>Auto-Save:</strong> Alle Eingaben werden automatisch im Browser gespeichert.</p>
+                    <p><strong>JSON Export:</strong> Speichert Parameter als Datei - perfekt für verschiedene Szenarien.</p>
+                    <p><strong>JSON Import:</strong> Lädt gespeicherte Szenarien wieder.</p>
+                    <p><strong>PDF Export:</strong> Erstellt professionellen Bericht zum Ausdrucken/Teilen.</p>
+                </div>
+
+                <div class="result-box">
+                    <h4>❓ Häufige Fragen</h4>
+                    <p><strong>Q: Warum progressive Staffelung?</strong><br>
+                    A: Belohnt höhere Performance überproportional, ohne bei niedrigem EBIT zu hohe Kosten zu verursachen.</p>
+
+                    <p><strong>Q: Warum 2 Säulen?</strong><br>
+                    A: EBIT allein belohnt nur Gewinn. Der Produktivitätsindex stellt sicher, dass auch Effizienz zählt.</p>
+
+                    <p><strong>Q: Was passiert bei negativem EBIT?</strong><br>
+                    A: Kein Bonus wird ausgezahlt (EBIT-Bonus = 0).</p>
+
+                    <p><strong>Q: Sind meine Daten sicher?</strong><br>
+                    A: Ja! Alle Daten bleiben lokal in Ihrem Browser. Keine Übertragung an Server.</p>
+                </div>
+            </div>
+        </div>
     </div>
-    
+
     <script>
 
         // ===== LocalStorage Functions =====
@@ -1148,134 +1374,382 @@
             const totalBonus = parseDisplayValue(document.getElementById('totalBonus'));
             const baseSalary = parseInput(document.getElementById('baseSalary'));
             const bonusPercentage = (totalBonus / baseSalary * 100).toFixed(1);
-
-            // Calculate productivity index (with division by zero protection)
             const productivityIndex = (baseCosts > 0) ? (totalWeight / baseCosts) * 1000 : 0;
+
+            // Get EBIT breakdown
+            const ebitBonusResult = calculateEbitBonus(ebit);
+            const ebitBonusRaw = ebitBonusResult.total;
+            const ebitBonusWeighted = ebitBonusRaw * 0.7;
+
             let prodRating = "";
-            if (baseCosts <= 0) prodRating = "Nicht berechenbar";
-            else if (productivityIndex < 15) prodRating = "Kritisch";
-            else if (productivityIndex < 20) prodRating = "Basis";
-            else if (productivityIndex < 25) prodRating = "Gut";
-            else prodRating = "Exzellent";
+            let prodFactor = 0;
+            if (baseCosts <= 0) {
+                prodRating = "Nicht berechenbar";
+                prodFactor = 0;
+            } else if (productivityIndex < 15) {
+                prodRating = "Kritisch";
+                prodFactor = 0;
+            } else if (productivityIndex <= 20) {
+                prodRating = "Basis";
+                prodFactor = 1.0;
+            } else if (productivityIndex <= 25) {
+                prodRating = "Gut";
+                prodFactor = 1.5;
+            } else {
+                prodRating = "Exzellent";
+                prodFactor = 2.0;
+            }
 
-            let y = 20;
+            const prodBonusBase = ebitBonusRaw * 0.3;
+            const prodBonus = prodBonusBase * prodFactor;
+            const investment = parseFloat(document.getElementById('investment').value) || 0;
+            const multiplier = parseFloat(document.getElementById('multiplierCalc').textContent.replace('x', ''));
+            const baseInterest = parseFloat(document.getElementById('baseInterest').value) / 100;
+            const interestAmount = investment * baseInterest;
+            const immediateRate = parseFloat(document.getElementById('immediatePayment').value) / 100;
+            const immediateAmount = totalBonus * immediateRate;
+            const bankAmount = totalBonus * (1 - immediateRate);
 
-            // Header
+            let y = 15;
+            const leftMargin = 15;
+            const rightMargin = 195;
+            const pageWidth = 210;
+
+            // ========== HEADER ==========
             doc.setFillColor(31, 78, 120);
-            doc.rect(0, 0, 210, 40, 'F');
+            doc.rect(0, 0, pageWidth, 50, 'F');
             doc.setTextColor(255, 255, 255);
-            doc.setFontSize(24);
-            doc.text('Farm Bonussystem Bericht', 105, 20, { align: 'center' });
-            doc.setFontSize(12);
-            doc.text('Namibia Rinderfarm', 105, 28, { align: 'center' });
-            doc.text(`Erstellt am: ${new Date().toLocaleDateString('de-DE')}`, 105, 35, { align: 'center' });
-
-            y = 50;
-            doc.setTextColor(0, 0, 0);
-
-            // Section 1: Herdenkennzahlen
-            doc.setFontSize(16);
-            doc.setTextColor(46, 117, 182);
-            doc.text('Herdenkennzahlen', 20, y);
-            y += 10;
-
-            doc.setFontSize(11);
-            doc.setTextColor(0, 0, 0);
-            doc.text(`Herdengröße: ${formatNumber(herdSize)} Tiere`, 20, y);
-            y += 6;
-            doc.text(`Verkaufte Tiere: ${formatNumber(soldAnimals)} (${salesRate}%)`, 20, y);
-            y += 6;
-            doc.text(`Ø Schlachtgewicht: ${formatNumber(slaughterWeight)} kg/Tier`, 20, y);
-            y += 6;
-            doc.text(`Total Schlachtgewicht: ${formatNumber(totalWeight)} kg`, 20, y);
-            y += 6;
-            doc.text(`Preis: ${formatNumber(pricePerKg)} N$/kg`, 20, y);
-            y += 12;
-
-            // Section 2: EBIT Berechnung
-            doc.setFontSize(16);
-            doc.setTextColor(46, 117, 182);
-            doc.text('EBIT Berechnung', 20, y);
-            y += 10;
-
-            doc.setFontSize(11);
-            doc.setTextColor(0, 0, 0);
-            doc.text(`Viehverkauf: ${formatNumber(cattleRevenue)} N$`, 25, y);
-            y += 6;
-            doc.text(`Jagd Einnahmen: ${formatNumber(huntingRevenue)} N$`, 25, y);
-            y += 6;
-            doc.text(`Pacht Einnahmen: ${formatNumber(rentRevenue)} N$`, 25, y);
-            y += 6;
-            doc.text(`Sonstige Einnahmen: ${formatNumber(otherRevenue)} N$`, 25, y);
-            y += 6;
+            doc.setFontSize(28);
             doc.setFont(undefined, 'bold');
-            doc.text(`Gesamteinnahmen: ${formatNumber(totalRevenue)} N$`, 25, y);
-            y += 8;
-            doc.setFont(undefined, 'normal');
-            doc.text(`Betriebskosten: ${formatNumber(baseCosts)} N$`, 25, y);
-            y += 8;
+            doc.text('FARM BONUSSYSTEM', pageWidth / 2, 20, { align: 'center' });
             doc.setFontSize(14);
-            doc.setFont(undefined, 'bold');
-            doc.setTextColor(40, 167, 69);
-            doc.text(`EBIT: ${formatNumber(ebit)} N$`, 25, y);
-            y += 12;
-
-            // Section 3: Produktivitätsindex
-            doc.setFontSize(16);
-            doc.setTextColor(46, 117, 182);
-            doc.text('Produktivitätsindex', 20, y);
-            y += 10;
-
-            doc.setFontSize(11);
-            doc.setTextColor(0, 0, 0);
+            doc.text('Namibia Rinderfarm - Bonus-Bericht', pageWidth / 2, 28, { align: 'center' });
             doc.setFont(undefined, 'normal');
-            doc.text(`Index: ${productivityIndex.toFixed(1)} kg pro 1.000 N$ Kosten`, 25, y);
-            y += 6;
-            doc.text(`Bewertung: ${prodRating}`, 25, y);
-            y += 12;
+            doc.setFontSize(10);
+            doc.text(`Berichtsdatum: ${new Date().toLocaleDateString('de-DE', { year: 'numeric', month: 'long', day: 'numeric' })}`, pageWidth / 2, 36, { align: 'center' });
+            doc.text(`Berichtszeit: ${new Date().toLocaleTimeString('de-DE')}`, pageWidth / 2, 43, { align: 'center' });
 
-            // Section 4: Bonusberechnung
-            doc.setFontSize(16);
-            doc.setTextColor(46, 117, 182);
-            doc.text('Bonusberechnung', 20, y);
-            y += 10;
+            y = 60;
 
-            doc.setFontSize(11);
-            doc.setTextColor(0, 0, 0);
-            doc.text(`EBIT Bonus (70%): ${document.getElementById('ebitBonus').textContent}`, 25, y);
-            y += 6;
-            doc.text(`Produktivitätsbonus (30%): ${document.getElementById('prodBonus').textContent}`, 25, y);
-            y += 6;
-            doc.text(`Skin in the Game Multiplikator: ${document.getElementById('multiplierCalc').textContent}`, 25, y);
-            y += 6;
-            doc.text(`Zinsen auf Investment: ${document.getElementById('interestAmount').textContent}`, 25, y);
-            y += 10;
-
-            // Total Bonus - Highlighted
+            // ========== EXECUTIVE SUMMARY ==========
             doc.setFillColor(102, 126, 234);
-            doc.roundedRect(15, y - 5, 180, 25, 3, 3, 'F');
+            doc.roundedRect(leftMargin, y, rightMargin - leftMargin, 35, 3, 3, 'F');
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(12);
+            doc.setFont(undefined, 'bold');
+            doc.text('ZUSAMMENFASSUNG', leftMargin + 5, y + 8);
+            doc.setFontSize(10);
+            doc.setFont(undefined, 'normal');
+            doc.text(`EBIT: ${formatNumber(ebit)} N$`, leftMargin + 5, y + 16);
+            doc.text(`Produktivitätsindex: ${productivityIndex.toFixed(1)} (${prodRating})`, leftMargin + 5, y + 23);
+            doc.setFontSize(14);
+            doc.setFont(undefined, 'bold');
+            doc.text(`Gesamtbonus: ${formatNumber(totalBonus)} N$`, leftMargin + 5, y + 31);
+
+            y += 45;
+
+            // ========== SECTION 1: HERDENKENNZAHLEN ==========
+            doc.setFillColor(240, 240, 240);
+            doc.rect(leftMargin, y, rightMargin - leftMargin, 8, 'F');
+            doc.setTextColor(31, 78, 120);
+            doc.setFontSize(13);
+            doc.setFont(undefined, 'bold');
+            doc.text('1. HERDENKENNZAHLEN', leftMargin + 3, y + 6);
+            y += 12;
+
+            doc.setFontSize(10);
+            doc.setTextColor(0, 0, 0);
+            doc.setFont(undefined, 'normal');
+
+            // Table
+            const herdData = [
+                ['Herdengröße', `${formatNumber(herdSize)} Tiere`],
+                ['Verkaufsrate', `${salesRate}%`],
+                ['Verkaufte Tiere', `${formatNumber(soldAnimals)} Tiere`],
+                ['Ø Schlachtgewicht', `${formatNumber(slaughterWeight)} kg/Tier`],
+                ['Total Schlachtgewicht', `${formatNumber(totalWeight)} kg`],
+                ['Preis pro kg', `${formatNumber(pricePerKg)} N$`]
+            ];
+
+            herdData.forEach((row, index) => {
+                if (index % 2 === 0) {
+                    doc.setFillColor(250, 250, 250);
+                    doc.rect(leftMargin, y, 180, 6, 'F');
+                }
+                doc.text(row[0], leftMargin + 3, y + 4.5);
+                doc.setFont(undefined, 'bold');
+                doc.text(row[1], rightMargin - 3, y + 4.5, { align: 'right' });
+                doc.setFont(undefined, 'normal');
+                y += 6;
+            });
+
+            y += 8;
+
+            // ========== SECTION 2: EBIT BERECHNUNG ==========
+            doc.setFillColor(240, 240, 240);
+            doc.rect(leftMargin, y, rightMargin - leftMargin, 8, 'F');
+            doc.setTextColor(31, 78, 120);
+            doc.setFontSize(13);
+            doc.setFont(undefined, 'bold');
+            doc.text('2. EBIT BERECHNUNG', leftMargin + 3, y + 6);
+            y += 12;
+
+            doc.setFontSize(10);
+            doc.setTextColor(0, 0, 0);
+
+            // Einnahmen
+            doc.setFont(undefined, 'bold');
+            doc.text('Einnahmen:', leftMargin + 3, y);
+            y += 6;
+            doc.setFont(undefined, 'normal');
+
+            const revenueData = [
+                ['  Viehverkauf', formatNumber(cattleRevenue)],
+                ['  Jagd', formatNumber(huntingRevenue)],
+                ['  Pacht', formatNumber(rentRevenue)],
+                ['  Sonstige', formatNumber(otherRevenue)]
+            ];
+
+            revenueData.forEach((row) => {
+                doc.text(row[0], leftMargin + 3, y);
+                doc.text(`${row[1]} N$`, rightMargin - 3, y, { align: 'right' });
+                y += 5;
+            });
+
+            doc.setDrawColor(200, 200, 200);
+            doc.line(leftMargin, y, rightMargin, y);
+            y += 5;
+
+            doc.setFont(undefined, 'bold');
+            doc.text('Gesamteinnahmen', leftMargin + 3, y);
+            doc.text(`${formatNumber(totalRevenue)} N$`, rightMargin - 3, y, { align: 'right' });
+            y += 8;
+
+            // Kosten
+            doc.setFont(undefined, 'normal');
+            doc.text('Betriebskosten', leftMargin + 3, y);
+            doc.text(`${formatNumber(baseCosts)} N$`, rightMargin - 3, y, { align: 'right' });
+            y += 6;
+
+            // EBIT Highlight
+            doc.setFillColor(212, 237, 218);
+            doc.roundedRect(leftMargin, y, rightMargin - leftMargin, 12, 2, 2, 'F');
+            doc.setFontSize(12);
+            doc.setFont(undefined, 'bold');
+            doc.setTextColor(21, 87, 36);
+            doc.text('EBIT', leftMargin + 3, y + 8);
+            doc.text(`${formatNumber(ebit)} N$`, rightMargin - 3, y + 8, { align: 'right' });
+            y += 18;
+
+            // ========== SECTION 3: PRODUKTIVITÄTSINDEX ==========
+            doc.setFillColor(240, 240, 240);
+            doc.rect(leftMargin, y, rightMargin - leftMargin, 8, 'F');
+            doc.setTextColor(31, 78, 120);
+            doc.setFontSize(13);
+            doc.setFont(undefined, 'bold');
+            doc.text('3. PRODUKTIVITÄTSINDEX', leftMargin + 3, y + 6);
+            y += 12;
+
+            doc.setFillColor(255, 243, 224);
+            doc.roundedRect(leftMargin, y, rightMargin - leftMargin, 20, 2, 2, 'F');
+            doc.setFontSize(10);
+            doc.setTextColor(0, 0, 0);
+            doc.setFont(undefined, 'normal');
+            doc.text('Formel: (kg Schlachtgewicht ÷ Gesamtkosten) × 1.000', leftMargin + 3, y + 6);
+            doc.text(`Berechnung: (${formatNumber(totalWeight)} ÷ ${formatNumber(baseCosts)}) × 1.000`, leftMargin + 3, y + 12);
+            doc.setFont(undefined, 'bold');
+            doc.setFontSize(11);
+            doc.text(`Index: ${productivityIndex.toFixed(1)}`, leftMargin + 3, y + 18);
+            doc.text(`Bewertung: ${prodRating}`, leftMargin + 60, y + 18);
+            doc.text(`Faktor: ${prodFactor.toFixed(1)}×`, rightMargin - 30, y + 18);
+            y += 26;
+
+            // ========== SECTION 4: BONUSBERECHNUNG ==========
+            doc.setFillColor(240, 240, 240);
+            doc.rect(leftMargin, y, rightMargin - leftMargin, 8, 'F');
+            doc.setTextColor(31, 78, 120);
+            doc.setFontSize(13);
+            doc.setFont(undefined, 'bold');
+            doc.text('4. BONUSBERECHNUNG (2-SÄULEN-MODELL)', leftMargin + 3, y + 6);
+            y += 14;
+
+            // EBIT Bonus Breakdown
+            doc.setFontSize(11);
+            doc.setTextColor(46, 117, 182);
+            doc.setFont(undefined, 'bold');
+            doc.text('Säule 1: EBIT Bonus (70% Gewichtung)', leftMargin + 3, y);
+            y += 6;
+
+            doc.setFontSize(9);
+            doc.setTextColor(0, 0, 0);
+            doc.setFont(undefined, 'bold');
+
+            // EBIT Breakdown Table header
+            doc.setFillColor(230, 240, 255);
+            doc.rect(leftMargin, y, 60, 6, 'F');
+            doc.rect(leftMargin + 60, y, 40, 6, 'F');
+            doc.rect(leftMargin + 100, y, 25, 6, 'F');
+            doc.rect(leftMargin + 125, y, 55, 6, 'F');
+            doc.text('Stufe', leftMargin + 2, y + 4);
+            doc.text('EBIT Betrag', leftMargin + 62, y + 4);
+            doc.text('Rate', leftMargin + 102, y + 4);
+            doc.text('Bonus', leftMargin + 127, y + 4);
+            y += 6;
+
+            doc.setFont(undefined, 'normal');
+            ebitBonusResult.breakdown.forEach((item, index) => {
+                if (index % 2 === 0) {
+                    doc.setFillColor(250, 250, 250);
+                    doc.rect(leftMargin, y, 180, 6, 'F');
+                }
+                doc.text(item.stufe, leftMargin + 2, y + 4);
+                doc.text(formatNumber(item.betrag) + ' N$', leftMargin + 62, y + 4);
+                doc.text(item.rate.toFixed(1) + '%', leftMargin + 102, y + 4);
+                doc.text(formatNumber(item.bonus) + ' N$', rightMargin - 3, y + 4, { align: 'right' });
+                y += 6;
+            });
+
+            doc.setFillColor(227, 242, 253);
+            doc.rect(leftMargin, y, 180, 7, 'F');
+            doc.setFont(undefined, 'bold');
+            doc.text('EBIT Bonus Total (ungew.)', leftMargin + 2, y + 5);
+            doc.text(formatNumber(ebitBonusRaw) + ' N$', rightMargin - 3, y + 5, { align: 'right' });
+            y += 7;
+
+            doc.setFillColor(100, 181, 246);
+            doc.setTextColor(255, 255, 255);
+            doc.rect(leftMargin, y, 180, 7, 'F');
+            doc.text('EBIT Bonus (70% gew.)', leftMargin + 2, y + 5);
+            doc.text(formatNumber(ebitBonusWeighted) + ' N$', rightMargin - 3, y + 5, { align: 'right' });
+            y += 12;
+
+            // Produktivitätsbonus
+            doc.setTextColor(46, 117, 182);
+            doc.setFontSize(11);
+            doc.text('Säule 2: Produktivitätsbonus (30% Gewichtung)', leftMargin + 3, y);
+            y += 6;
+
+            doc.setFontSize(9);
+            doc.setTextColor(0, 0, 0);
+            doc.setFont(undefined, 'normal');
+
+            const prodData = [
+                ['30% Basis (vom ungew. EBIT Bonus)', formatNumber(prodBonusBase) + ' N$'],
+                ['× Produktivitäts-Faktor', prodFactor.toFixed(1) + '×']
+            ];
+
+            prodData.forEach((row) => {
+                doc.text(row[0], leftMargin + 5, y);
+                doc.text(row[1], rightMargin - 3, y, { align: 'right' });
+                y += 5;
+            });
+
+            doc.setFillColor(100, 181, 246);
+            doc.setTextColor(255, 255, 255);
+            doc.rect(leftMargin, y, 180, 7, 'F');
+            doc.setFont(undefined, 'bold');
+            doc.text('Produktivitätsbonus (gew.)', leftMargin + 2, y + 5);
+            doc.text(formatNumber(prodBonus) + ' N$', rightMargin - 3, y + 5, { align: 'right' });
+            y += 12;
+
+            // Subtotal
+            const subtotal = ebitBonusWeighted + prodBonus;
+            doc.setTextColor(0, 0, 0);
+            doc.setFontSize(10);
+            doc.setFillColor(245, 245, 245);
+            doc.rect(leftMargin, y, 180, 7, 'F');
+            doc.setFont(undefined, 'bold');
+            doc.text('Basis-Bonus (Säule 1 + Säule 2)', leftMargin + 2, y + 5);
+            doc.text(formatNumber(subtotal) + ' N$', rightMargin - 3, y + 5, { align: 'right' });
+            y += 12;
+
+            // Skin in the Game
+            doc.setFontSize(11);
+            doc.setTextColor(46, 117, 182);
+            doc.setFont(undefined, 'bold');
+            doc.text('Skin in the Game Effekt', leftMargin + 3, y);
+            y += 6;
+
+            doc.setFontSize(9);
+            doc.setTextColor(0, 0, 0);
+            doc.setFont(undefined, 'normal');
+            doc.text('Investment:', leftMargin + 5, y);
+            doc.text(formatNumber(investment) + ' N$', rightMargin - 3, y, { align: 'right' });
+            y += 5;
+            doc.text('Multiplikator:', leftMargin + 5, y);
+            doc.text(multiplier.toFixed(2) + '×', rightMargin - 3, y, { align: 'right' });
+            y += 5;
+            doc.text('Basis-Bonus × Multiplikator:', leftMargin + 5, y);
+            const bonusAfterMult = subtotal * multiplier;
+            doc.text(formatNumber(bonusAfterMult) + ' N$', rightMargin - 3, y, { align: 'right' });
+            y += 5;
+            doc.text(`+ Zinsen (${(baseInterest * 100).toFixed(1)}%):`, leftMargin + 5, y);
+            doc.text(formatNumber(interestAmount) + ' N$', rightMargin - 3, y, { align: 'right' });
+            y += 8;
+
+            // ========== GESAMTBONUS HIGHLIGHT ==========
+            doc.setFillColor(102, 126, 234);
+            doc.roundedRect(leftMargin, y, rightMargin - leftMargin, 25, 3, 3, 'F');
             doc.setTextColor(255, 255, 255);
             doc.setFontSize(14);
             doc.setFont(undefined, 'bold');
-            doc.text('GESAMTBONUS', 20, y + 3);
-            doc.setFontSize(18);
-            doc.text(`${formatNumber(totalBonus)} N$`, 20, y + 12);
-            doc.setFontSize(12);
-            doc.text(`(${bonusPercentage}% vom Grundgehalt)`, 20, y + 19);
+            doc.text('GESAMTBONUS', leftMargin + 5, y + 8);
+            doc.setFontSize(20);
+            doc.text(`${formatNumber(totalBonus)} N$`, leftMargin + 5, y + 18);
+            doc.setFontSize(11);
+            doc.text(`${bonusPercentage}% vom Grundgehalt`, rightMargin - 5, y + 18, { align: 'right' });
             y += 30;
 
-            // Section 5: Auszahlungsstruktur
-            doc.setFontSize(16);
-            doc.setTextColor(46, 117, 182);
-            doc.text('Auszahlungsstruktur', 20, y);
-            y += 10;
+            // ========== SECTION 5: AUSZAHLUNGSSTRUKTUR ==========
+            doc.setFillColor(240, 240, 240);
+            doc.rect(leftMargin, y, rightMargin - leftMargin, 8, 'F');
+            doc.setTextColor(31, 78, 120);
+            doc.setFontSize(13);
+            doc.setFont(undefined, 'bold');
+            doc.text('5. AUSZAHLUNGSSTRUKTUR', leftMargin + 3, y + 6);
+            y += 12;
 
-            doc.setFontSize(11);
+            doc.setFontSize(10);
             doc.setTextColor(0, 0, 0);
             doc.setFont(undefined, 'normal');
-            doc.text(`Sofort-Auszahlung: ${document.getElementById('immediateAmount').textContent}`, 25, y);
-            y += 6;
-            doc.text(`Bonus Bank (3 Jahre): ${document.getElementById('bankAmount').textContent}`, 25, y);
+
+            // Payment boxes
+            const paymentBoxWidth = 85;
+            const gap = 10;
+
+            // Sofort-Auszahlung
+            doc.setFillColor(212, 237, 218);
+            doc.roundedRect(leftMargin, y, paymentBoxWidth, 20, 2, 2, 'F');
+            doc.setFont(undefined, 'bold');
+            doc.text('Sofort-Auszahlung', leftMargin + 3, y + 6);
+            doc.setFontSize(14);
+            doc.setTextColor(21, 87, 36);
+            doc.text(formatNumber(immediateAmount) + ' N$', leftMargin + 3, y + 14);
+            doc.setFontSize(9);
+            doc.setTextColor(0, 0, 0);
+            doc.setFont(undefined, 'normal');
+            doc.text(`(${(immediateRate * 100).toFixed(0)}%)`, leftMargin + 3, y + 19);
+
+            // Bonus Bank
+            doc.setFillColor(255, 243, 224);
+            doc.roundedRect(leftMargin + paymentBoxWidth + gap, y, paymentBoxWidth, 20, 2, 2, 'F');
+            doc.setFont(undefined, 'bold');
+            doc.text('Bonus Bank (3 Jahre)', leftMargin + paymentBoxWidth + gap + 3, y + 6);
+            doc.setFontSize(14);
+            doc.setTextColor(255, 111, 0);
+            doc.text(formatNumber(bankAmount) + ' N$', leftMargin + paymentBoxWidth + gap + 3, y + 14);
+            doc.setFontSize(9);
+            doc.setTextColor(0, 0, 0);
+            doc.setFont(undefined, 'normal');
+            doc.text(`(${((1 - immediateRate) * 100).toFixed(0)}%)`, leftMargin + paymentBoxWidth + gap + 3, y + 19);
+
+            y += 28;
+
+            // ========== FOOTER ==========
+            doc.setFontSize(8);
+            doc.setTextColor(150, 150, 150);
+            doc.text('Dieser Bericht wurde automatisch generiert durch das Farm Bonussystem Tool', pageWidth / 2, 285, { align: 'center' });
+            doc.text(`© ${new Date().getFullYear()} - Vertraulich - Nur für internen Gebrauch`, pageWidth / 2, 290, { align: 'center' });
 
             // Save PDF
             doc.save(`farm-bonus-bericht-${new Date().toISOString().split('T')[0]}.pdf`);
