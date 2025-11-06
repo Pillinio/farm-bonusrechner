@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Farm Bonussystem - Komplett - Namibia Rinderfarm</title>
+    <title>Bonussystem - Erichsfelde</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -550,8 +550,7 @@
         <div class="header">
             <img src="logo.png" alt="Farm Erichsfelde Logo" class="header-logo">
             <div class="header-content">
-                <h1>Farm Bonussystem Komplett</h1>
-                <p>Rinderfarm Namibia - Integriertes Bonus-Analyse System</p>
+                <h1>Bonussystem - Erichsfelde</h1>
             </div>
             <img src="logo.png" alt="Farm Erichsfelde Logo" class="header-logo" style="transform: scaleX(-1);">
             <button class="admin-toggle" id="adminToggle" onclick="toggleAdminMode()">🔒 Admin-Modus</button>
@@ -579,9 +578,7 @@
         <div id="ebit" class="tab-content active">
             <div class="main-content">
                 <div class="input-section">
-                    <h2>📥 EBIT Berechnung - Eingaben</h2>
-                    
-                    <h3>🐄 Herdenparameter</h3>
+                    <h2>🐄 Herdenparameter</h2>
                     <div class="input-group">
                         <label>Herdengröße: <span class="range-value" id="herdSizeValue">800</span>
                             <span class="tooltip">?
@@ -725,11 +722,6 @@
                             </tr>
                         </table>
                     </div>
-                    
-                    <div class="info-box">
-                        <strong>ℹ️ EBIT Berechnung:</strong> EBIT (Earnings Before Interest and Taxes) = Gesamteinnahmen - Betriebskosten.
-                        Dies ist die Grundlage für die Bonusberechnung im nächsten Tab.
-                    </div>
 
                     <div id="ebitCapControl" style="display: none;">
                         <!-- Wird dynamisch befüllt -->
@@ -809,8 +801,8 @@
                     <div class="info-box" style="background: #e3f2fd; border-left: 4px solid #2196f3;">
                         <strong>ℹ️ Richtwerte Namibia:</strong><br>
                         &lt; 15 = Kritisch (Verlustzone)<br>
-                        15-20 = Basis (Verbesserung nötig)<br>
-                        20-25 = Gut (Namibia-Standard)<br>
+                        15-20 = Basis (Potential für Verbesserung)<br>
+                        20-25 = Gut (Zielwert)<br>
                         &gt; 25 = Exzellent (Top 20%)
                     </div>
                     
@@ -839,7 +831,11 @@
                     <h2>💰 Bonus Ergebnisse</h2>
                     
                     <div class="result-box">
-                        <h4>💎 EBIT Bonus - Säule 1 (Progressive Berechnung)</h4>
+                        <h4>💎 EBIT Bonus - Säule 1
+                            <span class="tooltip">?
+                                <span class="tooltiptext">Progressive Berechnung: Der Bonus wird stufeweise berechnet, ähnlich wie Einkommenssteuer. Jede EBIT-Stufe wird mit ihrem eigenen Prozentsatz berechnet, dann mit 70% gewichtet.</span>
+                            </span>
+                        </h4>
                         <table>
                             <thead>
                                 <tr>
@@ -863,10 +859,6 @@
                                     <td style="text-align: right;"><strong id="ebitBonus">0 N$</strong></td>
                                 </tr>
                             </table>
-                        </div>
-                        <div class="info-box">
-                            <strong>ℹ️ Progressive Berechnung:</strong> Der Bonus wird stufeweise berechnet, ähnlich wie Einkommenssteuer. 
-                            Jede EBIT-Stufe wird mit ihrem eigenen Prozentsatz berechnet, dann mit 70% gewichtet.
                         </div>
                     </div>
                     
@@ -2205,10 +2197,10 @@
                 prodRating = "🔴 Kritisch (Verlustzone)";
             } else if (productivityIndex <= 20) {
                 prodBonusFactor = 1;
-                prodRating = "🟡 Basis (Verbesserung nötig)";
+                prodRating = "🟡 Basis (Potential für Verbesserung)";
             } else if (productivityIndex <= 25) {
                 prodBonusFactor = 1.5;
-                prodRating = "🟢 Gut (Namibia-Standard)";
+                prodRating = "🟢 Gut (Zielwert)";
             } else {
                 prodBonusFactor = 2;
                 prodRating = "⭐ Exzellent (Top 20%)";
