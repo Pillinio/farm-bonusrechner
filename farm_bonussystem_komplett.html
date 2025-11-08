@@ -795,11 +795,11 @@
                     </div>
                     
                     <div class="info-box" style="background: #e3f2fd; border-left: 4px solid #2196f3;">
-                        <strong>ℹ️ Richtwerte Namibia:</strong><br>
-                        &lt; 15 = Kritisch (Verlustzone)<br>
-                        15-20 = Basis (Potential für Verbesserung)<br>
-                        20-25 = Gut (Zielwert)<br>
-                        &gt; 25 = Exzellent (Top 20%)
+                        <strong>ℹ️ Richtwerte Farm:</strong><br>
+                        &lt; 15 = Kritisch (Verlustzone) - <strong>Faktor 0×</strong><br>
+                        15-20 = Ok (Potential für Verbesserung) - <strong>Faktor 1,0×</strong><br>
+                        20-25 = Gut (Zielwert) - <strong>Faktor 1,5×</strong><br>
+                        &gt; 25 = Exzellent (Top 20%) - <strong>Faktor 2,0×</strong>
                     </div>
                     
                     <h3>👥 Personal</h3>
@@ -861,18 +861,49 @@
                     <div class="result-box">
                         <h4>📊 Produktivitätsbonus - Säule 2</h4>
                         <div style="margin-bottom: 15px; padding: 15px; background: #fff3e0; border-radius: 5px;">
-                            <table style="width: 100%;">
+                            <div style="font-size: 0.9em; color: #6c757d; margin-bottom: 10px;">
+                                <strong>Rechenweg:</strong>
+                            </div>
+                            <table style="width: 100%; font-size: 0.95em;">
                                 <tr>
-                                    <td>Produktivitätsindex</td>
-                                    <td style="text-align: right;"><strong id="prodIndexDisplay">0.0</strong></td>
+                                    <td>kg Schlachtgewicht verkauft
+                                        <span class="tooltip" style="background: #ff9800; width: 16px; height: 16px; line-height: 16px; font-size: 10px;">?
+                                            <span class="tooltiptext" id="kgTooltip">Berechnung wird dynamisch eingefügt</span>
+                                        </span>
+                                    </td>
+                                    <td style="text-align: right;"><strong id="totalKgSoldCalc">0 kg</strong></td>
                                 </tr>
                                 <tr>
-                                    <td>Bewertung</td>
-                                    <td style="text-align: right;" id="prodRatingDisplay">-</td>
+                                    <td>÷ Gesamtkosten
+                                        <span class="tooltip" style="background: #ff9800; width: 16px; height: 16px; line-height: 16px; font-size: 10px;">?
+                                            <span class="tooltiptext">Betriebskosten der Farm</span>
+                                        </span>
+                                    </td>
+                                    <td style="text-align: right;"><strong id="totalCostsCalc">0 N$</strong></td>
                                 </tr>
                                 <tr>
-                                    <td>Bonus-Faktor</td>
-                                    <td style="text-align: right;"><strong id="prodFactorDisplay">0.0x</strong></td>
+                                    <td>× 1.000</td>
+                                    <td style="text-align: right;"><span style="color: #6c757d;">(Normierung)</span></td>
+                                </tr>
+                                <tr style="border-top: 2px solid #dee2e6;">
+                                    <td><strong>= Produktivitätsindex</strong>
+                                        <span class="tooltip" style="background: #ff9800; width: 16px; height: 16px; line-height: 16px; font-size: 10px;">?
+                                            <span class="tooltiptext" id="indexFormulaTooltip">Formel wird dynamisch eingefügt</span>
+                                        </span>
+                                    </td>
+                                    <td style="text-align: right;"><strong style="color: #ff6f00; font-size: 1.3em;" id="prodIndexDisplay">0.0</strong></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>→ Bewertung</strong>
+                                        <span class="tooltip" style="background: #ff9800; width: 16px; height: 16px; line-height: 16px; font-size: 10px;">?
+                                            <span class="tooltiptext" id="ratingTooltip">Bewertung basierend auf Richtwerten</span>
+                                        </span>
+                                    </td>
+                                    <td style="text-align: right;"><strong id="prodRatingDisplay">-</strong></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>→ Bonus-Faktor</strong></td>
+                                    <td style="text-align: right;"><strong style="color: #2e7d32; font-size: 1.2em;" id="prodFactorDisplay">0.0x</strong></td>
                                 </tr>
                             </table>
                         </div>
@@ -2183,19 +2214,19 @@
             let prodRating = "";
             if (totalCost <= 0) {
                 prodBonusFactor = 0;
-                prodRating = "⚠️ Keine Kosten - nicht berechenbar";
+                prodRating = "⚠️ Keine Kosten - nicht berechenbar - Faktor 0×";
             } else if (productivityIndex < 15) {
                 prodBonusFactor = 0;
-                prodRating = "🔴 Kritisch (Verlustzone)";
+                prodRating = "🔴 Kritisch (Verlustzone) - Faktor 0×";
             } else if (productivityIndex <= 20) {
                 prodBonusFactor = 1;
-                prodRating = "🟡 Basis (Potential für Verbesserung)";
+                prodRating = "🟡 Ok (Potential für Verbesserung) - Faktor 1,0×";
             } else if (productivityIndex <= 25) {
                 prodBonusFactor = 1.5;
-                prodRating = "🟢 Gut (Zielwert)";
+                prodRating = "🟢 Gut (Zielwert) - Faktor 1,5×";
             } else {
                 prodBonusFactor = 2;
-                prodRating = "⭐ Exzellent (Top 20%)";
+                prodRating = "⭐ Exzellent (Top 20%) - Faktor 2,0×";
             }
             
             // KORRIGIERTE BERECHNUNG:
@@ -2260,6 +2291,15 @@
             document.getElementById('totalCostsProd').textContent = formatNumber(totalCost) + ' N$';
             document.getElementById('prodIndexValue').textContent = productivityIndex.toFixed(1);
             document.getElementById('prodRating').textContent = prodRating;
+
+            // Update Produktivitätsindex Rechenweg (Bonus-Tab)
+            document.getElementById('totalKgSoldCalc').textContent = formatNumber(totalSlaughterWeight) + ' kg';
+            document.getElementById('totalCostsCalc').textContent = formatNumber(totalCost) + ' N$';
+
+            // Update dynamische Tooltips
+            document.getElementById('kgTooltip').textContent = `${formatNumber(soldAnimals)} Tiere × ${formatNumber(slaughterWeight)} kg = ${formatNumber(totalSlaughterWeight)} kg`;
+            document.getElementById('indexFormulaTooltip').textContent = `(${formatNumber(totalSlaughterWeight)} ÷ ${formatNumber(totalCost)}) × 1.000 = ${productivityIndex.toFixed(1)}`;
+            document.getElementById('ratingTooltip').textContent = `Index ${productivityIndex.toFixed(1)} liegt in Bereich: ${prodRating}`;
             
             // EBIT Breakdown Table
             let breakdownHTML = '';
