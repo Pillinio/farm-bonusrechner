@@ -787,9 +787,9 @@
                                 <div style="font-size: 2em; font-weight: bold; color: #ff6f00;" id="prodIndexValue">0.0</div>
                                 <div style="font-size: 0.85em; color: #6c757d; margin-top: 5px;">kg pro 1.000 N$ Kosten</div>
                             </div>
-                            <div style="margin-top: 10px; padding: 10px; background: #e8f5e9; border-radius: 5px; text-align: center;">
+                            <div style="margin-top: 10px; padding: 10px; background: #fff3e0; border-radius: 5px; text-align: center;">
                                 <div style="font-size: 0.9em; color: #6c757d;">Bewertung</div>
-                                <div style="font-size: 1.1em; font-weight: bold; color: #2e7d32;" id="prodRating">-</div>
+                                <div style="font-size: 1.1em; font-weight: bold; color: #ff6f00;" id="prodRating">-</div>
                             </div>
                         </div>
                     </div>
@@ -2258,7 +2258,11 @@
             document.getElementById('displayOther').textContent = formatNumber(otherRevenue) + ' N$';
             document.getElementById('totalRevenue').textContent = formatNumber(totalRevenue) + ' N$';
             document.getElementById('totalCost').textContent = '- ' + formatNumber(totalCost) + ' N$';
-            document.getElementById('ebitAmount').textContent = formatNumber(ebit) + ' N$';
+
+            // EBIT mit Farbcodierung (rot bei negativ)
+            const ebitElement = document.getElementById('ebitAmount');
+            ebitElement.textContent = formatNumber(ebit) + ' N$';
+            ebitElement.style.color = ebit < 0 ? '#dc3545' : '#28a745';
 
             // EBIT Cap Control
             const ebitCap = parseFloat(document.getElementById('ebitCap').value) * 1000000;
