@@ -526,7 +526,7 @@
             position: relative;
         }
 
-        .admin-only {
+        .admin-only-hide {
             display: none;
         }
 
@@ -845,7 +845,7 @@
                         </table>
                     </div>
 
-                    <div class="admin-only">
+                    <div class="admin-only-hide">
                         <h3>👥 Personal</h3>
                         <div class="input-group">
                             <label for="baseSalary">Grundgehalt Verwalter-Familie (N$)
@@ -946,7 +946,7 @@
                     <div class="highlight-box">
                         <h4>💰 GESAMTBONUS</h4>
                         <div class="total-bonus" id="totalBonus">0 N$</div>
-                        <div class="percentage admin-only" id="bonusPercentage">0% vom Grundgehalt</div>
+                        <div class="percentage admin-only-hide" id="bonusPercentage">0% vom Grundgehalt</div>
                         <hr style="margin: 15px 0; border: none; border-top: 1px solid rgba(255,255,255,0.3);">
                         <div class="result-grid">
                             <div>
@@ -1200,8 +1200,8 @@
             document.getElementById('adminToggle').textContent = '🔓 Admin-Modus aktiv';
             document.getElementById('adminToggle').classList.add('active');
 
-            // Admin-only Sektionen anzeigen
-            document.querySelectorAll('.admin-only').forEach(section => {
+            // Admin-only-hide Sektionen anzeigen (Personal, Auszahlung, Prozent)
+            document.querySelectorAll('.admin-only-hide').forEach(section => {
                 section.style.display = 'block';
             });
 
@@ -1217,8 +1217,8 @@
             document.getElementById('adminToggle').textContent = '🔒 Admin-Modus';
             document.getElementById('adminToggle').classList.remove('active');
 
-            // Admin-only Sektionen verstecken
-            document.querySelectorAll('.admin-only').forEach(section => {
+            // Admin-only-hide Sektionen verstecken (Personal, Auszahlung, Prozent)
+            document.querySelectorAll('.admin-only-hide').forEach(section => {
                 section.style.display = 'none';
             });
 
