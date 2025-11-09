@@ -563,7 +563,7 @@
         <div class="tabs">
             <button class="tab active" onclick="switchTab('ebit')">📊 EBIT Berechnung</button>
             <button class="tab" onclick="switchTab('bonus')">💰 Bonusberechnung</button>
-            <button class="tab" onclick="switchTab('overview')">🎯 Zielwert-Übersicht</button>
+            <button class="tab" onclick="switchTab('overview')">📊 Bonus Detailansicht</button>
             <button class="tab" onclick="switchTab('info')">ℹ️ Info & Hilfe</button>
         </div>
 
@@ -946,7 +946,7 @@
                     <div class="highlight-box">
                         <h4>💰 GESAMTBONUS</h4>
                         <div class="total-bonus" id="totalBonus">0 N$</div>
-                        <div class="percentage" id="bonusPercentage">0% vom Grundgehalt</div>
+                        <div class="percentage admin-only" id="bonusPercentage">0% vom Grundgehalt</div>
                         <hr style="margin: 15px 0; border: none; border-top: 1px solid rgba(255,255,255,0.3);">
                         <div class="result-grid">
                             <div>
@@ -967,10 +967,10 @@
             </div>
         </div>
         
-        <!-- TAB 3: ZIELWERT-ÜBERSICHT -->
+        <!-- TAB 3: BONUS DETAILANSICHT -->
         <div id="overview" class="tab-content">
             <div style="padding: 30px;">
-                <h2>🎯 Zielwert-Übersicht & Benchmarks</h2>
+                <h2>📊 Bonus Detailansicht</h2>
 
                 <div class="result-box" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none;">
                     <h4 style="color: white;">💡 Aktuelle Situation</h4>
