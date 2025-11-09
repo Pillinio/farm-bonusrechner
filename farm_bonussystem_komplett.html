@@ -745,7 +745,7 @@
                         <div style="font-size: 2em; font-weight: bold; color: #1976D2; text-align: center; padding: 10px;" id="ebitDisplayBonus">0 N$</div>
                     </div>
                     
-                    <h3>📊 EBIT Bonus-Staffelung (70% Gewichtung)</h3>
+                    <h3 id="ebitStaffelHeading">📊 EBIT Bonus-Staffelung (70% Gewichtung)</h3>
                     <div class="input-group admin-only">
                         <label>Stufe 1 (0-100k): <span class="range-value" id="tier1RateValue">8%</span></label>
                         <input type="range" id="tier1Rate" min="0" max="20" step="0.5" value="8" class="locked" oninput="updateValue('tier1Rate'); calculate()">
@@ -770,8 +770,20 @@
                         <label>EBIT Cap (Mio N$): <span class="range-value" id="ebitCapValue">4.0M</span></label>
                         <input type="range" id="ebitCap" min="1" max="10" step="0.5" value="4" class="locked" oninput="updateValue('ebitCap'); calculate()">
                     </div>
-                    
-                    <h3>📊 Produktivitätsindex (30% Gewichtung)</h3>
+
+                    <div class="input-group admin-only">
+                        <label>Gewichtung EBIT-Bonus: <span class="range-value" id="ebitWeightValue">70%</span>
+                            <span class="tooltip">?
+                                <span class="tooltiptext">Gewichtung zwischen EBIT-Bonus (Säule 1) und Produktivitätsbonus (Säule 2). Standard: 70% EBIT / 30% Produktivität.</span>
+                            </span>
+                        </label>
+                        <input type="range" id="ebitWeight" min="0" max="100" step="5" value="70" class="locked" oninput="updateValue('ebitWeight'); calculate()">
+                        <div style="text-align: center; margin-top: 10px; padding: 8px; background: #e3f2fd; border-radius: 5px; font-size: 0.9em;">
+                            <strong>Split:</strong> <span id="weightSplit">EBIT 70% / Produktivität 30%</span>
+                        </div>
+                    </div>
+
+                    <h3 id="prodIndexHeading">📊 Produktivitätsindex (30% Gewichtung)</h3>
                     
                     <div class="result-box" style="background: #fff3e0; border-left: 5px solid #ff9800;">
                         <h4>📈 Automatische Berechnung</h4>
@@ -884,7 +896,7 @@
                                     <td style="text-align: right;"><strong id="ebitBonusRaw">0 N$</strong></td>
                                 </tr>
                                 <tr style="background: #e3f2fd; font-weight: bold;">
-                                    <td><strong>EBIT Bonus (70% gewichtet)</strong></td>
+                                    <td><strong id="ebitBonusLabel">EBIT Bonus (70% gewichtet)</strong></td>
                                     <td style="text-align: right;"><strong id="ebitBonus">0 N$</strong></td>
                                 </tr>
                             </table>
@@ -916,7 +928,7 @@
                                     <td style="text-align: right;"><strong id="ebitBonusRawProd">0 N$</strong></td>
                                 </tr>
                                 <tr>
-                                    <td>30% Basis (bei Faktor 1,0)</td>
+                                    <td id="prodBasisLabel">30% Basis (bei Faktor 1,0)</td>
                                     <td style="text-align: right;" id="prodBonusBase">0 N$</td>
                                 </tr>
                                 <tr>
@@ -924,7 +936,7 @@
                                     <td style="text-align: right;" id="prodFactorCalc">× 0.0</td>
                                 </tr>
                                 <tr style="background: #e3f2fd; font-weight: bold;">
-                                    <td><strong>Produktivitätsbonus (gewichtet)</strong></td>
+                                    <td><strong id="prodBonusLabel">Produktivitätsbonus (gewichtet)</strong></td>
                                     <td style="text-align: right;"><strong id="prodBonus">0 N$</strong></td>
                                 </tr>
                             </table>
@@ -1268,6 +1280,7 @@
                 tier3Rate: document.getElementById('tier3Rate').value,
                 tier4Rate: document.getElementById('tier4Rate').value,
                 ebitCap: document.getElementById('ebitCap').value,
+                ebitWeight: document.getElementById('ebitWeight').value,
                 baseSalary: document.getElementById('baseSalary').value,
                 immediatePayment: document.getElementById('immediatePayment').value,
                 timestamp: new Date().toISOString()
@@ -1315,6 +1328,7 @@
                     tier3Rate: document.getElementById('tier3Rate').value,
                     tier4Rate: document.getElementById('tier4Rate').value,
                     ebitCap: document.getElementById('ebitCap').value,
+                    ebitWeight: document.getElementById('ebitWeight').value,
                     baseSalary: document.getElementById('baseSalary').value,
                     immediatePayment: document.getElementById('immediatePayment').value
                 }
@@ -1875,8 +1889,8 @@
             const input = document.getElementById(id);
             const value = parseFloat(input.value);
             const display = document.getElementById(id + 'Value');
-            
-            if (id.includes('Rate') || id === 'baseInterest' || id === 'immediatePayment') {
+
+            if (id.includes('Rate') || id === 'baseInterest' || id === 'immediatePayment' || id === 'ebitWeight') {
                 display.textContent = value + '%';
             } else if (id === 'multiplierMax') {
                 display.textContent = value.toFixed(1) + 'x';
@@ -1886,6 +1900,14 @@
                 display.textContent = formatNumber(value);
             } else {
                 display.textContent = formatNumber(value);
+            }
+
+            // Update weight split display and headings
+            if (id === 'ebitWeight') {
+                const prodWeightValue = 100 - value;
+                document.getElementById('weightSplit').textContent = `EBIT ${value.toFixed(0)}% / Produktivität ${prodWeightValue.toFixed(0)}%`;
+                document.getElementById('ebitStaffelHeading').textContent = `📊 EBIT Bonus-Staffelung (${value.toFixed(0)}% Gewichtung)`;
+                document.getElementById('prodIndexHeading').textContent = `📊 Produktivitätsindex (${prodWeightValue.toFixed(0)}% Gewichtung)`;
             }
         }
         
@@ -1985,10 +2007,15 @@
             // EBIT
             const ebit = totalRevenue - totalCost;
             
+            // Get dynamic weighting
+            const ebitWeightPercent = parseFloat(document.getElementById('ebitWeight').value);
+            const ebitWeight = ebitWeightPercent / 100;
+            const prodWeight = 1 - ebitWeight;
+
             // Calculate EBIT Bonus (PROGRESSIVE - KORRIGIERT!)
             const ebitBonusResult = calculateEbitBonus(ebit);
             const ebitBonusRaw = ebitBonusResult.total;
-            const ebitBonusTotal = ebitBonusRaw * 0.7; // 70% weighting
+            const ebitBonusTotal = ebitBonusRaw * ebitWeight; // Dynamic weighting
             
             // Calculate Productivity Index and Bonus (KORREKT nach PDF!)
             // Formel: (kg Schlachtgewicht verkauft ÷ Gesamtkosten) × 1000
@@ -2015,10 +2042,10 @@
                 prodRating = "💗 Exzellent - Faktor 2,0×";
             }
             
-            // KORRIGIERTE BERECHNUNG:
-            // Bei Faktor 1,0 → 30% vom ungewichteten EBIT-Bonus
+            // KORRIGIERTE BERECHNUNG mit dynamischer Gewichtung:
+            // Bei Faktor 1,0 → prodWeight% vom ungewichteten EBIT-Bonus
             // Bei anderen Faktoren → entsprechend skaliert
-            const prodBonusBase = ebitBonusRaw * 0.3; // 30% vom ungewichteten EBIT-Bonus
+            const prodBonusBase = ebitBonusRaw * prodWeight; // Dynamic weight vom ungewichteten EBIT-Bonus
             const prodBonusTotal = prodBonusBase * prodBonusFactor; // mal Faktor
             
             // Total Bonus (without Skin in the Game)
@@ -2098,15 +2125,18 @@
             
             document.getElementById('ebitBonusRaw').textContent = formatNumber(ebitBonusRaw) + ' N$';
             document.getElementById('ebitBonus').textContent = formatNumber(ebitBonusTotal) + ' N$';
-            
+            document.getElementById('ebitBonusLabel').textContent = `EBIT Bonus (${ebitWeightPercent.toFixed(0)}% gewichtet)`;
+
             // Update Produktivitätsbonus Anzeige (neue Struktur)
             document.getElementById('prodIndexDisplay').textContent = productivityIndex.toFixed(1);
             document.getElementById('prodRatingDisplay').textContent = prodRating;
             document.getElementById('prodFactorDisplay').textContent = prodBonusFactor.toFixed(1) + 'x';
             document.getElementById('ebitBonusRawProd').textContent = formatNumber(ebitBonusRaw) + ' N$';
             document.getElementById('prodBonusBase').textContent = formatNumber(prodBonusBase) + ' N$';
+            document.getElementById('prodBasisLabel').textContent = `${(prodWeight * 100).toFixed(0)}% Basis (bei Faktor 1,0)`;
             document.getElementById('prodFactorCalc').textContent = '× ' + prodBonusFactor.toFixed(1);
             document.getElementById('prodBonus').textContent = formatNumber(prodBonusTotal) + ' N$';
+            document.getElementById('prodBonusLabel').textContent = `Produktivitätsbonus (${(prodWeight * 100).toFixed(0)}% gewichtet)`;
 
             document.getElementById('totalBonus').textContent = formatNumber(totalBonus) + ' N$';
             document.getElementById('bonusPercentage').textContent = bonusPercentage.toFixed(1) + '% vom Grundgehalt';
@@ -2328,7 +2358,7 @@
             const loaded = loadFromLocalStorage();
 
             // Update all range value displays
-            ['tier1Rate', 'tier2Rate', 'tier3Rate', 'tier4Rate', 'ebitCap',
+            ['tier1Rate', 'tier2Rate', 'tier3Rate', 'tier4Rate', 'ebitCap', 'ebitWeight',
              'immediatePayment', 'herdSize', 'slaughterWeight', 'salesRate'].forEach(id => {
                 updateValue(id);
             });
