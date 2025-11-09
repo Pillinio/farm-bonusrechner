@@ -1057,20 +1057,27 @@
             <div style="padding: 30px; display: flex; flex-direction: column; gap: 20px;">
 
                 <div class="result-box" style="background: linear-gradient(135deg, #0f9d58 0%, #34a853 100%); color: #fff; border: none;">
-                    <h2 style="color: #fff; margin-bottom: 10px;">ℹ️ Info & Hilfe</h2>
-                    <p style="line-height: 1.6; margin: 0;">
-                        Das Farm-Bonussystem belohnt zwei Dinge: <strong>hohen EBIT</strong> und <strong>effizienten Ressourceneinsatz</strong>.
-                        Alles ist auf den Verwalter zugeschnitten – verständliche Hebel, transparente Wirkung und sofort sichtbarer Effekt in N$.
+                    <h2 style="color: #fff; margin-bottom: 15px; border-bottom: 2px solid rgba(255,255,255,0.3); padding-bottom: 10px;">ℹ️ INFO</h2>
+                    <h4 style="color: #fff; margin-bottom: 10px;">Warum dieses Bonussystem?</h4>
+                    <p style="line-height: 1.7; margin-bottom: 15px;">
+                        Die Führung einer Rinderfarm in Namibia erfordert Entscheidungen mit langfristigen Auswirkungen. Welche Tiere werden verkauft? Wie wird die Zuchtbasis entwickelt? Wie werden Kosten optimiert? Diese Fragen prägen den Erfolg der Farm über Jahre.
                     </p>
-                </div>
-
-                <div class="result-box">
-                    <h4>🎯 Sinn & Zweck in drei Sätzen</h4>
-                    <ul style="margin: 0; padding-left: 18px; line-height: 1.6;">
-                        <li>EBIT bildet 70 % des Bonus: Wer mehr erwirtschaftet, steigt stufenweise stärker auf.</li>
-                        <li>Der Produktivitätsindex (kg verkauftes Schlachtgewicht pro 1.000 N$ Kosten) steuert die restlichen 30 % via Faktor 0–2.</li>
-                        <li>Ausgezahlt werden standardmäßig 60 % sofort und 40 % in die Bonus Bank (3 Jahre Bindung) – beides per Slider anpassbar.</li>
-                    </ul>
+                    <p style="line-height: 1.7; margin-bottom: 15px;">
+                        Das Problem traditioneller Bonussysteme liegt im falschen Anreiz. Ein rein gewinnbasierter Bonus könnte dazu verleiten, durch massive Verkäufe kurzfristig hohe Einnahmen zu erzielen und dabei die Herdenstärke zu zerstören. Die Farm würde ausgeblutet statt aufgebaut.
+                    </p>
+                    <h4 style="color: #fff; margin-top: 20px; margin-bottom: 10px;">Die Lösung: Zwei Säulen plus Langfristsicherung</h4>
+                    <p style="line-height: 1.7; margin-bottom: 10px;">
+                        Das System kombiniert drei Komponenten mit klar definierten Zielen.
+                    </p>
+                    <p style="line-height: 1.7; margin-bottom: 10px;">
+                        <strong>Der EBIT-Bonus</strong> als erste Säule belohnt wirtschaftlichen Erfolg durch progressive Beteiligung am Betriebsergebnis. Eine Staffelung in vier Stufen honoriert höhere Gewinne stärker, während eine Deckelung extreme Boni verhindert.
+                    </p>
+                    <p style="line-height: 1.7; margin-bottom: 10px;">
+                        <strong>Der Produktivitätsbonus</strong> als zweite Säule misst die Effizienz der Bewirtschaftung. Der Index zeigt, wie viel Fleisch pro eingesetztem Kapital produziert wird. Ein Verwalter kann diesen Wert nicht durch bloßen Massenverkauf steigern, sondern nur durch optimiertes Management und nachhaltige Herdenführung. Diese Komponente verhindert Raubbau.
+                    </p>
+                    <p style="line-height: 1.7; margin: 0;">
+                        <strong>Die Bonus-Bank</strong> sichert langfristiges Denken ab und federt schwierige Jahre ab. Ein Teil jedes Jahresbonus wird für mehrere Jahre zurückgehalten. In guten Jahren baut sich ein Puffer auf, aus dem in schwierigen Jahren wie etwa einem Dürrejahr ausgezahlt werden kann, selbst wenn kein neuer Bonus entsteht. Wer nachhaltig wirtschaftet, wird auch in harten Zeiten honoriert. Wer jedoch durch kurzsichtige Entscheidungen die Farm schädigt, riskiert sowohl künftige Boni als auch die Auszahlung zurückgehaltener Beträge.
+                    </p>
                 </div>
 
                 <div class="result-box">
@@ -1099,8 +1106,10 @@
                     </table>
                 </div>
 
+                <h2 style="color: #2E75B6; margin-top: 30px; margin-bottom: 20px; padding-bottom: 10px; padding-top: 20px; border-top: 3px solid #dee2e6; border-bottom: 2px solid #2E75B6;">🛠️ HILFE</h2>
+
                 <div class="result-box">
-                    <h4>🛠️ So rechnest du Schritt für Schritt</h4>
+                    <h4>📋 So rechnest du Schritt für Schritt</h4>
                     <ol style="padding-left: 18px; line-height: 1.6; margin: 0;">
                         <li><strong>EBIT ermitteln:</strong> Einnahmen (Viehverkauf + Jagd + Pacht + Sonstige) minus fixe Betriebskosten.</li>
                         <li><strong>Staffel anwenden:</strong> Jeder EBIT-Bereich wird separat mit seiner Rate multipliziert. Summe daraus = ungewichteter EBIT-Bonus → × 70 % für Säule 1. Liegt der EBIT über dem Cap, wird nur der Cap-Betrag berücksichtigt.</li>
@@ -1742,17 +1751,38 @@
             const totalBonusText = document.getElementById('totalBonus').textContent;
             const immediateRate = parseFloat(document.getElementById('immediatePayment').value) / 100;
 
-            // Update current situation with color coding
-            const ebitElement = document.getElementById('overviewCurrentEbit');
-            ebitElement.textContent = formatNumber(ebit) + ' N$';
-            ebitElement.style.color = ebit < 0 ? '#dc3545' : '#28a745';
+            // Update current situation with background color coding
+            const ebitBox = document.getElementById('overviewCurrentEbit').parentElement;
+            ebitBox.innerHTML = `
+                <div style="opacity: 0.9; font-size: 0.9em;">Aktueller EBIT</div>
+                <div style="font-size: 1.8em; font-weight: bold;">${formatNumber(ebit)} N$</div>
+            `;
+            if (ebit < 0) {
+                ebitBox.style.background = '#f8d7da';
+                ebitBox.querySelector('div:last-child').style.color = '#721c24';
+            } else {
+                ebitBox.style.background = '#d4edda';
+                ebitBox.querySelector('div:last-child').style.color = '#155724';
+            }
 
-            const prodIndexElement = document.getElementById('overviewProdIndex');
-            prodIndexElement.textContent = productivityIndex.toFixed(1);
-            if (productivityIndex < 15) prodIndexElement.style.color = '#dc3545';
-            else if (productivityIndex <= 20) prodIndexElement.style.color = '#ffc107';
-            else if (productivityIndex <= 25) prodIndexElement.style.color = '#28a745';
-            else prodIndexElement.style.color = '#e91e63';
+            const prodBox = document.getElementById('overviewProdIndex').parentElement;
+            prodBox.innerHTML = `
+                <div style="opacity: 0.9; font-size: 0.9em;">Produktivitätsindex</div>
+                <div style="font-size: 1.8em; font-weight: bold;">${productivityIndex.toFixed(1)}</div>
+            `;
+            if (productivityIndex < 15) {
+                prodBox.style.background = '#f8d7da';
+                prodBox.querySelector('div:last-child').style.color = '#721c24';
+            } else if (productivityIndex <= 20) {
+                prodBox.style.background = '#fff3cd';
+                prodBox.querySelector('div:last-child').style.color = '#856404';
+            } else if (productivityIndex <= 25) {
+                prodBox.style.background = '#d4edda';
+                prodBox.querySelector('div:last-child').style.color = '#155724';
+            } else {
+                prodBox.style.background = '#fce4ec';
+                prodBox.querySelector('div:last-child').style.color = '#c2185b';
+            }
 
             document.getElementById('overviewCurrentBonus').textContent = totalBonusText;
 
