@@ -1448,7 +1448,8 @@
             return parseFloat(text.replace(/[^\d,.-]/g, '').replace(/\./g, '').replace(',', '.')) || 0;
         }
 
-        function exportToPDF() {
+        async function exportToPDF() {
+            alert('PDF-Export wird vorbereitet... Dies kann einen Moment dauern.');
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF('p', 'mm', 'a4');
 
