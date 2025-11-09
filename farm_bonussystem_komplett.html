@@ -526,6 +526,10 @@
             position: relative;
         }
 
+        .admin-only {
+            display: none;
+        }
+
         @media (max-width: 1024px) {
             .main-content {
                 grid-template-columns: 1fr;
@@ -828,25 +832,27 @@
                             </tbody>
                         </table>
                     </div>
-                    
-                    <h3>👥 Personal</h3>
-                    <div class="input-group">
-                        <label for="baseSalary">Grundgehalt Verwalter-Familie (N$)
-                            <span class="tooltip">?
-                                <span class="tooltiptext">Jährliches Festgehalt des Farm-Verwalters/Managers ohne Bonus.</span>
-                            </span>
-                        </label>
-                        <input type="text" id="baseSalary" value="700.000" oninput="formatInput(this); calculate()">
-                    </div>
 
-                    <h3>🏦 Auszahlungsstruktur</h3>
-                    <div class="input-group">
-                        <label>Sofort-Auszahlung: <span class="range-value" id="immediatePaymentValue">60%</span>
-                            <span class="tooltip">?
-                                <span class="tooltiptext">Prozentsatz des Bonus, der sofort ausgezahlt wird. Der Rest geht in die 3-Jahres Bonus Bank.</span>
-                            </span>
-                        </label>
-                        <input type="range" id="immediatePayment" min="0" max="100" step="5" value="60" oninput="updateValue('immediatePayment'); calculate()">
+                    <div class="admin-only">
+                        <h3>👥 Personal</h3>
+                        <div class="input-group">
+                            <label for="baseSalary">Grundgehalt Verwalter-Familie (N$)
+                                <span class="tooltip">?
+                                    <span class="tooltiptext">Jährliches Festgehalt des Farm-Verwalters/Managers ohne Bonus.</span>
+                                </span>
+                            </label>
+                            <input type="text" id="baseSalary" value="700.000" oninput="formatInput(this); calculate()">
+                        </div>
+
+                        <h3>🏦 Auszahlungsstruktur</h3>
+                        <div class="input-group">
+                            <label>Sofort-Auszahlung: <span class="range-value" id="immediatePaymentValue">60%</span>
+                                <span class="tooltip">?
+                                    <span class="tooltiptext">Prozentsatz des Bonus, der sofort ausgezahlt wird. Der Rest geht in die 3-Jahres Bonus Bank.</span>
+                                </span>
+                            </label>
+                            <input type="range" id="immediatePayment" min="0" max="100" step="5" value="60" oninput="updateValue('immediatePayment'); calculate()">
+                        </div>
                     </div>
                 </div>
                 
@@ -1216,24 +1222,34 @@
             document.getElementById('adminToggle').textContent = '🔓 Admin-Modus aktiv';
             document.getElementById('adminToggle').classList.add('active');
 
+            // Admin-only Sektionen anzeigen
+            document.querySelectorAll('.admin-only').forEach(section => {
+                section.style.display = 'block';
+            });
+
             // Alle gesperrten Inputs freischalten
             document.querySelectorAll('.locked').forEach(input => {
                 input.classList.remove('locked');
             });
 
-            alert('✅ Admin-Modus aktiviert! Alle Parameter sind jetzt editierbar.');
+            alert('✅ Admin-Modus aktiviert! Alle Parameter sind jetzt sichtbar und editierbar.');
         }
 
         function disableAdminMode() {
             document.getElementById('adminToggle').textContent = '🔒 Admin-Modus';
             document.getElementById('adminToggle').classList.remove('active');
 
-            // Alle Admin-Inputs sperren
+            // Admin-only Sektionen verstecken
+            document.querySelectorAll('.admin-only').forEach(section => {
+                section.style.display = 'none';
+            });
+
+            // Alle gesperrten Range-Inputs wieder sperren
             document.querySelectorAll('.admin-only input[type="range"]').forEach(input => {
                 input.classList.add('locked');
             });
 
-            alert('🔒 Admin-Modus deaktiviert. Bonus-Parameter sind gesperrt.');
+            alert('🔒 Admin-Modus deaktiviert. Sensible Parameter sind versteckt.');
         }
 
         // ===== LocalStorage Functions =====
