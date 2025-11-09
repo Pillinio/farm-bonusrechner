@@ -991,106 +991,63 @@
                 </div>
 
                 <div class="result-box">
-                    <h4>🎯 EBIT Zielwerte & Bonus-Potenzial</h4>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Ziel</th>
-                                <th>EBIT benötigt</th>
-                                <th>EBIT Bonus (70%)</th>
-                                <th>Total Bonus (geschätzt)</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr id="target-entry">
-                                <td><strong>Einstieg Bonussystem</strong></td>
-                                <td id="targetEntry">100.000 N$</td>
-                                <td id="targetEntryBonus">8.000 N$</td>
-                                <td id="targetEntryTotal">~11.000 N$</td>
-                                <td id="targetEntryStatus">❌</td>
-                            </tr>
-                            <tr id="target-tier2">
-                                <td><strong>Tier 2 erreichen</strong></td>
-                                <td id="targetTier2">500.000 N$</td>
-                                <td id="targetTier2Bonus">56.000 N$</td>
-                                <td id="targetTier2Total">~80.000 N$</td>
-                                <td id="targetTier2Status">❌</td>
-                            </tr>
-                            <tr id="target-tier3">
-                                <td><strong>Tier 3 erreichen</strong></td>
-                                <td id="targetTier3">2.000.000 N$</td>
-                                <td id="targetTier3Bonus">281.000 N$</td>
-                                <td id="targetTier3Total">~400.000 N$</td>
-                                <td id="targetTier3Status">❌</td>
-                            </tr>
-                            <tr id="target-max">
-                                <td><strong>Maximum erreichen</strong></td>
-                                <td id="targetMax">4.000.000 N$</td>
-                                <td id="targetMaxBonus">681.000 N$</td>
-                                <td id="targetMaxTotal">~970.000 N$</td>
-                                <td id="targetMaxStatus">❌</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                    <div class="info-box">
-                        <strong>ℹ️ Hinweis:</strong> "Total Bonus" ist eine Schätzung basierend auf durchschnittlichem Produktivitätsindex (1,5× Faktor) und ohne Skin in the Game Investment.
-                    </div>
-                </div>
-
-                <div class="result-box">
-                    <h4>📊 Produktivitätsindex Ziele</h4>
+                    <h4>💎 Säule 1: EBIT Bonus - Progressive Berechnung</h4>
                     <table>
                         <thead>
                             <tr>
                                 <th>Stufe</th>
+                                <th>Bereich</th>
+                                <th>Rate</th>
+                                <th>Dein EBIT in Stufe</th>
+                                <th>Bonus aus Stufe</th>
+                                <th>% ausgeschöpft</th>
+                            </tr>
+                        </thead>
+                        <tbody id="progressiveBreakdown">
+                            <!-- Wird dynamisch befüllt -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="result-box">
+                    <h4>📊 Säule 2: Produktivitätsindex - Kategorie-Einteilung</h4>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Kategorie</th>
                                 <th>Index-Bereich</th>
-                                <th>Bonus-Faktor</th>
-                                <th>Benötigt bei aktuellen Kosten</th>
+                                <th>Faktor</th>
+                                <th>Dein Wert</th>
                                 <th>Status</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            <tr id="prod-critical">
-                                <td>🔴 Kritisch</td>
-                                <td>&lt; 15</td>
-                                <td>0× (Kein Produktivitätsbonus)</td>
-                                <td id="prodCritical">-</td>
-                                <td id="prodCriticalStatus">-</td>
-                            </tr>
-                            <tr id="prod-basis">
-                                <td>🟡 Basis</td>
-                                <td>15 - 20</td>
-                                <td>1× (30% Basis-Produktivitätsbonus)</td>
-                                <td id="prodBasis">-</td>
-                                <td id="prodBasisStatus">-</td>
-                            </tr>
-                            <tr id="prod-good">
-                                <td>🟢 Gut</td>
-                                <td>20 - 25</td>
-                                <td>1,5× (45% vom EBIT-Bonus)</td>
-                                <td id="prodGood">-</td>
-                                <td id="prodGoodStatus">-</td>
-                            </tr>
-                            <tr id="prod-excellent">
-                                <td>⭐ Exzellent</td>
-                                <td>&gt; 25</td>
-                                <td>2× (60% vom EBIT-Bonus)</td>
-                                <td id="prodExcellent">-</td>
-                                <td id="prodExcellentStatus">-</td>
-                            </tr>
+                        <tbody id="prodCategoryBreakdown">
+                            <!-- Wird dynamisch befüllt -->
                         </tbody>
                     </table>
-                    <div class="info-box">
-                        <strong>💡 Tipp:</strong> Um den Index zu verbessern: Verkaufsgewicht erhöhen (mehr/schwerere Tiere verkaufen) oder Kosten senken.
+                    <div id="prodIndexExplanation" style="margin-top: 15px; padding: 15px; background: #fff3e0; border-radius: 8px;">
+                        <!-- Wird dynamisch befüllt -->
                     </div>
                 </div>
 
                 <div class="result-box">
-                    <h4>🚀 Handlungsempfehlungen</h4>
-                    <div id="recommendations" style="padding: 15px;">
-                        <!-- Wird dynamisch befüllt -->
-                    </div>
+                    <h4>💰 Auszahlungsstruktur</h4>
+                    <table>
+                        <tbody>
+                            <tr style="background: #e3f2fd; font-weight: bold; font-size: 1.1em;">
+                                <td><strong>Gesamtbonus</strong></td>
+                                <td style="text-align: right;"><strong id="overviewTotalBonus">0 N$</strong></td>
+                            </tr>
+                            <tr style="background: #e8f5e9;">
+                                <td>→ Sofort-Auszahlung (<span id="overviewImmediatePercent">60</span>%)</td>
+                                <td style="text-align: right;"><strong id="overviewImmediate">0 N$</strong></td>
+                            </tr>
+                            <tr style="background: #fff3e0;">
+                                <td>→ Bonus Bank (<span id="overviewBankPercent">40</span>%) - 3 Jahre Sperrfrist</td>
+                                <td style="text-align: right;"><strong id="overviewBank">0 N$</strong></td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
@@ -1766,98 +1723,129 @@
         }
 
         function updateOverview() {
-            // Get current calculated values from the last calculation
+            // Get current calculated values
             const herdSize = parseFloat(document.getElementById('herdSize').value);
             const slaughterWeight = parseFloat(document.getElementById('slaughterWeight').value);
             const salesRate = parseFloat(document.getElementById('salesRate').value) / 100;
-            const pricePerKg = parseFloat(document.getElementById('pricePerKg').value);
             const soldAnimals = Math.round(herdSize * salesRate);
             const totalSlaughterWeight = soldAnimals * slaughterWeight;
-            const cattleRevenue = totalSlaughterWeight * pricePerKg;
             const huntingRevenue = parseInput(document.getElementById('huntingRevenue'));
             const rentRevenue = parseInput(document.getElementById('rentRevenue'));
             const otherRevenue = parseInput(document.getElementById('otherRevenue'));
+            const pricePerKg = parseFloat(document.getElementById('pricePerKg').value);
+            const cattleRevenue = totalSlaughterWeight * pricePerKg;
             const baseCosts = parseInput(document.getElementById('baseCosts'));
             const totalRevenue = cattleRevenue + huntingRevenue + rentRevenue + otherRevenue;
             const ebit = totalRevenue - baseCosts;
             const productivityIndex = (baseCosts > 0) ? (totalSlaughterWeight / baseCosts) * 1000 : 0;
+            const ebitWeightPercent = parseFloat(document.getElementById('ebitWeight').value);
             const totalBonusText = document.getElementById('totalBonus').textContent;
+            const immediateRate = parseFloat(document.getElementById('immediatePayment').value) / 100;
 
-            // Update current situation
-            document.getElementById('overviewCurrentEbit').textContent = formatNumber(ebit) + ' N$';
-            document.getElementById('overviewProdIndex').textContent = productivityIndex.toFixed(1);
+            // Update current situation with color coding
+            const ebitElement = document.getElementById('overviewCurrentEbit');
+            ebitElement.textContent = formatNumber(ebit) + ' N$';
+            ebitElement.style.color = ebit < 0 ? '#dc3545' : '#28a745';
+
+            const prodIndexElement = document.getElementById('overviewProdIndex');
+            prodIndexElement.textContent = productivityIndex.toFixed(1);
+            if (productivityIndex < 15) prodIndexElement.style.color = '#dc3545';
+            else if (productivityIndex <= 20) prodIndexElement.style.color = '#ffc107';
+            else if (productivityIndex <= 25) prodIndexElement.style.color = '#28a745';
+            else prodIndexElement.style.color = '#e91e63';
+
             document.getElementById('overviewCurrentBonus').textContent = totalBonusText;
 
-            // Calculate EBIT targets
-            const target100k = calculateEbitBonus(100000);
-            const target500k = calculateEbitBonus(500000);
-            const target2M = calculateEbitBonus(2000000);
-            const target4M = calculateEbitBonus(4000000);
+            // Progressive EBIT Breakdown
+            const ebitCap = parseFloat(document.getElementById('ebitCap').value) * 1000000;
+            const cappedEbit = Math.min(ebit, ebitCap);
+            const tier1Rate = parseFloat(document.getElementById('tier1Rate').value) / 100;
+            const tier2Rate = parseFloat(document.getElementById('tier2Rate').value) / 100;
+            const tier3Rate = parseFloat(document.getElementById('tier3Rate').value) / 100;
+            const tier4Rate = parseFloat(document.getElementById('tier4Rate').value) / 100;
 
-            // Update EBIT targets table
-            document.getElementById('targetEntry').textContent = formatNumber(100000) + ' N$';
-            document.getElementById('targetEntryBonus').textContent = formatNumber(target100k.total * 0.7) + ' N$';
-            document.getElementById('targetEntryTotal').textContent = '~' + formatNumber(target100k.total * 0.7 * 1.43) + ' N$';
-            document.getElementById('targetEntryStatus').textContent = ebit >= 100000 ? '✅' : '❌';
+            let progressiveHTML = '';
+            const tiers = [
+                { name: '1', max: 100000, rate: tier1Rate },
+                { name: '2', max: 400000, rate: tier2Rate, offset: 100000 },
+                { name: '3', max: 1500000, rate: tier3Rate, offset: 500000 },
+                { name: '4', max: Infinity, rate: tier4Rate, offset: 2000000 }
+            ];
 
-            document.getElementById('targetTier2').textContent = formatNumber(500000) + ' N$';
-            document.getElementById('targetTier2Bonus').textContent = formatNumber(target500k.total * 0.7) + ' N$';
-            document.getElementById('targetTier2Total').textContent = '~' + formatNumber(target500k.total * 0.7 * 1.43) + ' N$';
-            document.getElementById('targetTier2Status').textContent = ebit >= 500000 ? '✅' : '❌';
+            let cumulativeEbit = 0;
+            tiers.forEach((tier, index) => {
+                const tierStart = tier.offset || 0;
+                const tierSize = tier.max === Infinity ? ebitCap - tierStart : tier.max;
+                const yourEbitInTier = Math.max(0, Math.min(cappedEbit - tierStart, tierSize));
+                const bonusFromTier = yourEbitInTier * tier.rate;
+                const percentUsed = tierSize > 0 ? (yourEbitInTier / tierSize * 100) : 0;
 
-            document.getElementById('targetTier3').textContent = formatNumber(2000000) + ' N$';
-            document.getElementById('targetTier3Bonus').textContent = formatNumber(target2M.total * 0.7) + ' N$';
-            document.getElementById('targetTier3Total').textContent = '~' + formatNumber(target2M.total * 0.7 * 1.43) + ' N$';
-            document.getElementById('targetTier3Status').textContent = ebit >= 2000000 ? '✅' : '❌';
+                const tierMax = tier.max === Infinity ? ebitCap : tierStart + tierSize;
+                const tierLabel = tier.max === Infinity ? `${formatNumber(tierStart)} - ${formatNumber(ebitCap)} N$` :
+                                  `${formatNumber(tierStart)} - ${formatNumber(tierMax)} N$`;
 
-            document.getElementById('targetMax').textContent = formatNumber(4000000) + ' N$';
-            document.getElementById('targetMaxBonus').textContent = formatNumber(target4M.total * 0.7) + ' N$';
-            document.getElementById('targetMaxTotal').textContent = '~' + formatNumber(target4M.total * 0.7 * 1.43) + ' N$';
-            document.getElementById('targetMaxStatus').textContent = ebit >= 4000000 ? '✅' : '❌';
+                progressiveHTML += `
+                    <tr>
+                        <td><strong>${tier.name}</strong></td>
+                        <td>${tierLabel}</td>
+                        <td>${(tier.rate * 100).toFixed(1)}%</td>
+                        <td>${formatNumber(yourEbitInTier)} N$</td>
+                        <td><strong>${formatNumber(bonusFromTier)} N$</strong></td>
+                        <td>${percentUsed.toFixed(0)}%</td>
+                    </tr>
+                `;
+            });
+            document.getElementById('progressiveBreakdown').innerHTML = progressiveHTML;
 
-            // Calculate productivity targets
-            const kgFor15 = (15 * baseCosts) / 1000;
-            const kgFor20 = (20 * baseCosts) / 1000;
-            const kgFor25 = (25 * baseCosts) / 1000;
+            // Produktivitätsindex Kategorien
+            let prodHTML = '';
+            const categories = [
+                { name: '🔴 Kritisch', min: 0, max: 15, factor: 0, bg: '#ffebee' },
+                { name: '🟡 Ok', min: 15, max: 20, factor: 1.0, bg: '#fff9c4' },
+                { name: '🟢 Gut', min: 20, max: 25, factor: 1.5, bg: '#e8f5e9' },
+                { name: '💗 Exzellent', min: 25, max: 999, factor: 2.0, bg: '#fce4ec' }
+            ];
 
-            document.getElementById('prodCritical').textContent = '< ' + formatNumber(kgFor15) + ' kg';
-            document.getElementById('prodCriticalStatus').textContent = productivityIndex < 15 ? '⬅️ Aktuell' : '';
+            let currentCategory = '';
+            categories.forEach(cat => {
+                const isInCategory = productivityIndex >= cat.min && productivityIndex < cat.max;
+                const rangeText = cat.max === 999 ? `> ${cat.min}` : `${cat.min} - ${cat.max}`;
+                const yourValue = isInCategory ? productivityIndex.toFixed(1) : '-';
+                const status = isInCategory ? '✅ Ja' : '';
 
-            document.getElementById('prodBasis').textContent = formatNumber(kgFor15) + ' - ' + formatNumber(kgFor20) + ' kg';
-            document.getElementById('prodBasisStatus').textContent = (productivityIndex >= 15 && productivityIndex <= 20) ? '⬅️ Aktuell' : '';
+                if (isInCategory) currentCategory = cat.name;
 
-            document.getElementById('prodGood').textContent = formatNumber(kgFor20) + ' - ' + formatNumber(kgFor25) + ' kg';
-            document.getElementById('prodGoodStatus').textContent = (productivityIndex > 20 && productivityIndex <= 25) ? '⬅️ Aktuell' : '';
+                prodHTML += `
+                    <tr style="background: ${cat.bg};">
+                        <td>${cat.name}</td>
+                        <td>${rangeText}</td>
+                        <td><strong>Faktor ${cat.factor.toFixed(1)}×</strong></td>
+                        <td>${yourValue}</td>
+                        <td><strong>${status}</strong></td>
+                    </tr>
+                `;
+            });
+            document.getElementById('prodCategoryBreakdown').innerHTML = prodHTML;
 
-            document.getElementById('prodExcellent').textContent = '> ' + formatNumber(kgFor25) + ' kg';
-            document.getElementById('prodExcellentStatus').textContent = productivityIndex > 25 ? '⬅️ Aktuell' : '';
-
-            // Generate recommendations
-            let recommendations = '';
-
-            if (ebit < 100000) {
-                recommendations += '<div class="warning" style="margin-bottom: 15px;"><strong>🎯 Priorität 1:</strong> EBIT steigern auf mindestens 100.000 N$ um ins Bonussystem einzusteigen.</div>';
-            } else if (ebit < 500000) {
-                recommendations += '<div class="info-box" style="margin-bottom: 15px;"><strong>🎯 Nächstes Ziel:</strong> EBIT auf 500.000 N$ erhöhen für Tier 2 (12% Rate). Noch ' + formatNumber(500000 - ebit) + ' N$ benötigt.</div>';
-            } else if (ebit < 2000000) {
-                recommendations += '<div class="info-box" style="margin-bottom: 15px;"><strong>🎯 Nächstes Ziel:</strong> EBIT auf 2.000.000 N$ erhöhen für Tier 3 (15% Rate). Noch ' + formatNumber(2000000 - ebit) + ' N$ benötigt.</div>';
-            } else if (ebit < 4000000) {
-                recommendations += '<div class="info-box" style="margin-bottom: 15px;"><strong>🎯 Nächstes Ziel:</strong> EBIT auf 4.000.000 N$ erhöhen für maximalen Bonus. Noch ' + formatNumber(4000000 - ebit) + ' N$ benötigt.</div>';
-            } else {
-                recommendations += '<div class="success" style="margin-bottom: 15px;"><strong>✅ Exzellent!</strong> EBIT-Cap erreicht - maximaler EBIT-Bonus wird ausgezahlt.</div>';
+            // Produktivitätsindex Erklärung
+            let explanation = `<strong>Warum in dieser Kategorie:</strong><br>`;
+            explanation += `• Dein Index: ${productivityIndex.toFixed(1)}<br>`;
+            explanation += `• Berechnung: (${formatNumber(totalSlaughterWeight)} kg ÷ ${formatNumber(baseCosts)} N$) × 1.000<br>`;
+            if (currentCategory) {
+                explanation += `• → ${currentCategory}`;
             }
+            document.getElementById('prodIndexExplanation').innerHTML = explanation;
 
-            if (productivityIndex < 15) {
-                recommendations += '<div class="warning" style="margin-bottom: 15px;"><strong>⚠️ Kritisch:</strong> Produktivitätsindex zu niedrig (kein Produktivitätsbonus). Mindestens ' + formatNumber(kgFor15 - totalSlaughterWeight) + ' kg mehr verkaufen oder Kosten senken.</div>';
-            } else if (productivityIndex <= 20) {
-                recommendations += '<div class="info-box" style="margin-bottom: 15px;"><strong>💡 Verbesserung möglich:</strong> Produktivitätsindex auf >20 erhöhen für 1,5× Faktor. Noch ' + formatNumber(kgFor20 - totalSlaughterWeight) + ' kg verkauftes Gewicht benötigt.</div>';
-            } else if (productivityIndex <= 25) {
-                recommendations += '<div class="info-box" style="margin-bottom: 15px;"><strong>💡 Fast Top:</strong> Produktivitätsindex auf >25 erhöhen für 2× Faktor (Exzellent). Noch ' + formatNumber(kgFor25 - totalSlaughterWeight) + ' kg verkauftes Gewicht benötigt.</div>';
-            } else {
-                recommendations += '<div class="success" style="margin-bottom: 15px;"><strong>⭐ Exzellent!</strong> Produktivitätsindex im Top-Bereich - maximaler Produktivitätsbonus (2× Faktor).</div>';
-            }
+            // Auszahlungsstruktur
+            const totalBonus = parseFloat(totalBonusText.replace(/[^\d]/g, '')) || 0;
+            const immediateAmount = totalBonus * immediateRate;
+            const bankAmount = totalBonus * (1 - immediateRate);
 
-            document.getElementById('recommendations').innerHTML = recommendations;
+            document.getElementById('overviewTotalBonus').textContent = formatNumber(totalBonus) + ' N$';
+            document.getElementById('overviewImmediatePercent').textContent = (immediateRate * 100).toFixed(0);
+            document.getElementById('overviewImmediate').textContent = formatNumber(immediateAmount) + ' N$';
+            document.getElementById('overviewBankPercent').textContent = ((1 - immediateRate) * 100).toFixed(0);
+            document.getElementById('overviewBank').textContent = formatNumber(bankAmount) + ' N$';
         }
         
         function formatNumber(num) {
