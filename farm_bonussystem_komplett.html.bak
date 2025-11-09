@@ -1191,6 +1191,331 @@
     </div>
 
     <script>
+        <!-- Alte Sektionen entfernt - Info-Tab ist jetzt kompakt -->
+                <div class="result-box">
+                    <h4>🏗️ Säule 1: EBIT Bonus (70% Gewichtung)</h4>
+
+                    <div style="background: #e3f2fd; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                        <strong>📌 Kernkonzept:</strong><br>
+                        Je höher der Gewinn (EBIT), desto höher der Bonus - aber nicht linear, sondern progressiv.
+                        Höhere EBIT-Bereiche werden stärker belohnt, um Spitzenleistung zu incentivieren.
+                    </div>
+
+                    <p style="margin-bottom: 10px;"><strong>EBIT-Berechnung:</strong></p>
+                    <div style="background: #f5f5f5; padding: 10px; border-left: 4px solid #4472C4; margin-bottom: 15px;">
+                        EBIT = Gesamteinnahmen - Betriebskosten<br>
+                        <span style="font-size: 0.9em; color: #6c757d;">
+                        (Einnahmen = Viehverkauf + Jagd + Pacht + Sonstige)
+                        </span>
+                    </div>
+
+                    <p style="margin-bottom: 10px;"><strong>Progressive Staffelung:</strong></p>
+                    <table style="margin-bottom: 15px;">
+                        <thead>
+                            <tr><th>Stufe</th><th>EBIT Bereich</th><th>Bonus-Rate</th><th>Max. aus Stufe</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>1</strong></td>
+                                <td>0 - 100.000 N$</td>
+                                <td>8%</td>
+                                <td>8.000 N$</td>
+                            </tr>
+                            <tr>
+                                <td><strong>2</strong></td>
+                                <td>100.001 - 500.000 N$</td>
+                                <td>12%</td>
+                                <td>48.000 N$</td>
+                            </tr>
+                            <tr>
+                                <td><strong>3</strong></td>
+                                <td>500.001 - 2.000.000 N$</td>
+                                <td>15%</td>
+                                <td>225.000 N$</td>
+                            </tr>
+                            <tr style="background: #fff3cd;">
+                                <td><strong>4</strong></td>
+                                <td>über 2.000.000 N$</td>
+                                <td>20%</td>
+                                <td>unbegrenzt*</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <p style="font-size: 0.9em; color: #6c757d; margin-bottom: 15px;">* bis zum eingestellten EBIT-Cap (Standard: 4 Mio N$)</p>
+
+                    <div style="background: #fff3cd; padding: 15px; border-radius: 8px; border-left: 4px solid #ffc107;">
+                        <strong>💡 Rechenbeispiel:</strong> EBIT = 1.500.000 N$<br><br>
+                        <table style="width: 100%; font-size: 0.95em;">
+                            <tr>
+                                <td>Stufe 1:</td>
+                                <td style="text-align: right;">100.000 × 8%</td>
+                                <td style="text-align: right;"><strong>= 8.000 N$</strong></td>
+                            </tr>
+                            <tr>
+                                <td>Stufe 2:</td>
+                                <td style="text-align: right;">400.000 × 12%</td>
+                                <td style="text-align: right;"><strong>= 48.000 N$</strong></td>
+                            </tr>
+                            <tr>
+                                <td>Stufe 3:</td>
+                                <td style="text-align: right;">1.000.000 × 15%</td>
+                                <td style="text-align: right;"><strong>= 150.000 N$</strong></td>
+                            </tr>
+                            <tr style="border-top: 2px solid #dee2e6;">
+                                <td colspan="2"><strong>Summe (ungewichtet):</strong></td>
+                                <td style="text-align: right;"><strong>206.000 N$</strong></td>
+                            </tr>
+                            <tr style="background: #d4edda;">
+                                <td colspan="2"><strong>× 70% Gewichtung:</strong></td>
+                                <td style="text-align: right;"><strong>144.200 N$</strong></td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Säule 2: Produktivität -->
+                <div class="result-box">
+                    <h4>📊 Säule 2: Produktivitätsbonus (30% Gewichtung)</h4>
+
+                    <div style="background: #e3f2fd; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                        <strong>📌 Kernkonzept:</strong><br>
+                        EBIT allein sagt nichts über Effizienz aus. Der Produktivitätsindex misst, wie gut die Farm
+                        ihre Ressourcen (Kosten) in Output (Schlachtgewicht) verwandelt. Dies verhindert ineffizientes Wirtschaften.
+                    </div>
+
+                    <p style="margin-bottom: 10px;"><strong>Formel:</strong></p>
+                    <div style="background: #f5f5f5; padding: 10px; border-left: 4px solid #ff9800; margin-bottom: 15px;">
+                        Produktivitätsindex = (kg Schlachtgewicht verkauft ÷ Gesamtkosten) × 1.000<br>
+                        <span style="font-size: 0.9em; color: #6c757d;">
+                        Ergebnis: kg pro 1.000 N$ Kosten
+                        </span>
+                    </div>
+
+                    <p style="margin-bottom: 10px;"><strong>Bewertungs-Stufen (Namibia Richtwerte):</strong></p>
+                    <table style="margin-bottom: 15px;">
+                        <thead>
+                            <tr><th>Index-Bereich</th><th>Bewertung</th><th>Bedeutung</th><th>Faktor</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr style="background: #ffebee;">
+                                <td>&lt; 15</td>
+                                <td>🔴 Kritisch</td>
+                                <td>Verlustzone - zu ineffizient</td>
+                                <td><strong>0×</strong></td>
+                            </tr>
+                            <tr style="background: #fff9c4;">
+                                <td>15 - 20</td>
+                                <td>🟡 Basis</td>
+                                <td>Verbesserungsbedarf</td>
+                                <td><strong>1,0×</strong></td>
+                            </tr>
+                            <tr style="background: #e8f5e9;">
+                                <td>20 - 25</td>
+                                <td>🟢 Gut</td>
+                                <td>Namibia-Standard erreicht</td>
+                                <td><strong>1,5×</strong></td>
+                            </tr>
+                            <tr style="background: #e1f5fe;">
+                                <td>&gt; 25</td>
+                                <td>⭐ Exzellent</td>
+                                <td>Top 20% - Benchmark</td>
+                                <td><strong>2,0×</strong></td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <p style="margin-bottom: 10px;"><strong>Bonus-Berechnung:</strong></p>
+                    <div style="background: #f5f5f5; padding: 10px; border-left: 4px solid #ff9800; margin-bottom: 15px;">
+                        1. Basis = 30% vom ungewichteten EBIT-Bonus<br>
+                        2. Multipliziert mit dem Index-Faktor (0× bis 2×)<br>
+                        3. Ergebnis = Gewichteter Produktivitätsbonus
+                    </div>
+
+                    <div style="background: #fff3cd; padding: 15px; border-radius: 8px; border-left: 4px solid #ffc107;">
+                        <strong>💡 Rechenbeispiel:</strong> Index = 23 (Gut), EBIT-Bonus ungew. = 206.000 N$<br><br>
+                        <table style="width: 100%; font-size: 0.95em;">
+                            <tr>
+                                <td>30% Basis:</td>
+                                <td style="text-align: right;">206.000 × 0,3</td>
+                                <td style="text-align: right;"><strong>= 61.800 N$</strong></td>
+                            </tr>
+                            <tr>
+                                <td>Index-Faktor:</td>
+                                <td style="text-align: right;">23 → "Gut"</td>
+                                <td style="text-align: right;"><strong>= 1,5×</strong></td>
+                            </tr>
+                            <tr style="background: #d4edda; border-top: 2px solid #dee2e6;">
+                                <td colspan="2"><strong>Produktivitätsbonus:</strong></td>
+                                <td style="text-align: right;"><strong>92.700 N$</strong></td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Auszahlungsstruktur -->
+                <div class="result-box">
+                    <h4>🏦 Auszahlungsstruktur</h4>
+
+                    <div style="background: #e3f2fd; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                        <strong>📌 Kernkonzept:</strong><br>
+                        Split zwischen sofortiger Auszahlung und langfristiger Bindung. Verhindert kurzfristiges Denken
+                        und stellt sicher, dass Manager nachhaltig handeln.
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                        <div style="background: #e8f5e9; padding: 15px; border-radius: 8px; border-left: 4px solid #28a745;">
+                            <strong>💵 Sofort-Auszahlung</strong><br>
+                            • Wird direkt ausgezahlt<br>
+                            • Sofort verfügbar<br>
+                            • Standard: 60%<br>
+                            • Liquidität für Manager
+                        </div>
+                        <div style="background: #fff3e0; padding: 15px; border-radius: 8px; border-left: 4px solid #ff9800;">
+                            <strong>🏦 Bonus Bank</strong><br>
+                            • 3 Jahre Sperrfrist<br>
+                            • Langfristige Bindung<br>
+                            • Standard: 40%<br>
+                            • Sichert nachhaltiges Handeln
+                        </div>
+                    </div>
+
+                    <p style="font-size: 0.9em; color: #6c757d;">
+                        <strong>Hinweis:</strong> Bei vorzeitigem Ausscheiden verfällt die Bonus Bank üblicherweise.
+                        Details im Arbeitsvertrag festgelegt.
+                    </p>
+                </div>
+
+                <!-- Vollständiges Beispiel -->
+                <div class="result-box" style="background: #f5f5f5; border-left: 5px solid #4472C4;">
+                    <h4>📝 Vollständiges Berechnungsbeispiel</h4>
+
+                    <p style="margin-bottom: 10px;"><strong>Ausgangslage:</strong></p>
+                    <ul style="margin-bottom: 15px; line-height: 1.8;">
+                        <li>EBIT: 1.500.000 N$</li>
+                        <li>Produktivitätsindex: 23 (Gut)</li>
+                        <li>Auszahlung: 60% sofort / 40% Bank</li>
+                    </ul>
+
+                    <table style="width: 100%; margin-bottom: 15px;">
+                        <tr style="background: #e3f2fd;">
+                            <td colspan="3"><strong>Schritt 1: EBIT Bonus (70%)</strong></td>
+                        </tr>
+                        <tr>
+                            <td>Progressive Berechnung</td>
+                            <td style="text-align: right;">siehe oben</td>
+                            <td style="text-align: right;"><strong>144.200 N$</strong></td>
+                        </tr>
+                        <tr style="background: #e3f2fd;">
+                            <td colspan="3"><strong>Schritt 2: Produktivitätsbonus (30%)</strong></td>
+                        </tr>
+                        <tr>
+                            <td>Index 23 → Faktor 1,5×</td>
+                            <td style="text-align: right;">61.800 × 1,5</td>
+                            <td style="text-align: right;"><strong>92.700 N$</strong></td>
+                        </tr>
+                        <tr style="background: #d4edda; font-size: 1.1em;">
+                            <td colspan="2"><strong>GESAMTBONUS:</strong></td>
+                            <td style="text-align: right;"><strong>236.900 N$</strong></td>
+                        </tr>
+                        <tr style="background: #e8f5e9;">
+                            <td colspan="3"><strong>Schritt 3: Auszahlung</strong></td>
+                        </tr>
+                        <tr>
+                            <td>Sofort (60%)</td>
+                            <td style="text-align: right;">236.900 × 0,6</td>
+                            <td style="text-align: right;"><strong>142.140 N$</strong></td>
+                        </tr>
+                        <tr>
+                            <td>Bonus Bank (40%)</td>
+                            <td style="text-align: right;">236.900 × 0,4</td>
+                            <td style="text-align: right;"><strong>94.760 N$</strong></td>
+                        </tr>
+                    </table>
+                </div>
+
+                <!-- Tool-Funktionen -->
+                <div class="result-box">
+                    <h4>💾 Tool-Funktionen erklärt</h4>
+
+                    <table>
+                        <thead>
+                            <tr><th style="width: 30%;">Funktion</th><th>Beschreibung</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>💾 Auto-Save</strong></td>
+                                <td>Speichert jede Eingabe automatisch im Browser (LocalStorage). Beim nächsten Öffnen werden die Werte wiederhergestellt.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>💾 JSON Export</strong></td>
+                                <td>Exportiert alle Parameter als JSON-Datei. Nutzen Sie dies für verschiedene Szenarien (z.B. "Konservativ", "Aggressiv", "Best Case").</td>
+                            </tr>
+                            <tr>
+                                <td><strong>📁 JSON Import</strong></td>
+                                <td>Lädt zuvor exportierte Parameter. Perfekt zum Vergleichen verschiedener Szenarien.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>📄 PDF Export</strong></td>
+                                <td>Erstellt einen professionellen, druckfertigen Bericht mit allen Berechnungen und Ergebnissen.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>🎯 Zielwert-Übersicht</strong></td>
+                                <td>Zeigt, welche EBIT/Produktivitäts-Ziele erreicht werden müssen für höhere Boni. Inkl. Handlungsempfehlungen.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- FAQ -->
+                <div class="result-box">
+                    <h4>❓ Häufig gestellte Fragen</h4>
+
+                    <div style="margin-bottom: 15px;">
+                        <strong>Warum progressive Staffelung statt fixer Prozentsatz?</strong><br>
+                        <span style="color: #6c757d;">
+                        → Progressive Staffelung belohnt Spitzenleistung überproportional, während bei schwacher Performance
+                        die Bonuskosten kontrolliert bleiben. Bei einem fixen Prozentsatz wären entweder niedrige EBITs
+                        zu teuer oder hohe EBITs zu wenig incentiviert.
+                        </span>
+                    </div>
+
+                    <div style="margin-bottom: 15px;">
+                        <strong>Warum 70% EBIT und nur 30% Produktivität?</strong><br>
+                        <span style="color: #6c757d;">
+                        → EBIT ist die Hauptkennzahl für Unternehmenserfolg. Produktivität ist wichtig für Nachhaltigkeit,
+                        aber sollte den Fokus auf Profitabilität nicht verwässern. 70/30 ist ein bewährtes Verhältnis.
+                        </span>
+                    </div>
+
+                    <div style="margin-bottom: 15px;">
+                        <strong>Was passiert bei Verlust (negativem EBIT)?</strong><br>
+                        <span style="color: #6c757d;">
+                        → Bei negativem EBIT wird kein Bonus ausgezahlt. Der Produktivitätsbonus entfällt ebenfalls,
+                        da er vom EBIT-Bonus abhängt. Nur die Zinsen auf das Investment werden gezahlt.
+                        </span>
+                    </div>
+
+                    <div style="margin-bottom: 15px;">
+                        <strong>Können die Parameter angepasst werden?</strong><br>
+                        <span style="color: #6c757d;">
+                        → Ja! Alle Slider und Werte sind editierbar. Ändern Sie Staffel-Sätze, EBIT-Cap,
+                        Multiplikator-Maximum etc. nach Bedarf. Die Berechnungen passen sich sofort an.
+                        </span>
+                    </div>
+
+                    <div>
+                        <strong>Sind meine Eingaben und Daten sicher?</strong><br>
+                        <span style="color: #6c757d;">
+                        → Absolut. Alle Daten bleiben lokal in Ihrem Browser (LocalStorage).
+                        Es findet keine Übertragung an Server statt. Nur Sie haben Zugriff auf Ihre Berechnungen.
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
         // ===== Admin Mode Management =====
         let isAdminMode = false;
         const ADMIN_PASSWORD = 'farm2025'; // Ändern Sie dieses Passwort!
