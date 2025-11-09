@@ -829,7 +829,7 @@
                         <div class="input-group">
                             <label>Gewichtung EBIT-Bonus: <span class="range-value" id="ebitWeightValue">70%</span>
                                 <span class="tooltip">?
-                                    <span class="tooltiptext">Gewichtung zwischen EBIT-Bonus (Säule 1) und Produktivitätsbonus (Säule 2). Standard: 70% EBIT / 30% Produktivität.</span>
+                                    <span class="tooltiptext">Bestimmt die Aufteilung des Bonus zwischen EBIT-Säule und Produktivitäts-Säule. Höherer EBIT-Anteil = Fokus auf Gewinn. Höherer Produktivitäts-Anteil = Fokus auf Effizienz.</span>
                                 </span>
                             </label>
                             <input type="range" id="ebitWeight" min="0" max="100" step="5" value="70" oninput="updateValue('ebitWeight'); calculate()">
@@ -930,7 +930,7 @@
                     <div class="result-box">
                         <h4>💎 EBIT Bonus - Säule 1
                             <span class="tooltip">?
-                                <span class="tooltiptext">Progressive Berechnung: Der Bonus wird stufeweise berechnet, ähnlich wie Einkommenssteuer. Jede EBIT-Stufe wird mit ihrem eigenen Prozentsatz berechnet, dann mit 70% gewichtet.</span>
+                                <span class="tooltiptext">Progressive Berechnung: Der Bonus wird stufeweise berechnet, ähnlich wie Einkommenssteuer. Jede EBIT-Stufe wird mit ihrem eigenen Prozentsatz berechnet, dann nach Säulengewichtung verrechnet.</span>
                             </span>
                         </h4>
                         <table>
@@ -1220,11 +1220,43 @@
                 </div>
 
                 <div class="result-box">
-                    <h4>🧾 Bedienhinweise & Tipps</h4>
+                    <h4>📖 Begriffserklärungen</h4>
+                    <table>
+                        <tbody>
+                            <tr><td style="width: 30%;"><strong>Progressiv</strong></td><td>Stufenweise Steigerung statt linearer Prozentsatz. Belohnt Spitzenleistung überproportional, hält Kosten bei schwacher Performance niedrig.</td></tr>
+                            <tr><td><strong>EBIT</strong></td><td>Earnings Before Interest and Taxes. Gewinn vor Zinsen und Steuern. Misst operative Profitabilität. Berechnung: Gesamteinnahmen - Betriebskosten.</td></tr>
+                            <tr><td><strong>Schlachtgewicht</strong></td><td>Gewicht nach Schlachtung ohne Kopf, Haut, Innereien, Blut. Bei Rindern ca. 55-62% des Lebendgewichts. Dies ist das verkaufbare Fleischgewicht.</td></tr>
+                            <tr><td><strong>Herdengröße</strong></td><td>Gesamtzahl aller Rinder auf der Farm.</td></tr>
+                            <tr><td><strong>Verkaufsrate</strong></td><td>Prozentsatz der Herde, der jährlich verkauft wird.</td></tr>
+                            <tr><td><strong>Betriebskosten</strong></td><td>Alle laufenden Farmkosten: Personal, Futter, Veterinär, Instandhaltung, Wasser, Energie.</td></tr>
+                            <tr><td><strong>Zusatzeinnahmen</strong></td><td>Jagd = Lizenzen, Pacht = Landverpachtung, Sonstiges = Felle, Nebenprodukte.</td></tr>
+                            <tr><td><strong>Produktivitätsindex</strong></td><td>(kg Schlachtgewicht ÷ Gesamtkosten) × 1.000. Misst Effizienz: Fleischoutput pro eingesetztem Kapital.</td></tr>
+                            <tr><td><strong>Bonusfaktor</strong></td><td>Multiplikator basierend auf Produktivitätsindex. Bestimmt Höhe des Produktivitätsbonus.</td></tr>
+                            <tr><td><strong>Bonus-Bank</strong></td><td>Teil des Bonus wird mehrere Jahre zurückgehalten und verzinst. Puffer für schwierige Jahre.</td></tr>
+                            <tr><td><strong>EBIT Cap</strong></td><td>Obergrenze für die EBIT-Bonusberechnung. Verhindert extreme Bonuszahlungen.</td></tr>
+                            <tr><td><strong>Ungewichtet</strong></td><td>Rohbonus aus progressiver Berechnung vor Säulenaufteilung.</td></tr>
+                            <tr><td><strong>Gewichtet</strong></td><td>Nach Säulengewichtung verrechnet.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="result-box">
+                    <h4>🔍 Transparenz & Controlling</h4>
+                    <table>
+                        <tbody>
+                            <tr><td style="width: 25%;"><strong>Kosten</strong></td><td>Werden via Kontoauszüge und Budgets vom Direktorium kontrolliert und transparent aufbereitet.</td></tr>
+                            <tr><td><strong>Herde</strong></td><td>Wird via Airtable mit Daten aus der Farmsoftware monatlich gefüttert. Vom Direktorium geführt und transparent zur Verfügung gestellt.</td></tr>
+                            <tr><td><strong>Weidezustandsindex</strong></td><td>In Planung (TBD).</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="result-box">
+                    <h4>🧾 Bedienhinweise</h4>
                     <ul style="margin: 0; padding-left: 18px; line-height: 1.6;">
-                        <li>Alle Eingaben werden automatisch im Browser gespeichert; Export/Import (JSON) und PDF-Bericht stehen oben bereit.</li>
-                        <li>Admin-Modus (Passwort) nur nutzen, wenn Staffel-Sätze oder Cap angepasst werden sollen.</li>
-                        <li>Bonusziele lassen sich mit den Zielwert-Karten prüfen – so weiß der Verwalter, welche Kennzahl als nächstes dran ist.</li>
+                        <li>Alle Eingaben werden automatisch im Browser gespeichert.</li>
+                        <li>Export/Import (JSON) und PDF-Bericht stehen oben bereit.</li>
+                        <li>Admin-Modus nur für Parameter-Anpassungen durch Direktoren.</li>
                     </ul>
                 </div>
 
