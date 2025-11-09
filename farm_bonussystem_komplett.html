@@ -1802,34 +1802,34 @@
             // Update current situation with background color coding
             const ebitBox = document.getElementById('overviewCurrentEbit').parentElement;
             ebitBox.innerHTML = `
-                <div style="opacity: 0.9; font-size: 0.9em;">Aktueller EBIT</div>
-                <div style="font-size: 1.8em; font-weight: bold;">${formatNumber(ebit)} N$</div>
+                <div style="font-size: 0.9em; color: #000; font-weight: 600; opacity: 0.8;">Aktueller EBIT</div>
+                <div style="font-size: 2.5em; font-weight: bold; text-shadow: 0 2px 4px rgba(0,0,0,0.15);">${formatNumber(ebit)} N$</div>
             `;
             if (ebit < 0) {
-                ebitBox.style.background = '#f8d7da';
-                ebitBox.querySelector('div:last-child').style.color = '#721c24';
+                ebitBox.style.background = '#ffcdd2';
+                ebitBox.querySelector('div:last-child').style.color = '#b71c1c';
             } else {
-                ebitBox.style.background = '#d4edda';
-                ebitBox.querySelector('div:last-child').style.color = '#155724';
+                ebitBox.style.background = '#c8e6c9';
+                ebitBox.querySelector('div:last-child').style.color = '#1b5e20';
             }
 
             const prodBox = document.getElementById('overviewProdIndex').parentElement;
             prodBox.innerHTML = `
-                <div style="opacity: 0.9; font-size: 0.9em;">Produktivitätsindex</div>
-                <div style="font-size: 1.8em; font-weight: bold;">${productivityIndex.toFixed(1)}</div>
+                <div style="font-size: 0.9em; color: #000; font-weight: 600; opacity: 0.8;">Produktivitätsindex</div>
+                <div style="font-size: 2.5em; font-weight: bold; text-shadow: 0 2px 4px rgba(0,0,0,0.15);">${productivityIndex.toFixed(1)}</div>
             `;
             if (productivityIndex < 15) {
-                prodBox.style.background = '#f8d7da';
-                prodBox.querySelector('div:last-child').style.color = '#721c24';
+                prodBox.style.background = '#ffcdd2';
+                prodBox.querySelector('div:last-child').style.color = '#b71c1c';
             } else if (productivityIndex <= 20) {
-                prodBox.style.background = '#fff3cd';
-                prodBox.querySelector('div:last-child').style.color = '#856404';
+                prodBox.style.background = '#fff59d';
+                prodBox.querySelector('div:last-child').style.color = '#f57f17';
             } else if (productivityIndex <= 25) {
-                prodBox.style.background = '#d4edda';
-                prodBox.querySelector('div:last-child').style.color = '#155724';
+                prodBox.style.background = '#c8e6c9';
+                prodBox.querySelector('div:last-child').style.color = '#1b5e20';
             } else {
-                prodBox.style.background = '#fce4ec';
-                prodBox.querySelector('div:last-child').style.color = '#c2185b';
+                prodBox.style.background = '#f8bbd0';
+                prodBox.querySelector('div:last-child').style.color = '#880e4f';
             }
 
             document.getElementById('overviewCurrentBonus').textContent = totalBonusText;
