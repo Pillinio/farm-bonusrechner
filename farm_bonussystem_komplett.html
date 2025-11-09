@@ -530,6 +530,14 @@
             display: none;
         }
 
+        .admin-display {
+            display: block;
+        }
+
+        .admin-edit {
+            display: none;
+        }
+
         @media (max-width: 1024px) {
             .main-content {
                 grid-template-columns: 1fr;
@@ -746,40 +754,88 @@
                     </div>
                     
                     <h3 id="ebitStaffelHeading">📊 EBIT Bonus-Staffelung (70% Gewichtung)</h3>
-                    <div class="input-group admin-only">
-                        <label>Stufe 1 (0-100k): <span class="range-value" id="tier1RateValue">8%</span></label>
-                        <input type="range" id="tier1Rate" min="0" max="20" step="0.5" value="8" class="locked" oninput="updateValue('tier1Rate'); calculate()">
+
+                    <!-- Verwalter-Ansicht: Nur Anzeige der Werte -->
+                    <div class="admin-display">
+                        <div class="result-box" style="background: #f8f9fa; border-left: 4px solid #4472C4;">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Stufe</th>
+                                        <th>Bereich</th>
+                                        <th>Bonus-Rate</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><strong>Stufe 1</strong></td>
+                                        <td>0 - 100.000 N$</td>
+                                        <td><strong><span id="tier1RateDisplay">8</span>%</strong></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Stufe 2</strong></td>
+                                        <td>100.000 - 500.000 N$</td>
+                                        <td><strong><span id="tier2RateDisplay">12</span>%</strong></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Stufe 3</strong></td>
+                                        <td>500.000 - 2.000.000 N$</td>
+                                        <td><strong><span id="tier3RateDisplay">15</span>%</strong></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Stufe 4</strong></td>
+                                        <td>über 2.000.000 N$</td>
+                                        <td><strong><span id="tier4RateDisplay">20</span>%</strong></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <div style="margin-top: 15px; padding: 10px; background: #e3f2fd; border-radius: 5px;">
+                                <strong>EBIT Cap:</strong> <span id="ebitCapDisplay">4,0</span> Mio N$<br>
+                                <strong>Gewichtung:</strong> <span id="weightSplitDisplay">EBIT 70% / Produktivität 30%</span>
+                            </div>
+                            <div style="margin-top: 10px; padding: 8px; background: #fff3cd; border-radius: 5px; font-size: 0.9em; text-align: center;">
+                                🔒 Diese Werte sind fest und nur im Admin-Modus änderbar
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="input-group admin-only">
-                        <label>Stufe 2 (100k-500k): <span class="range-value" id="tier2RateValue">12%</span></label>
-                        <input type="range" id="tier2Rate" min="0" max="25" step="0.5" value="12" class="locked" oninput="updateValue('tier2Rate'); calculate()">
-                    </div>
+                    <!-- Admin-Ansicht: Regler zum Editieren -->
+                    <div class="admin-edit">
+                        <div class="input-group">
+                            <label>Stufe 1 (0-100k): <span class="range-value" id="tier1RateValue">8%</span></label>
+                            <input type="range" id="tier1Rate" min="0" max="20" step="0.5" value="8" oninput="updateValue('tier1Rate'); calculate()">
+                        </div>
 
-                    <div class="input-group admin-only">
-                        <label>Stufe 3 (500k-2M): <span class="range-value" id="tier3RateValue">15%</span></label>
-                        <input type="range" id="tier3Rate" min="0" max="30" step="0.5" value="15" class="locked" oninput="updateValue('tier3Rate'); calculate()">
-                    </div>
+                        <div class="input-group">
+                            <label>Stufe 2 (100k-500k): <span class="range-value" id="tier2RateValue">12%</span></label>
+                            <input type="range" id="tier2Rate" min="0" max="25" step="0.5" value="12" oninput="updateValue('tier2Rate'); calculate()">
+                        </div>
 
-                    <div class="input-group admin-only">
-                        <label>Stufe 4 (2M+): <span class="range-value" id="tier4RateValue">20%</span></label>
-                        <input type="range" id="tier4Rate" min="0" max="35" step="0.5" value="20" class="locked" oninput="updateValue('tier4Rate'); calculate()">
-                    </div>
+                        <div class="input-group">
+                            <label>Stufe 3 (500k-2M): <span class="range-value" id="tier3RateValue">15%</span></label>
+                            <input type="range" id="tier3Rate" min="0" max="30" step="0.5" value="15" oninput="updateValue('tier3Rate'); calculate()">
+                        </div>
 
-                    <div class="input-group admin-only">
-                        <label>EBIT Cap (Mio N$): <span class="range-value" id="ebitCapValue">4.0M</span></label>
-                        <input type="range" id="ebitCap" min="1" max="10" step="0.5" value="4" class="locked" oninput="updateValue('ebitCap'); calculate()">
-                    </div>
+                        <div class="input-group">
+                            <label>Stufe 4 (2M+): <span class="range-value" id="tier4RateValue">20%</span></label>
+                            <input type="range" id="tier4Rate" min="0" max="35" step="0.5" value="20" oninput="updateValue('tier4Rate'); calculate()">
+                        </div>
 
-                    <div class="input-group admin-only">
-                        <label>Gewichtung EBIT-Bonus: <span class="range-value" id="ebitWeightValue">70%</span>
-                            <span class="tooltip">?
-                                <span class="tooltiptext">Gewichtung zwischen EBIT-Bonus (Säule 1) und Produktivitätsbonus (Säule 2). Standard: 70% EBIT / 30% Produktivität.</span>
-                            </span>
-                        </label>
-                        <input type="range" id="ebitWeight" min="0" max="100" step="5" value="70" class="locked" oninput="updateValue('ebitWeight'); calculate()">
-                        <div style="text-align: center; margin-top: 10px; padding: 8px; background: #e3f2fd; border-radius: 5px; font-size: 0.9em;">
-                            <strong>Split:</strong> <span id="weightSplit">EBIT 70% / Produktivität 30%</span>
+                        <div class="input-group">
+                            <label>EBIT Cap (Mio N$): <span class="range-value" id="ebitCapValue">4.0M</span></label>
+                            <input type="range" id="ebitCap" min="1" max="10" step="0.5" value="4" oninput="updateValue('ebitCap'); calculate()">
+                        </div>
+
+                        <div class="input-group">
+                            <label>Gewichtung EBIT-Bonus: <span class="range-value" id="ebitWeightValue">70%</span>
+                                <span class="tooltip">?
+                                    <span class="tooltiptext">Gewichtung zwischen EBIT-Bonus (Säule 1) und Produktivitätsbonus (Säule 2). Standard: 70% EBIT / 30% Produktivität.</span>
+                                </span>
+                            </label>
+                            <input type="range" id="ebitWeight" min="0" max="100" step="5" value="70" oninput="updateValue('ebitWeight'); calculate()">
+                            <div style="text-align: center; margin-top: 10px; padding: 8px; background: #e3f2fd; border-radius: 5px; font-size: 0.9em;">
+                                <strong>Split:</strong> <span id="weightSplit">EBIT 70% / Produktivität 30%</span>
+                            </div>
                         </div>
                     </div>
 
@@ -1205,10 +1261,9 @@
                 section.style.display = 'block';
             });
 
-            // Alle gesperrten Inputs freischalten
-            document.querySelectorAll('.locked').forEach(input => {
-                input.classList.remove('locked');
-            });
+            // Wechsel von Display zu Edit Mode für Bonus-Parameter
+            document.querySelectorAll('.admin-display').forEach(el => el.style.display = 'none');
+            document.querySelectorAll('.admin-edit').forEach(el => el.style.display = 'block');
 
             alert('✅ Admin-Modus aktiviert! Alle Parameter sind jetzt sichtbar und editierbar.');
         }
@@ -1222,10 +1277,9 @@
                 section.style.display = 'none';
             });
 
-            // Alle gesperrten Range-Inputs wieder sperren
-            document.querySelectorAll('.admin-only input[type="range"]').forEach(input => {
-                input.classList.add('locked');
-            });
+            // Wechsel von Edit zu Display Mode für Bonus-Parameter
+            document.querySelectorAll('.admin-edit').forEach(el => el.style.display = 'none');
+            document.querySelectorAll('.admin-display').forEach(el => el.style.display = 'block');
 
             alert('🔒 Admin-Modus deaktiviert. Sensible Parameter sind versteckt.');
         }
@@ -1924,9 +1978,17 @@
             if (id === 'ebitWeight') {
                 const prodWeightValue = 100 - value;
                 document.getElementById('weightSplit').textContent = `EBIT ${value.toFixed(0)}% / Produktivität ${prodWeightValue.toFixed(0)}%`;
+                document.getElementById('weightSplitDisplay').textContent = `EBIT ${value.toFixed(0)}% / Produktivität ${prodWeightValue.toFixed(0)}%`;
                 document.getElementById('ebitStaffelHeading').textContent = `📊 EBIT Bonus-Staffelung (${value.toFixed(0)}% Gewichtung)`;
                 document.getElementById('prodIndexHeading').textContent = `📊 Produktivitätsindex (${prodWeightValue.toFixed(0)}% Gewichtung)`;
             }
+
+            // Update display values for Verwalter view
+            if (id === 'tier1Rate') document.getElementById('tier1RateDisplay').textContent = value.toFixed(1);
+            if (id === 'tier2Rate') document.getElementById('tier2RateDisplay').textContent = value.toFixed(1);
+            if (id === 'tier3Rate') document.getElementById('tier3RateDisplay').textContent = value.toFixed(1);
+            if (id === 'tier4Rate') document.getElementById('tier4RateDisplay').textContent = value.toFixed(1);
+            if (id === 'ebitCap') document.getElementById('ebitCapDisplay').textContent = value.toFixed(1);
         }
         
         function calculateEbitBonus(ebit) {
