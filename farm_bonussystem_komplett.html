@@ -1015,10 +1015,6 @@
                             </div>
                         </div>
                     </div>
-                    
-                    <div id="statusMessage" class="success">
-                        <strong>✅ Status:</strong> Bonus-Berechnung aktualisiert
-                    </div>
                 </div>
             </div>
         </div>
@@ -2216,19 +2212,6 @@
             document.getElementById('bonusPercentage').textContent = bonusPercentage.toFixed(1) + '% vom Grundgehalt';
             document.getElementById('immediateAmount').textContent = formatNumber(immediateAmount) + ' N$';
             document.getElementById('bankAmount').textContent = formatNumber(bankAmount) + ' N$';
-            
-            // Status message
-            const statusDiv = document.getElementById('statusMessage');
-            if (ebit < 0) {
-                statusDiv.className = 'warning';
-                statusDiv.innerHTML = '<strong>⚠️ Warnung:</strong> Die Farm macht Verlust!';
-            } else if (ebit < 500000) {
-                statusDiv.className = 'warning';
-                statusDiv.innerHTML = '<strong>⚠️ Hinweis:</strong> EBIT zu niedrig für attraktiven Bonus.';
-            } else {
-                statusDiv.className = 'success';
-                statusDiv.innerHTML = '<strong>✅ Gut:</strong> Solide Performance mit fairem Bonus.';
-            }
         }
         
         function updateDashboard() {
