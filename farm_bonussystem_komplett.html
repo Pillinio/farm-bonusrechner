@@ -699,7 +699,7 @@
                                 <td style="text-align: right;"><strong id="cattleRevenue">0 N$</strong></td>
                             </tr>
                             <tr>
-                                <td>└ Verkaufte Tiere</td>
+                                <td>Verkaufte Tiere</td>
                                 <td style="text-align: right; font-size: 0.9em; color: #6c757d;" id="soldAnimalsDetail">0 × 225 kg × 60 N$/kg</td>
                             </tr>
                             <tr>
@@ -792,9 +792,6 @@
                             <div style="margin-top: 15px; padding: 10px; background: #e3f2fd; border-radius: 5px;">
                                 <strong>EBIT Cap:</strong> <span id="ebitCapDisplay">4,0</span> Mio N$<br>
                                 <strong>Gewichtung:</strong> <span id="weightSplitDisplay">EBIT 70% / Produktivität 30%</span>
-                            </div>
-                            <div style="margin-top: 10px; padding: 8px; background: #fff3cd; border-radius: 5px; font-size: 0.9em; text-align: center;">
-                                🔒 Diese Werte sind fest und nur im Admin-Modus änderbar
                             </div>
                         </div>
                     </div>
@@ -1143,7 +1140,7 @@
                         <tbody>
                             <tr>
                                 <td><strong>EBIT-Bonus</strong></td>
-                                <td>Progressive Staffel (0–100k × 8 %, 100–500k × 12 %, 500k–2 M × 15 %, >2 M × 20 %), Cap standardmäßig 4 Mio N$.</td>
+                                <td>Progressive Staffel (0–100k × 8 %, 100–500k × 12 %, 500k–2 M × 15 %, >2 M × 20 %), Cap standardmäßig 3 Mio N$.</td>
                                 <td>70 %</td>
                             </tr>
                             <tr>
@@ -1153,7 +1150,7 @@
                             </tr>
                             <tr>
                                 <td><strong>Auszahlung</strong></td>
-                                <td>Slider steuert Sofort-Anteil (Standard 60 %); Rest wandert in die Bonus Bank (3 Jahre, Verzinsung laut Firmenvorgabe).</td>
+                                <td>Teil des Bonus, der sofort ausgezahlt wird, nämlich 60% des ungewichteten Gesamtbonus. Die übrigen 40% werden auf der Bonus Bank einbehalten und dort verzinst in der Höhe, wie auf dem Point break Konto Zinsen gezahlt werden.</td>
                                 <td>—</td>
                             </tr>
                         </tbody>
@@ -1167,12 +1164,13 @@
                     <table>
                         <tbody>
                             <tr><td style="width: 30%;"><strong>Progressiv</strong></td><td>Stufenweise Steigerung statt linearer Prozentsatz. Belohnt Spitzenleistung überproportional, hält Kosten bei schwacher Performance niedrig.</td></tr>
-                            <tr><td><strong>EBIT</strong></td><td>Earnings Before Interest and Taxes. Gewinn vor Zinsen und Steuern. Misst operative Profitabilität. Berechnung: Gesamteinnahmen - Betriebskosten.</td></tr>
+                            <tr><td><strong>EBIT</strong></td><td>Earnings Before Interest and Taxes. Gewinn vor Zinsen und Steuern. Misst operative Profitabilität. Berechnung: Gesamteinnahmen abzüglich Betriebskosten.</td></tr>
+                            <tr><td><strong>Gesamteinnahmen</strong></td><td>Einnahmen der Pommerschen Farmgesellschaft aus (i) Rinderzucht und -verkauf, (ii) Wildernte, (iii) Trophäenjagd, (iv) Zinsen, (v) Grasverkauf und (vi) Pacht.</td></tr>
                             <tr><td><strong>Schlachtgewicht</strong></td><td>Gewicht nach Schlachtung ohne Kopf, Haut, Innereien, Blut. Bei Rindern ca. 55-62% des Lebendgewichts. Dies ist das verkaufbare Fleischgewicht.</td></tr>
                             <tr><td><strong>Herdengröße</strong></td><td>Gesamtzahl aller Rinder auf der Farm.</td></tr>
                             <tr><td><strong>Verkaufsrate</strong></td><td>Prozentsatz der Herde, der jährlich verkauft wird.</td></tr>
-                            <tr><td><strong>Betriebskosten</strong></td><td>Alle laufenden Farmkosten: Personal, Futter, Veterinär, Instandhaltung, Wasser, Energie.</td></tr>
-                            <tr><td><strong>Zusatzeinnahmen</strong></td><td>Jagd = Lizenzen, Pacht = Landverpachtung, Sonstiges = Felle, Nebenprodukte.</td></tr>
+                            <tr><td><strong>Betriebskosten</strong></td><td>Betriebsnotwendige Aufwendungen.</td></tr>
+                            <tr><td><strong>Sonstige Einnahmen</strong></td><td>Wildernte, Trophäenjagd, Zinsen, Grasverkauf und Pacht.</td></tr>
                             <tr><td><strong>Produktivitätsindex</strong></td><td>(kg Schlachtgewicht ÷ Gesamtkosten) × 1.000. Misst Effizienz: Fleischoutput pro eingesetztem Kapital.</td></tr>
                             <tr><td><strong>Bonusfaktor</strong></td><td>Multiplikator basierend auf Produktivitätsindex. Bestimmt Höhe des Produktivitätsbonus.</td></tr>
                             <tr><td><strong>Bonus-Bank</strong></td><td>Teil des Bonus wird mehrere Jahre zurückgehalten und verzinst. Puffer für schwierige Jahre.</td></tr>
