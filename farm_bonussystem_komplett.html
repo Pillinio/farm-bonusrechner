@@ -1410,7 +1410,7 @@
             const ebit = totalRevenue - baseCosts;
             const totalBonus = parseDisplayValue(document.getElementById('totalBonus'));
             const baseSalary = parseInput(document.getElementById('baseSalary'));
-            const bonusPercentage = (totalBonus / baseSalary * 100).toFixed(1);
+            const bonusPercentage = calcPercent(totalBonus, baseSalary);
             const productivityIndex = (baseCosts > 0) ? (totalWeight / baseCosts) * 1000 : 0;
 
             // Get EBIT breakdown
@@ -1923,7 +1923,13 @@
         function formatNumber(num) {
             return Math.round(num).toLocaleString('de-DE');
         }
-        
+
+        // Sichere Prozentberechnung mit Division-by-Zero-Schutz
+        function calcPercent(value, base) {
+            if (base <= 0) return 0;
+            return (value / base * 100);
+        }
+
         function formatInput(input) {
             // Get raw number value (remove all dots)
             let value = input.value.replace(/\./g, '');
@@ -2119,7 +2125,7 @@
             // Total Bonus (without Skin in the Game)
             const totalBonus = ebitBonusTotal + prodBonusTotal;
             const baseSalary = parseInput(document.getElementById('baseSalary'));
-            const bonusPercentage = (totalBonus / baseSalary * 100) || 0;
+            const bonusPercentage = calcPercent(totalBonus, baseSalary);
             
             // Payment structure
             const immediateRate = parseFloat(document.getElementById('immediatePayment').value) / 100;
@@ -2390,8 +2396,8 @@
             let html = '';
             keyPoints.forEach(ebit => {
                 const bonus = calculateEbitBonus(ebit).total * 0.7;
-                const percentage = (bonus / baseSalary * 100).toFixed(1);
-                const effectiveRate = (bonus / ebit * 100).toFixed(2);
+                const percentage = calcPercent(bonus, baseSalary).toFixed(1);
+                const effectiveRate = calcPercent(bonus, ebit).toFixed(1);
                 
                 html += `
                     <tr>
