@@ -322,6 +322,52 @@ async function checkO2(
   return { ...base, severity, value: openCount, message, skipped: false };
 }
 
+/** C1: Compliance — days until nearest certificate expiry */
+async function checkC1(
+  supabase: SupabaseClient,
+  rule: AlertRule,
+): Promise<CheckResult> {
+  const base: Omit<CheckResult, "severity" | "value" | "message" | "skipped"> = {
+    kpi_id: rule.kpi_id,
+    rule_id: rule.id,
+    rule_name: rule.name,
+  };
+
+  // Find the certificate with the nearest expiry date
+  const { data: cert, error } = await supabase
+    .from("compliance_certificates")
+    .select("cert_type, cert_number, expiry_date, status")
+    .not("expiry_date", "is", null)
+    .order("expiry_date", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+
+  if (error || !cert) {
+    return { ...base, severity: null, value: null, message: "Keine Compliance-Zertifikate vorhanden", skipped: true };
+  }
+
+  const expiry = new Date(cert.expiry_date);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const daysRemaining = Math.ceil((expiry.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+
+  const typeLabels: Record<string, string> = {
+    fmd: "MKS",
+    brucellosis: "Brucellose",
+    eu_approval: "EU-Zulassung",
+    transport: "Transport",
+  };
+  const label = typeLabels[cert.cert_type] || cert.cert_type;
+
+  // Lower days = worse → descending severity (thresholds: yellow=90, red=60)
+  const severity = severityDescending(daysRemaining, rule.threshold_yellow, rule.threshold_red);
+  const message = severity
+    ? `${label}-Zertifikat (${cert.cert_number || "—"}): ${daysRemaining} Tage bis Ablauf — Schwelle ${severity === "red" ? rule.threshold_red : rule.threshold_yellow} Tage`
+    : `${label}-Zertifikat (${cert.cert_number || "—"}): ${daysRemaining} Tage bis Ablauf — OK`;
+
+  return { ...base, severity, value: daysRemaining, message, skipped: false };
+}
+
 // ---------------------------------------------------------------------------
 // KPI dispatcher
 // ---------------------------------------------------------------------------
@@ -332,6 +378,7 @@ const KPI_CHECKERS: Record<string, (s: SupabaseClient, r: AlertRule) => Promise<
   H3: checkH3,
   W1: checkW1,
   O2: checkO2,
+  C1: checkC1,
 };
 
 // ---------------------------------------------------------------------------

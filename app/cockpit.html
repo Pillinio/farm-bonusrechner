@@ -696,25 +696,37 @@ async function loadO2() {
     } catch { noData('o2'); }
 }
 
-// C1 — Days until cert expiry
+// C1 — Days until nearest cert expiry (from compliance_certificates)
 async function loadC1() {
     try {
         const { data } = await supabase
-            .from('certifications')
-            .select('expiry_date, cert_name')
+            .from('compliance_certificates')
+            .select('cert_type, cert_number, expiry_date, status')
+            .not('expiry_date', 'is', null)
             .order('expiry_date', { ascending: true })
             .limit(1);
 
         if (!data?.length) return noData('c1');
 
-        const expiry = new Date(data[0].expiry_date);
+        const cert = data[0];
+        const expiry = new Date(cert.expiry_date);
         const today = new Date();
+        today.setHours(0, 0, 0, 0);
         const days = Math.ceil((expiry - today) / (1000 * 60 * 60 * 24));
-        const status = days > 90 ? 'green' : days > 30 ? 'yellow' : 'red';
+
+        const status = days > 90 ? 'green' : days > 60 ? 'yellow' : 'red';
+
+        const typeLabels = {
+            fmd: 'MKS',
+            brucellosis: 'Brucellose',
+            eu_approval: 'EU-Zulassung',
+            transport: 'Transport'
+        };
+        const label = typeLabels[cert.cert_type] || cert.cert_type;
 
         setCard('c1', {
-            value: days + ' Tage',
-            subtitle: data[0].cert_name || 'Tage bis Ablauf',
+            value: (days <= 0 ? 'Abgelaufen' : days + ' Tage'),
+            subtitle: label + ' (' + (cert.cert_number || '—') + ')',
             status
         });
     } catch { noData('c1'); }

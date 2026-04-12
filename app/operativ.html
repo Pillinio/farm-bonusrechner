@@ -522,16 +522,50 @@
         </div>
     </div>
 
-    <!-- Compliance Placeholder (C1-C4) -->
+    <!-- Compliance (C1-C4) -->
     <div class="section">
         <div class="section-title">
             <span class="section-icon">&#x1F4CB;</span>
             Compliance (C1&ndash;C4)
         </div>
-        <div class="placeholder">
-            <div class="placeholder-icon">&#x1F6A7;</div>
-            Compliance-Tracking wird in Phase 4 aktiviert.<br>
-            EU-Exportzertifizierung, Brandschutz, DVS-Kontrollen und Audit-Status werden dann hier angezeigt.
+        <div class="kpi-row" id="compliance-cards">
+            <div class="no-data"><span class="loading-spinner"></span> Lade Compliance-Daten...</div>
+        </div>
+
+        <!-- C4: Transport Documentation Checklist -->
+        <div style="margin-top: 16px;">
+            <div style="font-weight: 600; color: #374151; margin-bottom: 10px; display: flex; align-items: center; gap: 8px;">
+                <span>&#x1F69A;</span> C4 &mdash; Transportdokumentation
+            </div>
+            <div class="task-list" id="transport-checklist">
+                <div class="task-item">
+                    <span class="task-name">
+                        <span class="status-dot status-yellow"></span>
+                        Bewegungsgenehmigung
+                    </span>
+                    <span class="task-frequency">Pro Lieferung erforderlich</span>
+                    <span class="task-coverage" style="color: #eab308;">Checkliste</span>
+                </div>
+                <div class="task-item">
+                    <span class="task-name">
+                        <span class="status-dot status-yellow"></span>
+                        Desinfektionszertifikat
+                    </span>
+                    <span class="task-frequency">Pro Lieferung erforderlich</span>
+                    <span class="task-coverage" style="color: #eab308;">Checkliste</span>
+                </div>
+                <div class="task-item">
+                    <span class="task-name">
+                        <span class="status-dot status-yellow"></span>
+                        Veterin&auml;rzeugnis
+                    </span>
+                    <span class="task-frequency">Pro Lieferung erforderlich</span>
+                    <span class="task-coverage" style="color: #eab308;">Checkliste</span>
+                </div>
+            </div>
+            <div style="font-size: 0.8em; color: #9ca3af; margin-top: 8px;">
+                Einzellieferungsverfolgung wird in einer sp&auml;teren Phase aktiviert.
+            </div>
         </div>
     </div>
 
@@ -784,6 +818,132 @@ async function loadAssets() {
     }
 }
 
+// ── C1-C3: Compliance Certificates ──────────────────────────────
+async function loadCompliance() {
+    const container = document.getElementById('compliance-cards');
+
+    try {
+        const { data: certs } = await supabase
+            .from('compliance_certificates')
+            .select('*')
+            .order('expiry_date', { ascending: true });
+
+        if (!certs?.length) {
+            container.innerHTML = '<div class="no-data">Keine Compliance-Zertifikate erfasst.</div>';
+            return;
+        }
+
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        const certConfig = {
+            fmd: {
+                id: 'C1',
+                title: 'MKS-Zonenstatus',
+                icon: '&#x1F6E1;&#xFE0F;',
+                greenDays: 90,
+                yellowDays: 60
+            },
+            brucellosis: {
+                id: 'C2',
+                title: 'Brucellose-Testabdeckung',
+                icon: '&#x1F9EA;',
+                greenDays: 180,
+                yellowDays: 90
+            },
+            eu_approval: {
+                id: 'C3',
+                title: 'EU-Exportzulassung',
+                icon: '&#x1F1EA;&#x1F1FA;',
+                greenDays: 90,
+                yellowDays: 60
+            }
+        };
+
+        const cards = [];
+
+        for (const [certType, config] of Object.entries(certConfig)) {
+            const cert = certs.find(c => c.cert_type === certType);
+
+            if (!cert) {
+                cards.push(`
+                    <div class="kpi-card">
+                        <div class="kpi-label">${config.icon} ${config.id} &mdash; ${config.title}</div>
+                        <div class="kpi-value" style="color: #9ca3af;">&mdash;</div>
+                        <div class="kpi-sub">Kein Zertifikat vorhanden</div>
+                        <div class="kpi-status-bar status-gray"></div>
+                    </div>
+                `);
+                continue;
+            }
+
+            const expiry = cert.expiry_date ? new Date(cert.expiry_date) : null;
+            let daysRemaining = null;
+            let statusColor = 'gray';
+            let statusLabel = 'Unbekannt';
+            let badgeClass = 'status-gray';
+
+            if (expiry) {
+                daysRemaining = Math.ceil((expiry - today) / (1000 * 60 * 60 * 24));
+
+                if (daysRemaining <= 0) {
+                    statusColor = 'red';
+                    statusLabel = 'Abgelaufen';
+                    badgeClass = 'status-red';
+                } else if (daysRemaining < config.yellowDays) {
+                    statusColor = 'red';
+                    statusLabel = 'L\u00e4uft ab';
+                    badgeClass = 'status-red';
+                } else if (daysRemaining < config.greenDays) {
+                    statusColor = 'yellow';
+                    statusLabel = 'L\u00e4uft ab';
+                    badgeClass = 'status-yellow';
+                } else {
+                    statusColor = 'green';
+                    statusLabel = 'G\u00fcltig';
+                    badgeClass = 'status-green';
+                }
+            }
+
+            const valueColor = statusColor === 'green' ? '#22c55e' :
+                               statusColor === 'yellow' ? '#eab308' : '#ef4444';
+
+            const daysText = daysRemaining !== null
+                ? (daysRemaining <= 0 ? 'Abgelaufen' : daysRemaining + ' Tage')
+                : '\u2014';
+
+            const extraInfo = certType === 'brucellosis' && cert.notes
+                ? `<div class="kpi-sub">${escHtml(cert.notes)}</div>`
+                : '';
+
+            const auditInfo = certType === 'eu_approval' && cert.audit_rating
+                ? `<div class="kpi-sub">Audit: ${escHtml(cert.audit_rating)}</div>`
+                : '';
+
+            cards.push(`
+                <div class="kpi-card">
+                    <div class="kpi-label">${config.icon} ${config.id} &mdash; ${config.title}</div>
+                    <div class="kpi-value" style="color: ${valueColor};">${daysText}</div>
+                    <div class="kpi-sub" style="margin-top: 6px;">
+                        <span class="status-dot ${badgeClass}"></span>
+                        <strong>${statusLabel}</strong>
+                    </div>
+                    <div class="kpi-sub">Nr.: ${escHtml(cert.cert_number || '\u2014')}</div>
+                    <div class="kpi-sub">Ausgestellt: ${formatDate(cert.issued_date)} &mdash; Ablauf: ${formatDate(cert.expiry_date)}</div>
+                    <div class="kpi-sub">Beh\u00f6rde: ${escHtml(cert.issuing_authority || '\u2014')}</div>
+                    ${extraInfo}
+                    ${auditInfo}
+                    <div class="kpi-status-bar ${badgeClass}" style="margin-top: 8px;"></div>
+                </div>
+            `);
+        }
+
+        container.innerHTML = cards.join('');
+    } catch {
+        container.innerHTML = '<div class="no-data">Fehler beim Laden der Compliance-Daten.</div>';
+    }
+}
+
 // ── Load All ─────────────────────────────────────────────────────
 async function loadAll() {
     document.getElementById('last-update').textContent = 'Aktualisiere...';
@@ -792,7 +952,8 @@ async function loadAll() {
         loadTaskCoverage(),
         loadOpenMaintenance(),
         loadIncidents(),
-        loadAssets()
+        loadAssets(),
+        loadCompliance()
     ]);
 
     const now = new Date();

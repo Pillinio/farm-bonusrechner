@@ -94,21 +94,43 @@
       "required": ["kind", "source", "data"],
       "properties": {
         "kind": { "const": "market-prices-lpo" },
-        "source": { "type": "string" },
+        "source": { "type": "string", "description": "Origin identifier, e.g. 'openclaw' or 'manual'" },
         "data": {
           "type": "object",
-          "required": ["price_date", "prices"],
+          "required": ["price_date", "week_number", "prices"],
           "properties": {
-            "price_date": { "type": "string", "format": "date" },
+            "price_date": {
+              "type": "string",
+              "format": "date",
+              "description": "Monday of the LPO week (e.g. '2026-03-02' for Week 10)"
+            },
+            "week_number": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 53,
+              "description": "LPO week number from the PDF header"
+            },
             "prices": {
               "type": "array",
+              "minItems": 1,
               "items": {
                 "type": "object",
                 "required": ["commodity", "price_nad", "unit"],
                 "properties": {
-                  "commodity": { "type": "string" },
-                  "price_nad": { "type": "number" },
-                  "unit": { "type": "string" }
+                  "commodity": {
+                    "type": "string",
+                    "pattern": "^beef_(meatco|meatco_fixed|beefcor|rmaa)_(A[B]?[0-6]|B[0-6]|C[0-6])$",
+                    "description": "Commodity key: beef_{buyer}_{grade}. Buyers: meatco (180-239kg), meatco_fixed (240kg+), beefcor (representative ox price), rmaa. Grades: A0-A6, AB0-AB6, B0-B6, C0-C6."
+                  },
+                  "price_nad": {
+                    "type": "number",
+                    "minimum": 0,
+                    "description": "Price in NAD per kg (excl. VAT)"
+                  },
+                  "unit": {
+                    "type": "string",
+                    "const": "per_kg"
+                  }
                 },
                 "additionalProperties": false
               }
