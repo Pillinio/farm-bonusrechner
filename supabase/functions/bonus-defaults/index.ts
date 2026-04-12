@@ -4,7 +4,8 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { createLogger } from "../_shared/logger.ts";
 
-const ALLOWED_ORIGIN = "https://erichsfelde.farm";
+// Allow any origin until production domain is decided — tighten after Cloudflare deploy
+const ALLOWED_ORIGIN = "*";
 
 /** JSON response helper */
 function json(data: unknown, status = 200): Response {
