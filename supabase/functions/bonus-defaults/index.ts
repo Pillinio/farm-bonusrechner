@@ -2,6 +2,9 @@
 // Edge Function: returns live farm data as defaults for the bonus calculator.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createLogger } from "../_shared/logger.ts";
+
+const ALLOWED_ORIGIN = "https://erichsfelde.farm";
 
 /** JSON response helper */
 function json(data: unknown, status = 200): Response {
@@ -9,7 +12,7 @@ function json(data: unknown, status = 200): Response {
     status,
     headers: {
       "Content-Type": "application/json",
-      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Origin": ALLOWED_ORIGIN,
       "Access-Control-Allow-Headers": "Authorization, X-API-Key, Content-Type",
     },
   });
@@ -38,7 +41,7 @@ Deno.serve(async (req: Request) => {
     return new Response(null, {
       status: 204,
       headers: {
-        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Origin": ALLOWED_ORIGIN,
         "Access-Control-Allow-Headers": "Authorization, X-API-Key, Content-Type",
         "Access-Control-Allow-Methods": "GET, OPTIONS",
       },
@@ -61,18 +64,14 @@ Deno.serve(async (req: Request) => {
   } else if (apiKey) {
     clientKey = apiKey;
   } else {
-    // Use anon key from env as fallback for public access
-    const anonKey = Deno.env.get("SUPABASE_ANON_KEY");
-    if (anonKey) {
-      clientKey = anonKey;
-    } else {
-      return json({ error: "Missing authentication." }, 401);
-    }
+    return json({ error: "Missing authentication. Provide Authorization: Bearer <token> or X-API-Key header." }, 401);
   }
 
   const supabase = createClient(supabaseUrl, clientKey, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
+
+  const logger = createLogger(supabase, "edge:bonus-defaults");
 
   const warnings: string[] = [];
   const now = new Date();
@@ -303,6 +302,12 @@ Deno.serve(async (req: Request) => {
     dataDate: now.toISOString().split("T")[0],
     warnings,
   };
+
+  await logger.info(`Bonus defaults served (source: ${response.source})`, {
+    source: response.source,
+    warnings_count: warnings.length,
+    warnings: warnings.length > 0 ? warnings : undefined,
+  });
 
   return json(response);
 });

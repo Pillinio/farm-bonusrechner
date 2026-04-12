@@ -16,9 +16,30 @@ Target table: weather_observations (with source='open-meteo-forecast')
 import json
 import os
 import sys
+import time
 from datetime import date
 
 import requests
+
+
+# ---------------------------------------------------------------------------
+# Retry helper
+# ---------------------------------------------------------------------------
+
+def fetch_with_retry(url, params=None, max_retries=3, timeout=30):
+    """Fetch URL with exponential backoff retry."""
+    for attempt in range(max_retries):
+        try:
+            resp = requests.get(url, params=params, timeout=timeout)
+            resp.raise_for_status()
+            return resp.json()
+        except (requests.RequestException, ValueError) as e:
+            if attempt < max_retries - 1:
+                wait = 2 ** attempt * 5  # 5s, 10s, 20s
+                print(f"Retry {attempt+1}/{max_retries} after {wait}s: {e}")
+                time.sleep(wait)
+            else:
+                raise
 
 # ---------------------------------------------------------------------------
 # Configuration
@@ -52,11 +73,12 @@ def fetch_forecast() -> list[dict]:
         "timezone": "Africa/Windhoek",
     }
 
-    resp = requests.get(url, params=params, timeout=30)
-    resp.raise_for_status()
-    data = resp.json()
+    data = fetch_with_retry(url, params=params)
 
-    daily = data.get("daily", {})
+    if "daily" not in data or "time" not in data.get("daily", {}):
+        raise ValueError(f"Unexpected API response structure: {list(data.keys())}")
+
+    daily = data["daily"]
     dates = daily.get("time", [])
     temp_max = daily.get("temperature_2m_max", [])
     temp_min = daily.get("temperature_2m_min", [])
@@ -107,6 +129,19 @@ def upsert_to_supabase(rows: list[dict]) -> None:
 # ---------------------------------------------------------------------------
 
 def main():
+    # Verify Supabase connection before main work
+    headers = {
+        "apikey": SUPABASE_KEY,
+        "Authorization": f"Bearer {SUPABASE_KEY}",
+    }
+    test_resp = requests.get(
+        f"{SUPABASE_URL}/rest/v1/farms?select=name&limit=1",
+        headers=headers, timeout=10,
+    )
+    if test_resp.status_code != 200:
+        raise RuntimeError(f"Supabase auth failed: {test_resp.status_code}")
+    print(f"Supabase connected: {test_resp.json()}")
+
     print(f"Fetching {FORECAST_DAYS}-day weather forecast for Erichsfelde")
     print(f"  Location: lat={FARM_LAT}, lon={FARM_LON}")
     print(f"  Date: {date.today().isoformat()}")

@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Farm Erichsfelde</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .login-container {
+            max-width: 440px;
+            width: 100%;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: white;
+            padding: 30px 30px 24px;
+            text-align: center;
+        }
+
+        .header-logo {
+            width: 90px;
+            height: auto;
+            max-height: 80px;
+            object-fit: contain;
+            margin-bottom: 12px;
+        }
+
+        .header h1 {
+            font-size: 1.6em;
+            margin-bottom: 4px;
+        }
+
+        .header p {
+            font-size: 0.95em;
+            opacity: 0.85;
+        }
+
+        .form-section {
+            padding: 30px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.9em;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 6px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            font-size: 1em;
+            color: #111827;
+            transition: border-color 0.2s;
+            outline: none;
+        }
+
+        .form-input:focus {
+            border-color: #2E75B6;
+        }
+
+        .form-input::placeholder {
+            color: #9ca3af;
+        }
+
+        .submit-btn {
+            width: 100%;
+            margin-top: 20px;
+            padding: 14px;
+            background: linear-gradient(135deg, #2E75B6 0%, #1F4E78 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.15s, box-shadow 0.15s;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 16px rgba(46,117,182,0.3);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .message {
+            margin-top: 16px;
+            padding: 12px 16px;
+            border-radius: 10px;
+            font-size: 0.9em;
+            display: none;
+        }
+
+        .message.success {
+            display: block;
+            background: #ecfdf5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .message.error {
+            display: block;
+            background: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .footer-note {
+            text-align: center;
+            padding: 0 30px 24px;
+            font-size: 0.8em;
+            color: #9ca3af;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 18px;
+            height: 18px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+            vertical-align: middle;
+            margin-right: 6px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 480px) {
+            body { padding: 10px; }
+            .form-section { padding: 20px; }
+            .header { padding: 20px 20px 16px; }
+            .header h1 { font-size: 1.3em; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="login-container">
+    <div class="header">
+        <img src="../logo.png" alt="Erichsfelde Logo" class="header-logo">
+        <h1>Farm Controlling</h1>
+        <p>Erichsfelde &mdash; Pommersche Farmgesellschaft</p>
+    </div>
+
+    <div class="form-section">
+        <form id="login-form">
+            <label class="form-label" for="email">E-Mail-Adresse</label>
+            <input
+                type="email"
+                id="email"
+                class="form-input"
+                placeholder="name@beispiel.de"
+                required
+                autocomplete="email"
+            >
+            <button type="submit" class="submit-btn" id="submit-btn">
+                Magic Link senden
+            </button>
+        </form>
+        <div class="message" id="message"></div>
+    </div>
+
+    <div class="footer-note">
+        Ein Login-Link wird an Ihre E-Mail gesendet. Kein Passwort noetig.
+    </div>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://vhwlcnfxslkftswksqrw.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_2a5cKq6CF2Qfe1D1DqLrTw_0kHRD4Cd';
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// Determine redirect target
+const params = new URLSearchParams(window.location.search);
+const redirectTo = params.get('redirect') || 'cockpit.html';
+
+// If already logged in, redirect immediately
+(async function() {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session) {
+        window.location.href = redirectTo;
+    }
+})();
+
+// Listen for auth state changes (handles magic link callback)
+supabase.auth.onAuthStateChange((event, session) => {
+    if (event === 'SIGNED_IN' && session) {
+        window.location.href = redirectTo;
+    }
+});
+
+// Handle form submission
+const form = document.getElementById('login-form');
+const emailInput = document.getElementById('email');
+const submitBtn = document.getElementById('submit-btn');
+const messageEl = document.getElementById('message');
+
+form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const email = emailInput.value.trim();
+    if (!email) return;
+
+    // Disable button, show loading
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span class="loading-spinner"></span> Wird gesendet...';
+    messageEl.className = 'message';
+    messageEl.style.display = 'none';
+
+    try {
+        const { error } = await supabase.auth.signInWithOtp({
+            email,
+            options: {
+                emailRedirectTo: window.location.origin + '/app/' + redirectTo,
+            },
+        });
+
+        if (error) {
+            messageEl.className = 'message error';
+            if (error.message.includes('rate')) {
+                messageEl.textContent = 'Zu viele Versuche. Bitte warten Sie einige Minuten.';
+            } else if (error.message.includes('invalid') || error.message.includes('Invalid')) {
+                messageEl.textContent = 'Ungueltige E-Mail-Adresse. Bitte pruefen Sie Ihre Eingabe.';
+            } else {
+                messageEl.textContent = 'Fehler: ' + error.message;
+            }
+        } else {
+            messageEl.className = 'message success';
+            messageEl.textContent = 'Login-Link wurde an ' + email + ' gesendet. Bitte pruefen Sie Ihr Postfach (auch Spam-Ordner).';
+            emailInput.value = '';
+        }
+    } catch (err) {
+        messageEl.className = 'message error';
+        messageEl.textContent = 'Verbindungsfehler. Bitte versuchen Sie es erneut.';
+    }
+
+    submitBtn.disabled = false;
+    submitBtn.innerHTML = 'Magic Link senden';
+});
+</script>
+
+</body>
+</html>

@@ -6,6 +6,7 @@
 // Optional env vars: TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createLogger } from "../_shared/logger.ts";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -362,14 +363,25 @@ async function wasRecentlyAlerted(
 // Telegram notification
 // ---------------------------------------------------------------------------
 
-async function sendTelegramNotification(results: CheckResult[]): Promise<boolean> {
+interface TelegramResult {
+  sent: boolean;
+  error?: string;
+}
+
+async function sendTelegramNotification(results: CheckResult[]): Promise<TelegramResult> {
   const token = Deno.env.get("TELEGRAM_BOT_TOKEN");
   const chatId = Deno.env.get("TELEGRAM_CHAT_ID");
 
-  if (!token || !chatId) return false;
+  if (!token || !chatId) {
+    const msg = "Telegram not configured: " + (!token ? "TELEGRAM_BOT_TOKEN" : "TELEGRAM_CHAT_ID") + " missing";
+    console.error(msg);
+    return { sent: false, error: msg };
+  }
 
   const triggered = results.filter((r) => r.severity != null && !r.skipped);
-  if (triggered.length === 0) return false;
+  if (triggered.length === 0) {
+    return { sent: false };
+  }
 
   const redAlerts = triggered.filter((r) => r.severity === "red");
   const yellowAlerts = triggered.filter((r) => r.severity === "yellow");
@@ -399,9 +411,16 @@ async function sendTelegramNotification(results: CheckResult[]): Promise<boolean
       body: JSON.stringify({ chat_id: chatId, text, parse_mode: "HTML" }),
     });
     const result = await res.json();
-    return result.ok === true;
-  } catch {
-    return false;
+    if (result.ok === true) {
+      return { sent: true };
+    }
+    const errorMsg = `Telegram API error: ${result.error_code} — ${result.description}`;
+    console.error(errorMsg);
+    return { sent: false, error: errorMsg };
+  } catch (err) {
+    const errorMsg = `Telegram fetch failed: ${(err as Error).message}`;
+    console.error(errorMsg);
+    return { sent: false, error: errorMsg };
   }
 }
 
@@ -416,6 +435,8 @@ Deno.serve(async (_req: Request) => {
   const supabase = createClient(supabaseUrl, serviceRoleKey, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
+
+  const logger = createLogger(supabase, "edge:alerts");
 
   // Load active alert rules
   const { data: rules, error: rulesErr } = await supabase
@@ -489,18 +510,32 @@ Deno.serve(async (_req: Request) => {
   }
 
   // Send Telegram notification for any new alerts
-  const telegramSent = await sendTelegramNotification(
+  const telegramResult = await sendTelegramNotification(
     results.filter((r) => !r.message.includes("dedupliziert")),
   );
 
   const triggered = results.filter((r) => r.severity != null && !r.skipped);
+
+  // Log each check result
+  for (const r of results) {
+    if (r.severity) {
+      await logger.warn(`Alert triggered: ${r.kpi_id} = ${r.severity}`, {
+        kpi_id: r.kpi_id,
+        severity: r.severity,
+        value: r.value,
+        telegram_sent: telegramResult.sent,
+      });
+    } else {
+      await logger.info(`Alert check OK: ${r.kpi_id}`, { kpi_id: r.kpi_id, message: r.message });
+    }
+  }
 
   return json({
     status: "ok",
     checked: results.length,
     triggered: triggered.length,
     skipped: results.filter((r) => r.skipped).length,
-    telegram_sent: telegramSent,
+    telegram: telegramResult,
     details: results,
   });
 });

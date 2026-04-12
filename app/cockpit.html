@@ -62,6 +62,37 @@
             opacity: 0.85;
         }
 
+        /* Navigation */
+        .nav {
+            display: flex;
+            gap: 0;
+            background: #f8f9fa;
+            border-bottom: 2px solid #dee2e6;
+            overflow-x: auto;
+        }
+
+        .nav a {
+            padding: 12px 24px;
+            text-decoration: none;
+            color: #6b7280;
+            font-size: 0.9em;
+            font-weight: 500;
+            white-space: nowrap;
+            border-bottom: 3px solid transparent;
+            transition: color 0.2s, border-color 0.2s;
+        }
+
+        .nav a:hover {
+            color: #374151;
+            background: #f0f0f0;
+        }
+
+        .nav a.active {
+            color: #2E75B6;
+            border-bottom-color: #2E75B6;
+            font-weight: 600;
+        }
+
         /* Toolbar */
         .toolbar {
             display: flex;
@@ -236,6 +267,9 @@
         </div>
     </div>
 
+    <!-- Navigation -->
+    <div id="main-nav"></div>
+
     <!-- Toolbar -->
     <div class="toolbar">
         <span id="last-update">Wird geladen...</span>
@@ -362,6 +396,11 @@
     </div>
 </div>
 
+<script type="module">
+import { renderNav } from './shared/nav.js';
+renderNav('cockpit');
+</script>
+
 <script>
 // ── Supabase Client ──────────────────────────────────────────────
 const SUPABASE_URL = 'https://vhwlcnfxslkftswksqrw.supabase.co';
@@ -372,10 +411,10 @@ const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 async function checkAuth() {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
-        alert('Bitte zuerst einloggen.');
-        // Redirect could go here when login page exists
-        // window.location.href = 'login.html';
+        window.location.href = 'login.html?redirect=' + encodeURIComponent(window.location.pathname);
+        return null;
     }
+    return session.user;
 }
 
 // ── Helpers ──────────────────────────────────────────────────────
@@ -661,11 +700,13 @@ async function loadAll() {
 }
 
 // ── Init ─────────────────────────────────────────────────────────
-checkAuth();
-loadAll();
-
-// Auto-refresh every 5 minutes
-setInterval(loadAll, 5 * 60 * 1000);
+(async function init() {
+    const user = await checkAuth();
+    if (!user) return; // redirect in progress
+    loadAll();
+    // Auto-refresh every 5 minutes
+    setInterval(loadAll, 5 * 60 * 1000);
+})();
 </script>
 
 </body>

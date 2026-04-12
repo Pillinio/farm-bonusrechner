@@ -34,7 +34,7 @@ export function renderNav(activePage) {
     </nav>`;
 
   // Find or create the mount point
-  let target = document.querySelector('[data-nav]') || document.querySelector('.nav');
+  let target = document.querySelector('[data-nav]') || document.querySelector('#main-nav') || document.querySelector('.nav');
 
   if (target) {
     target.outerHTML = html;

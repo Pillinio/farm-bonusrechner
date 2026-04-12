@@ -3,6 +3,7 @@
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import schema from "./schema.json" with { type: "json" };
+import { createLogger } from "../_shared/logger.ts";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -15,6 +16,15 @@ interface IngestPayload {
   kind: Kind;
   source: string;
   data: Record<string, unknown>;
+}
+
+/** Compute SHA-256 hash of a string, returned as hex. */
+async function sha256(input: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(input);
+  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
 /** Lightweight validation – checks required top-level fields and kind value. */
@@ -243,6 +253,8 @@ Deno.serve(async (req: Request) => {
     auth: { persistSession: false, autoRefreshToken: false },
   });
 
+  const logger = createLogger(supabase, "edge:ingest");
+
   // --- Parse & validate ---
   let body: unknown;
   try {
@@ -258,6 +270,24 @@ Deno.serve(async (req: Request) => {
     return json({ error: (err as Error).message }, 400);
   }
 
+  // --- Idempotency: compute SHA-256 hash and check for duplicates ---
+  const payloadHash = await sha256(JSON.stringify(body));
+
+  const { data: existingEvent } = await supabase
+    .from("raw_events")
+    .select("id")
+    .eq("payload_hash", payloadHash)
+    .limit(1)
+    .maybeSingle();
+
+  if (existingEvent) {
+    return json({
+      status: "duplicate",
+      raw_event_id: existingEvent.id,
+      payload_hash: payloadHash,
+    });
+  }
+
   // --- Store raw event ---
   const { data: rawEvent, error: rawErr } = await supabase
     .from("raw_events")
@@ -265,6 +295,7 @@ Deno.serve(async (req: Request) => {
       kind: payload.kind,
       source: payload.source,
       payload: body,
+      payload_hash: payloadHash,
       status: "ok",
     })
     .select("id")
@@ -298,6 +329,12 @@ Deno.serve(async (req: Request) => {
       .update({ records_inserted: recordsInserted })
       .eq("id", rawEventId);
 
+    await logger.info(`Ingest complete: ${payload.kind}`, {
+      kind: payload.kind,
+      raw_event_id: rawEventId,
+      records_inserted: recordsInserted,
+    });
+
     return json({
       status: "ok",
       kind: payload.kind,
@@ -312,6 +349,12 @@ Deno.serve(async (req: Request) => {
       .from("raw_events")
       .update({ status: "error", error_message: message })
       .eq("id", rawEventId);
+
+    await logger.error(`Ingest failed: ${payload.kind}`, {
+      kind: payload.kind,
+      raw_event_id: rawEventId,
+      error: message,
+    });
 
     return json({
       status: "error",

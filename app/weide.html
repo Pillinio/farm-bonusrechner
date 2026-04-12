@@ -347,13 +347,7 @@
     </div>
 
     <!-- Navigation -->
-    <nav class="nav">
-        <a href="cockpit.html">Cockpit</a>
-        <a href="finanzen.html">Finanzen</a>
-        <a href="herde.html">Herde</a>
-        <a href="weide.html" class="active">Weide &amp; Klima</a>
-        <a href="operativ.html">Operativ</a>
-    </nav>
+    <div id="main-nav"></div>
 
     <!-- Toolbar -->
     <div class="toolbar">
@@ -428,6 +422,11 @@
     </div>
 </div>
 
+<script type="module">
+import { renderNav } from './shared/nav.js';
+renderNav('weide');
+</script>
+
 <script>
 // ── Supabase Client ──────────────────────────────────────────────
 const SUPABASE_URL = 'https://vhwlcnfxslkftswksqrw.supabase.co';
@@ -438,8 +437,10 @@ const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 async function checkAuth() {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
-        alert('Bitte zuerst einloggen.');
+        window.location.href = 'login.html?redirect=' + encodeURIComponent(window.location.pathname);
+        return null;
     }
+    return session.user;
 }
 
 // ── W1: Stocking Rate ───────────────────────────────────────────
@@ -667,11 +668,13 @@ async function loadAll() {
 }
 
 // ── Init ─────────────────────────────────────────────────────────
-checkAuth();
-loadAll();
-
-// Auto-refresh every 5 minutes
-setInterval(loadAll, 5 * 60 * 1000);
+(async function init() {
+    const user = await checkAuth();
+    if (!user) return; // redirect in progress
+    loadAll();
+    // Auto-refresh every 5 minutes
+    setInterval(loadAll, 5 * 60 * 1000);
+})();
 </script>
 
 </body>

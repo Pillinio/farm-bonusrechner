@@ -60,3 +60,5 @@ package-lock.json
 # Supabase local
 supabase/.branches/
 supabase/.temp/
+.claude/worktrees/
+.playwright-mcp/

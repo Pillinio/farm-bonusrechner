@@ -460,6 +460,7 @@
 
 <!-- ═══════════ HEADER ═══════════ -->
 <div class="header" style="position:relative;">
+    <a href="cockpit.html" style="position:absolute;left:16px;top:50%;transform:translateY(-50%);color:white;text-decoration:none;font-size:0.85em;opacity:0.85;">&#x2190; Cockpit</a>
     <h1>Monatsmeldung</h1>
     <p>Farm Erichsfelde</p>
     <button class="logout-btn hidden" id="logoutBtn" onclick="logout()">Abmelden</button>
@@ -673,6 +674,7 @@ let tasks = [];
 let photoFiles = [null, null, null];
 let photoLabels = ['', '', ''];
 let draftTimer = null;
+let isSubmitting = false;
 
 // ═══════════════════════════════════════
 // Auth
@@ -1002,6 +1004,9 @@ function clearDraft() {
 // Submit
 // ═══════════════════════════════════════
 async function submitForm() {
+    if (isSubmitting) return;
+    isSubmitting = true;
+
     const btn = document.getElementById('submitBtn');
     btn.disabled = true;
     btn.innerHTML = '<span class="spinner"></span> Wird gesendet...';
@@ -1118,6 +1123,7 @@ async function submitForm() {
 
     } catch (err) {
         alert('Fehler: ' + err.message);
+        isSubmitting = false;
         btn.disabled = false;
         btn.textContent = 'Monatsmeldung absenden';
     }
@@ -1186,6 +1192,21 @@ function formatDateDE(iso) {
     const [y,m,d] = iso.split('-');
     return `${d}.${m}.${y}`;
 }
+
+// ═══════════════════════════════════════
+// Offline Detection
+// ═══════════════════════════════════════
+window.addEventListener('offline', () => {
+    document.getElementById('offlineBanner')?.remove();
+    const banner = document.createElement('div');
+    banner.id = 'offlineBanner';
+    banner.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#dc2626;color:white;text-align:center;padding:8px;z-index:9999;font-weight:600;';
+    banner.textContent = 'Keine Internetverbindung — Entwurf wird lokal gespeichert';
+    document.body.prepend(banner);
+});
+window.addEventListener('online', () => {
+    document.getElementById('offlineBanner')?.remove();
+});
 
 // ═══════════════════════════════════════
 // Init

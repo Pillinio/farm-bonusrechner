@@ -4,6 +4,7 @@
 // POST /report?quarter=2026-Q1&send=true → generates and emails via Resend
 
 import { createClient, type SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createLogger } from "../_shared/logger.ts";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -678,6 +679,8 @@ Deno.serve(async (req: Request) => {
     auth: { persistSession: false, autoRefreshToken: false },
   });
 
+  const logger = createLogger(supabase, "edge:report");
+
   // Parse quarter param
   const url = new URL(req.url);
   const quarterParam = url.searchParams.get("quarter");
@@ -728,9 +731,28 @@ Deno.serve(async (req: Request) => {
     data_quality: dataQuality,
   };
 
+  const sectionsLoaded = [
+    report.finance ? "finance" : null,
+    report.herd ? "herd" : null,
+    report.pasture ? "pasture" : null,
+    report.operations ? "operations" : null,
+  ].filter(Boolean);
+
+  await logger.info(`Report generated: ${quarterParam}`, {
+    quarter: quarterParam,
+    sections_loaded: sectionsLoaded,
+    alerts_count: report.alerts.length,
+    data_quality_issues: dataQuality.filter((d) => d.status !== "ok").length,
+  });
+
   // POST with send=true → also email
   if (req.method === "POST" && url.searchParams.get("send") === "true") {
     const emailResult = await sendReportEmail(report);
+    if (emailResult.sent) {
+      await logger.info(`Report email sent: ${quarterParam}`);
+    } else {
+      await logger.error(`Report email failed: ${quarterParam}`, { error: emailResult.error });
+    }
     return json({ report, email: emailResult });
   }
 

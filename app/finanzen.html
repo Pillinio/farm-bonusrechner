@@ -249,7 +249,8 @@
 
         .monthly-grid th, .monthly-grid td {
             font-size: 0.82em;
-            padding: 8px 6px;
+            padding: 12px 8px;
+            min-height: 44px;
             text-align: right;
             white-space: nowrap;
         }
@@ -338,14 +339,7 @@
     </div>
 
     <!-- Navigation -->
-    <nav class="nav">
-        <a href="cockpit.html">Cockpit</a>
-        <a href="finanzen.html" class="active">Finanzen</a>
-        <a href="herde.html">Herde</a>
-        <a href="weide.html">Weide</a>
-        <a href="operativ.html">Operativ</a>
-        <a href="../farm_bonussystem_komplett.html">Bonus</a>
-    </nav>
+    <div id="main-nav"></div>
 
     <!-- Toolbar -->
     <div class="toolbar">
@@ -458,6 +452,11 @@
     </div>
 </div>
 
+<script type="module">
+import { renderNav } from './shared/nav.js';
+renderNav('finanzen');
+</script>
+
 <script>
 // ── Supabase Client ──────────────────────────────────────────────
 const SUPABASE_URL = 'https://vhwlcnfxslkftswksqrw.supabase.co';
@@ -467,12 +466,24 @@ const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const YEAR = new Date().getFullYear();
 const MONTH_NAMES = ['Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'];
 
+// ── Chart instances (for destroy on reload) ─────────────────────
+const charts = {};
+
+function destroyChart(id) {
+    if (charts[id]) {
+        charts[id].destroy();
+        charts[id] = null;
+    }
+}
+
 // ── Auth Guard ───────────────────────────────────────────────────
 async function checkAuth() {
     const { data: { session } } = await sb.auth.getSession();
     if (!session) {
-        alert('Bitte zuerst einloggen.');
+        window.location.href = 'login.html?redirect=' + encodeURIComponent(window.location.pathname);
+        return null;
     }
+    return session.user;
 }
 
 // ── Helpers ──────────────────────────────────────────────────────
@@ -632,7 +643,8 @@ async function loadF3() {
             <div class="kpi-detail" style="margin-bottom:12px;">Gesamtumsatz YTD: N$ ${fmt(total)}</div>
             <div class="chart-container"><canvas id="chart-f3"></canvas></div>`;
 
-        new Chart(document.getElementById('chart-f3'), {
+        destroyChart('f3');
+        charts['f3'] = new Chart(document.getElementById('chart-f3'), {
             type: 'bar',
             data: {
                 labels: MONTH_NAMES,
@@ -714,7 +726,8 @@ async function loadF4() {
         if (hasMultipleYears) {
             // Approximate cost/kg per year (use same total kg as proxy)
             const perKgByYear = years.map(y => yearCosts[y] / totalKg);
-            new Chart(document.getElementById('chart-f4'), {
+            destroyChart('f4');
+            charts['f4'] = new Chart(document.getElementById('chart-f4'), {
                 type: 'line',
                 data: {
                     labels: years,
@@ -938,8 +951,11 @@ async function loadAll() {
 }
 
 // ── Init ─────────────────────────────────────────────────────────
-checkAuth();
-loadAll();
+(async function init() {
+    const user = await checkAuth();
+    if (!user) return; // redirect in progress
+    loadAll();
+})();
 </script>
 
 </body>

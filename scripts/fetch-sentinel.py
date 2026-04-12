@@ -26,6 +26,29 @@ Useful cloud-free scenes: depends on season (rainy season = more cloud cover)
 
 import os
 import sys
+import time
+
+import requests
+
+
+# ---------------------------------------------------------------------------
+# Retry helper
+# ---------------------------------------------------------------------------
+
+def fetch_with_retry(url, params=None, headers=None, max_retries=3, timeout=30):
+    """Fetch URL with exponential backoff retry."""
+    for attempt in range(max_retries):
+        try:
+            resp = requests.get(url, params=params, headers=headers, timeout=timeout)
+            resp.raise_for_status()
+            return resp.json()
+        except (requests.RequestException, ValueError) as e:
+            if attempt < max_retries - 1:
+                wait = 2 ** attempt * 5  # 5s, 10s, 20s
+                print(f"Retry {attempt+1}/{max_retries} after {wait}s: {e}")
+                time.sleep(wait)
+            else:
+                raise
 
 
 def main():
@@ -37,6 +60,24 @@ def main():
     print("Farm center: lat=-21.6056, lon=16.9011")
     print("Bounding box: SW(16.82, -21.70) NE(16.95, -21.55)")
     print()
+
+    # Verify Supabase connection before main work
+    supabase_url = os.environ.get("SUPABASE_URL", "").rstrip("/")
+    supabase_key = os.environ.get("SUPABASE_SERVICE_KEY", "")
+    if supabase_url and supabase_key:
+        sb_headers = {
+            "apikey": supabase_key,
+            "Authorization": f"Bearer {supabase_key}",
+        }
+        test_resp = requests.get(
+            f"{supabase_url}/rest/v1/farms?select=name&limit=1",
+            headers=sb_headers, timeout=10,
+        )
+        if test_resp.status_code != 200:
+            raise RuntimeError(f"Supabase auth failed: {test_resp.status_code}")
+        print(f"Supabase connected: {test_resp.json()}")
+    else:
+        print("WARNING: SUPABASE_URL or SUPABASE_SERVICE_KEY not set")
 
     # Check if Copernicus credentials are available
     client_id = os.environ.get("COPERNICUS_CLIENT_ID", "")

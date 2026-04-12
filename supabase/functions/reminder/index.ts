@@ -3,12 +3,23 @@
 // Required env vars: TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createLogger } from "../_shared/logger.ts";
 
 const FORM_URL = "https://erichsfelde.farm/herd-entry.html";
 
 Deno.serve(async (_req: Request) => {
+  // Use Africa/Windhoek timezone for date checks (Namibia local time)
   const now = new Date();
-  const day = now.getUTCDate();
+  const formatter = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Africa/Windhoek',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  });
+  const dateStr = formatter.format(now); // "2026-04-01"
+  const day = parseInt(dateStr.split('-')[2]);
+  const month = dateStr.split('-')[1];
+  const year = parseInt(dateStr.split('-')[0]);
 
   // Only send reminders on the 1st of the month
   if (day !== 1) {
@@ -20,6 +31,12 @@ Deno.serve(async (_req: Request) => {
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
   const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+
+  const supabaseForLog = createClient(supabaseUrl, supabaseKey, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+  const logger = createLogger(supabaseForLog, "edge:reminder");
+
   const telegramToken = Deno.env.get("TELEGRAM_BOT_TOKEN");
   const chatId = Deno.env.get("TELEGRAM_CHAT_ID");
 
@@ -33,12 +50,11 @@ Deno.serve(async (_req: Request) => {
   const supabase = createClient(supabaseUrl, supabaseKey);
 
   // Check if a snapshot for the current month already exists
-  const year = now.getUTCFullYear();
-  const month = String(now.getUTCMonth() + 1).padStart(2, "0");
   const monthStart = `${year}-${month}-01`;
-  const nextMonth = now.getUTCMonth() + 1 === 12
+  const monthNum = parseInt(month);
+  const nextMonth = monthNum === 12
     ? `${year + 1}-01-01`
-    : `${year}-${String(now.getUTCMonth() + 2).padStart(2, "0")}-01`;
+    : `${year}-${String(monthNum + 1).padStart(2, "0")}-01`;
 
   const { data, error } = await supabase
     .from("herd_snapshots")
@@ -55,6 +71,7 @@ Deno.serve(async (_req: Request) => {
   }
 
   if (data && data.length > 0) {
+    await logger.info("Reminder skipped: snapshot already exists", { month, year });
     return new Response(
       JSON.stringify({ ok: true, skipped: true, reason: "snapshot already exists" }),
       { headers: { "Content-Type": "application/json" } },
@@ -74,6 +91,12 @@ Deno.serve(async (_req: Request) => {
   });
 
   const telegramResult = await telegramRes.json();
+
+  if (telegramResult.ok) {
+    await logger.info("Reminder sent via Telegram", { month, year });
+  } else {
+    await logger.error("Reminder Telegram send failed", { month, year, telegram_error: telegramResult });
+  }
 
   return new Response(
     JSON.stringify({ ok: telegramResult.ok, sent: true }),
