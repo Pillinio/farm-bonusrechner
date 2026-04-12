@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markt - Farm Erichsfelde</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: white;
+            padding: 20px 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 30px;
+        }
+
+        .header-logo {
+            width: 120px;
+            height: auto;
+            max-height: 100px;
+            object-fit: contain;
+        }
+
+        .header-content {
+            flex: 1;
+            max-width: 800px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.2em;
+            margin-bottom: 6px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.85;
+        }
+
+        /* Navigation */
+        .nav {
+            display: flex;
+            gap: 0;
+            background: #f8f9fa;
+            border-bottom: 2px solid #dee2e6;
+            overflow-x: auto;
+        }
+
+        .nav a {
+            padding: 12px 24px;
+            text-decoration: none;
+            color: #6b7280;
+            font-size: 0.9em;
+            font-weight: 500;
+            white-space: nowrap;
+            border-bottom: 3px solid transparent;
+            transition: color 0.2s, border-color 0.2s;
+        }
+
+        .nav a:hover {
+            color: #374151;
+            background: #f0f0f0;
+        }
+
+        .nav a.active {
+            color: #2E75B6;
+            border-bottom-color: #2E75B6;
+            font-weight: 600;
+        }
+
+        /* Toolbar */
+        .toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 24px;
+            background: #f8f9fa;
+            border-bottom: 2px solid #dee2e6;
+            font-size: 0.9em;
+            color: #6b7280;
+        }
+
+        .toolbar button {
+            background: #2E75B6;
+            color: white;
+            border: none;
+            padding: 6px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: background 0.2s;
+        }
+
+        .toolbar button:hover {
+            background: #1F4E78;
+        }
+
+        /* Grid */
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            padding: 24px;
+        }
+
+        /* Section Title */
+        .section-title {
+            grid-column: 1 / -1;
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #374151;
+            padding: 8px 0 4px;
+            border-bottom: 1px solid #e5e7eb;
+            margin-top: 8px;
+        }
+
+        .section-title:first-child {
+            margin-top: 0;
+        }
+
+        /* Card */
+        .card {
+            display: flex;
+            align-items: stretch;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+            overflow: hidden;
+            transition: transform 0.15s, box-shadow 0.15s;
+            color: inherit;
+            border: 1px solid #e5e7eb;
+        }
+
+        .card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 24px rgba(0,0,0,0.13);
+        }
+
+        .card-status-bar {
+            width: 6px;
+            flex-shrink: 0;
+        }
+
+        .card-body {
+            flex: 1;
+            padding: 20px 22px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .card-top {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 4px;
+        }
+
+        .card-icon {
+            font-size: 1.6em;
+            line-height: 1;
+        }
+
+        .card-title {
+            font-size: 0.95em;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .card-value {
+            font-size: 2em;
+            font-weight: 700;
+            color: #111827;
+            line-height: 1.1;
+        }
+
+        .card-subtitle {
+            font-size: 0.85em;
+            color: #6b7280;
+            margin-top: 2px;
+        }
+
+        .card-status-dot {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-left: auto;
+            flex-shrink: 0;
+        }
+
+        /* Card with chart */
+        .card-wide {
+            grid-column: 1 / -1;
+        }
+
+        .card-chart {
+            flex-direction: column;
+        }
+
+        .chart-container {
+            width: 100%;
+            padding: 12px 22px 16px;
+            position: relative;
+            height: 220px;
+        }
+
+        .chart-container canvas {
+            width: 100% !important;
+            height: 100% !important;
+        }
+
+        /* Colors */
+        .status-green  { background-color: #22c55e; }
+        .status-yellow { background-color: #eab308; }
+        .status-red    { background-color: #ef4444; }
+        .status-gray   { background-color: #9ca3af; }
+
+        /* Loading */
+        .loading-spinner {
+            display: inline-block;
+            width: 18px;
+            height: 18px;
+            border: 2px solid #d1d5db;
+            border-top-color: #2E75B6;
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            body { padding: 10px; }
+
+            .header {
+                flex-direction: column;
+                gap: 12px;
+                padding: 16px 20px;
+            }
+            .header-logo { width: 70px; }
+            .header h1 { font-size: 1.5em; }
+
+            .grid {
+                grid-template-columns: 1fr;
+                gap: 14px;
+                padding: 16px;
+            }
+
+            .card-value { font-size: 1.6em; }
+            .chart-container { height: 180px; }
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 14px;
+            color: #9ca3af;
+            font-size: 0.8em;
+            border-top: 1px solid #e5e7eb;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- Header -->
+    <div class="header">
+        <img src="../logo.png" alt="Erichsfelde Logo" class="header-logo">
+        <div class="header-content">
+            <h1>Markt</h1>
+            <p>Erichsfelde &mdash; Pommersche Farmgesellschaft</p>
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <div id="main-nav"></div>
+
+    <!-- Toolbar -->
+    <div class="toolbar">
+        <span id="last-update">Wird geladen...</span>
+        <button onclick="loadAll()">Aktualisieren</button>
+    </div>
+
+    <!-- KPI Cards -->
+    <div class="grid">
+
+        <!-- M1 — Rindfleischpreis NAD/kg (wide card with chart) -->
+        <div class="card card-wide card-chart" id="card-m1">
+            <div class="card-body">
+                <div class="card-top">
+                    <span class="card-icon">&#x1F4B5;</span>
+                    <span class="card-title">M1 &mdash; Rindfleischpreis NAD/kg</span>
+                    <span class="card-status-dot status-gray"></span>
+                </div>
+                <div class="card-value" data-kpi="m1"><span class="loading-spinner"></span></div>
+                <div class="card-subtitle">Meatco A2/B2 aktuell</div>
+            </div>
+            <div class="chart-container">
+                <canvas id="chart-m1"></canvas>
+            </div>
+        </div>
+
+        <!-- M2 — Marge pro kg -->
+        <div class="card" id="card-m2">
+            <div class="card-status-bar status-gray"></div>
+            <div class="card-body">
+                <div class="card-top">
+                    <span class="card-icon">&#x1F4CA;</span>
+                    <span class="card-title">M2 &mdash; Marge pro verkauftem kg</span>
+                    <span class="card-status-dot status-gray"></span>
+                </div>
+                <div class="card-value" data-kpi="m2"><span class="loading-spinner"></span></div>
+                <div class="card-subtitle">Preis minus Kosten je kg</div>
+            </div>
+        </div>
+
+        <!-- M3 — Input-Kosten-Index -->
+        <div class="card" id="card-m3">
+            <div class="card-status-bar status-gray"></div>
+            <div class="card-body">
+                <div class="card-top">
+                    <span class="card-icon">&#x1F33E;</span>
+                    <span class="card-title">M3 &mdash; Futter-/Input-Kosten-Index</span>
+                    <span class="card-status-dot status-gray"></span>
+                </div>
+                <div class="card-value" data-kpi="m3"><span class="loading-spinner"></span></div>
+                <div class="card-subtitle">Monatliche Veraenderung</div>
+            </div>
+        </div>
+
+        <!-- M4 — Wechselkurse (wide card with chart) -->
+        <div class="card card-wide card-chart" id="card-m4">
+            <div class="card-body">
+                <div class="card-top">
+                    <span class="card-icon">&#x1F4B1;</span>
+                    <span class="card-title">M4 &mdash; Wechselkurse</span>
+                    <span class="card-status-dot status-gray"></span>
+                </div>
+                <div class="card-value" data-kpi="m4"><span class="loading-spinner"></span></div>
+                <div class="card-subtitle">NAD/EUR &amp; NAD/USD (letzte 30 Tage)</div>
+            </div>
+            <div class="chart-container">
+                <canvas id="chart-m4"></canvas>
+            </div>
+        </div>
+
+        <!-- M5 — Grade-Mix (with pie chart) -->
+        <div class="card card-chart" id="card-m5">
+            <div class="card-body">
+                <div class="card-top">
+                    <span class="card-icon">&#x1F969;</span>
+                    <span class="card-title">M5 &mdash; Grade-Mix</span>
+                    <span class="card-status-dot status-gray"></span>
+                </div>
+                <div class="card-value" data-kpi="m5"><span class="loading-spinner"></span></div>
+                <div class="card-subtitle">A / B / C-Grades (12 Monate)</div>
+            </div>
+            <div class="chart-container">
+                <canvas id="chart-m5"></canvas>
+            </div>
+        </div>
+
+        <!-- M6 — Condemnation Rate -->
+        <div class="card" id="card-m6">
+            <div class="card-status-bar status-gray"></div>
+            <div class="card-body">
+                <div class="card-top">
+                    <span class="card-icon">&#x26A0;&#xFE0F;</span>
+                    <span class="card-title">M6 &mdash; Condemnation Rate</span>
+                    <span class="card-status-dot status-gray"></span>
+                </div>
+                <div class="card-value" data-kpi="m6"><span class="loading-spinner"></span></div>
+                <div class="card-subtitle">Konfiszierungsverlust in %</div>
+            </div>
+        </div>
+
+        <!-- M7 — Shortages -->
+        <div class="card" id="card-m7">
+            <div class="card-status-bar status-gray"></div>
+            <div class="card-body">
+                <div class="card-top">
+                    <span class="card-icon">&#x1F4E6;</span>
+                    <span class="card-title">M7 &mdash; Shortages</span>
+                    <span class="card-status-dot status-gray"></span>
+                </div>
+                <div class="card-value" data-kpi="m7"><span class="loading-spinner"></span></div>
+                <div class="card-subtitle">Angekuendigt vs. tatsaechlich geliefert</div>
+            </div>
+        </div>
+
+        <!-- M8 — LPO Benchmark -->
+        <div class="card" id="card-m8">
+            <div class="card-status-bar status-gray"></div>
+            <div class="card-body">
+                <div class="card-top">
+                    <span class="card-icon">&#x1F4C8;</span>
+                    <span class="card-title">M8 &mdash; LPO Benchmark vs Meatco</span>
+                    <span class="card-status-dot status-gray"></span>
+                </div>
+                <div class="card-value" data-kpi="m8"><span class="loading-spinner"></span></div>
+                <div class="card-subtitle">Wochenpreisvergleich</div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="footer">
+        Farm Controlling &mdash; Erichsfelde &copy; 2026 &middot; Auto-Refresh alle 5 Min.
+    </div>
+</div>
+
+<script type="module">
+import { renderNav } from './shared/nav.js';
+renderNav('markt');
+</script>
+
+<script>
+// ── Supabase Client ──────────────────────────────────────────────
+const SUPABASE_URL = 'https://vhwlcnfxslkftswksqrw.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_2a5cKq6CF2Qfe1D1DqLrTw_0kHRD4Cd';
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// ── Auth Guard ───────────────────────────────────────────────────
+async function checkAuth() {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+        window.location.href = 'login.html?redirect=' + encodeURIComponent(window.location.pathname);
+        return null;
+    }
+    return session.user;
+}
+
+// ── Chart instances ─────────────────────────────────────────────
+let chartM1 = null;
+let chartM4 = null;
+let chartM5 = null;
+
+// ── Helpers ──────────────────────────────────────────────────────
+function setCard(id, { value, subtitle, status }) {
+    const card = document.getElementById('card-' + id);
+    if (!card) return;
+
+    const bar = card.querySelector('.card-status-bar');
+    const dot = card.querySelector('.card-status-dot');
+    const valEl = card.querySelector('.card-value');
+    const subEl = card.querySelector('.card-subtitle');
+
+    ['status-green','status-yellow','status-red','status-gray'].forEach(c => {
+        if (bar) bar.classList.remove(c);
+        if (dot) dot.classList.remove(c);
+    });
+
+    const cls = 'status-' + status;
+    if (bar) bar.classList.add(cls);
+    if (dot) dot.classList.add(cls);
+
+    valEl.textContent = value;
+    if (subtitle) subEl.textContent = subtitle;
+}
+
+function noData(id, subtitle) {
+    setCard(id, { value: '\u2014', subtitle: subtitle || 'Keine Daten', status: 'gray' });
+}
+
+// ── M1 — Rindfleischpreis NAD/kg ────────────────────────────────
+async function loadM1() {
+    try {
+        const { data } = await supabase
+            .from('market_prices')
+            .select('commodity, price_date, price_nad')
+            .like('commodity', 'beef_%')
+            .order('price_date', { ascending: true });
+
+        if (!data?.length) return noData('m1');
+
+        // Group by commodity (grade)
+        const grades = {};
+        data.forEach(r => {
+            if (!grades[r.commodity]) grades[r.commodity] = [];
+            grades[r.commodity].push({ date: r.price_date, price: r.price_nad });
+        });
+
+        // Get latest price across all grades
+        const latest = data[data.length - 1];
+        const latestPrice = latest.price_nad;
+        const gradeName = latest.commodity.replace('beef_', '').toUpperCase();
+
+        setCard('m1', {
+            value: 'N$ ' + latestPrice.toFixed(2),
+            subtitle: gradeName + ' aktuell',
+            status: 'green'
+        });
+
+        // Draw line chart
+        const ctx = document.getElementById('chart-m1').getContext('2d');
+        if (chartM1) chartM1.destroy();
+
+        const colors = ['#2E75B6', '#e74c3c', '#27ae60', '#f39c12', '#8e44ad'];
+        const datasets = Object.entries(grades).map(([commodity, points], i) => ({
+            label: commodity.replace('beef_', '').toUpperCase(),
+            data: points.map(p => ({ x: p.date, y: p.price })),
+            borderColor: colors[i % colors.length],
+            backgroundColor: colors[i % colors.length] + '20',
+            tension: 0.3,
+            pointRadius: 2,
+            borderWidth: 2,
+            fill: false,
+        }));
+
+        chartM1 = new Chart(ctx, {
+            type: 'line',
+            data: { datasets },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'top', labels: { font: { size: 11 } } },
+                },
+                scales: {
+                    x: { type: 'category', ticks: { maxTicksLimit: 8, font: { size: 10 } } },
+                    y: { title: { display: true, text: 'NAD/kg', font: { size: 11 } }, ticks: { font: { size: 10 } } },
+                },
+            },
+        });
+    } catch { noData('m1'); }
+}
+
+// ── M2 — Marge pro kg ───────────────────────────────────────────
+async function loadM2() {
+    try {
+        // Latest beef price
+        const { data: priceData } = await supabase
+            .from('market_prices')
+            .select('price_nad')
+            .like('commodity', 'beef_%')
+            .order('price_date', { ascending: false })
+            .limit(1);
+
+        // Costs from budgets
+        const { data: costs } = await supabase
+            .from('budgets')
+            .select('actual_nad')
+            .eq('fiscal_year', new Date().getFullYear());
+
+        // Total kg sold
+        const { data: sales } = await supabase
+            .from('sales')
+            .select('weight_kg')
+            .gte('sale_date', new Date().getFullYear() + '-01-01');
+
+        if (!priceData?.length) return noData('m2', 'Kein Marktpreis');
+
+        const pricePerKg = priceData[0].price_nad;
+
+        // Calculate cost per kg if possible
+        if (sales?.length && costs?.length) {
+            const totalKg = sales.reduce((s, r) => s + (r.weight_kg || 0), 0);
+            const totalCost = costs.reduce((s, r) => s + (r.actual_nad || 0), 0);
+
+            if (totalKg > 0) {
+                const costPerKg = totalCost / totalKg;
+                const margin = pricePerKg - costPerKg;
+                const status = margin > 10 ? 'green' : margin > 0 ? 'yellow' : 'red';
+
+                return setCard('m2', {
+                    value: 'N$ ' + margin.toFixed(2),
+                    subtitle: 'Preis ' + pricePerKg.toFixed(2) + ' - Kosten ' + costPerKg.toFixed(2),
+                    status
+                });
+            }
+        }
+
+        // Fallback: show price only
+        setCard('m2', {
+            value: 'N$ ' + pricePerKg.toFixed(2),
+            subtitle: 'Nur Preis (Kosten fehlen)',
+            status: 'gray'
+        });
+    } catch { noData('m2'); }
+}
+
+// ── M3 — Futter-/Input-Kosten-Index ─────────────────────────────
+async function loadM3() {
+    try {
+        // Try market_prices for feed/fuel commodities
+        const { data } = await supabase
+            .from('market_prices')
+            .select('commodity, price_date, price_nad')
+            .or('commodity.like.maize%,commodity.like.lick%,commodity.like.diesel%,commodity.like.feed%,commodity.like.fuel%')
+            .order('price_date', { ascending: false })
+            .limit(60);
+
+        if (!data?.length) {
+            // Fallback: try budgets for feed/fuel categories
+            const { data: budgets } = await supabase
+                .from('budgets')
+                .select('category, month, actual_nad')
+                .eq('fiscal_year', new Date().getFullYear())
+                .or('category.ilike.%futter%,category.ilike.%feed%,category.ilike.%fuel%,category.ilike.%diesel%');
+
+            if (!budgets?.length) return noData('m3', 'Keine Input-Preisdaten');
+
+            // Calculate month-over-month
+            const byMonth = {};
+            budgets.forEach(r => {
+                if (!byMonth[r.month]) byMonth[r.month] = 0;
+                byMonth[r.month] += r.actual_nad || 0;
+            });
+
+            const months = Object.keys(byMonth).sort((a, b) => b - a);
+            if (months.length < 2) return noData('m3', 'Zu wenig Monate');
+
+            const curr = byMonth[months[0]];
+            const prev = byMonth[months[1]];
+            const change = prev > 0 ? ((curr - prev) / prev * 100) : 0;
+            const sign = change > 0 ? '+' : '';
+            const status = Math.abs(change) < 5 ? 'green' : Math.abs(change) < 15 ? 'yellow' : 'red';
+
+            return setCard('m3', {
+                value: sign + change.toFixed(1) + ' %',
+                subtitle: 'Monatliche Veraenderung (Budget)',
+                status
+            });
+        }
+
+        // Group by month and compute aggregate index
+        const byMonth = {};
+        data.forEach(r => {
+            const month = r.price_date.substring(0, 7);
+            if (!byMonth[month]) byMonth[month] = [];
+            byMonth[month].push(r.price_nad);
+        });
+
+        const monthKeys = Object.keys(byMonth).sort().reverse();
+        if (monthKeys.length < 2) return noData('m3', 'Zu wenig Monate');
+
+        const avgCurr = byMonth[monthKeys[0]].reduce((s, v) => s + v, 0) / byMonth[monthKeys[0]].length;
+        const avgPrev = byMonth[monthKeys[1]].reduce((s, v) => s + v, 0) / byMonth[monthKeys[1]].length;
+        const change = avgPrev > 0 ? ((avgCurr - avgPrev) / avgPrev * 100) : 0;
+        const sign = change > 0 ? '+' : '';
+        const status = Math.abs(change) < 5 ? 'green' : Math.abs(change) < 15 ? 'yellow' : 'red';
+
+        setCard('m3', {
+            value: sign + change.toFixed(1) + ' %',
+            subtitle: 'Monatliche Veraenderung',
+            status
+        });
+    } catch { noData('m3'); }
+}
+
+// ── M4 — Wechselkurse ───────────────────────────────────────────
+async function loadM4() {
+    try {
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        const cutoff = thirtyDaysAgo.toISOString().split('T')[0];
+
+        const { data } = await supabase
+            .from('market_prices')
+            .select('commodity, price_date, price_nad')
+            .like('commodity', 'fx_%')
+            .gte('price_date', cutoff)
+            .order('price_date', { ascending: true });
+
+        if (!data?.length) return noData('m4', 'Keine Wechselkursdaten');
+
+        // Group by currency pair
+        const pairs = {};
+        data.forEach(r => {
+            if (!pairs[r.commodity]) pairs[r.commodity] = [];
+            pairs[r.commodity].push({ date: r.price_date, rate: r.price_nad });
+        });
+
+        // Show latest rates
+        const latestValues = [];
+        Object.entries(pairs).forEach(([key, points]) => {
+            const latest = points[points.length - 1];
+            const label = key.replace('fx_', '').toUpperCase();
+            latestValues.push(label + ': ' + latest.rate.toFixed(2));
+        });
+
+        if (latestValues.length === 0) return noData('m4');
+
+        setCard('m4', {
+            value: latestValues.join(' | '),
+            subtitle: 'NAD-Wechselkurse aktuell',
+            status: 'green'
+        });
+
+        // Draw chart
+        const ctx = document.getElementById('chart-m4').getContext('2d');
+        if (chartM4) chartM4.destroy();
+
+        const colors = ['#2E75B6', '#e74c3c', '#27ae60'];
+        const datasets = Object.entries(pairs).map(([commodity, points], i) => ({
+            label: commodity.replace('fx_', '').toUpperCase(),
+            data: points.map(p => ({ x: p.date, y: p.rate })),
+            borderColor: colors[i % colors.length],
+            tension: 0.3,
+            pointRadius: 2,
+            borderWidth: 2,
+            fill: false,
+        }));
+
+        chartM4 = new Chart(ctx, {
+            type: 'line',
+            data: { datasets },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'top', labels: { font: { size: 11 } } },
+                },
+                scales: {
+                    x: { type: 'category', ticks: { maxTicksLimit: 8, font: { size: 10 } } },
+                    y: { title: { display: true, text: 'NAD', font: { size: 11 } }, ticks: { font: { size: 10 } } },
+                },
+            },
+        });
+    } catch { noData('m4'); }
+}
+
+// ── M5 — Grade-Mix ──────────────────────────────────────────────
+async function loadM5() {
+    try {
+        const oneYearAgo = new Date();
+        oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+        const cutoff = oneYearAgo.toISOString().split('T')[0];
+
+        const { data } = await supabase
+            .from('slaughter_line_items')
+            .select('grade, cold_mass_kg, slaughter_reports!inner(slaughter_date)')
+            .gte('slaughter_reports.slaughter_date', cutoff);
+
+        if (!data?.length) return noData('m5', 'Keine Schlachtdaten');
+
+        // Group by grade category (A, B, C, other)
+        const gradeGroups = { A: 0, B: 0, C: 0, Sonstige: 0 };
+        let total = 0;
+
+        data.forEach(r => {
+            const mass = r.cold_mass_kg || 0;
+            total += mass;
+            const g = (r.grade || '').toUpperCase();
+            if (g.startsWith('A')) gradeGroups.A += mass;
+            else if (g.startsWith('B')) gradeGroups.B += mass;
+            else if (g.startsWith('C')) gradeGroups.C += mass;
+            else gradeGroups.Sonstige += mass;
+        });
+
+        if (total === 0) return noData('m5', 'Keine Masseangaben');
+
+        const aPct = Math.round(gradeGroups.A / total * 100);
+        const bPct = Math.round(gradeGroups.B / total * 100);
+        const cPct = Math.round(gradeGroups.C / total * 100);
+
+        const status = aPct >= 60 ? 'green' : aPct >= 40 ? 'yellow' : 'red';
+
+        setCard('m5', {
+            value: aPct + '% A',
+            subtitle: 'A: ' + aPct + '% | B: ' + bPct + '% | C: ' + cPct + '%',
+            status
+        });
+
+        // Draw pie chart
+        const ctx = document.getElementById('chart-m5').getContext('2d');
+        if (chartM5) chartM5.destroy();
+
+        const labels = [];
+        const values = [];
+        const bgColors = [];
+        const colorMap = { A: '#22c55e', B: '#eab308', C: '#ef4444', Sonstige: '#9ca3af' };
+
+        Object.entries(gradeGroups).forEach(([grade, mass]) => {
+            if (mass > 0) {
+                labels.push(grade + '-Grade');
+                values.push(Math.round(mass));
+                bgColors.push(colorMap[grade] || '#9ca3af');
+            }
+        });
+
+        chartM5 = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels,
+                datasets: [{
+                    data: values,
+                    backgroundColor: bgColors,
+                    borderWidth: 2,
+                    borderColor: '#fff',
+                }],
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'right', labels: { font: { size: 11 } } },
+                },
+            },
+        });
+    } catch { noData('m5'); }
+}
+
+// ── M6 — Condemnation Rate ──────────────────────────────────────
+async function loadM6() {
+    try {
+        const { data } = await supabase
+            .from('slaughter_line_items')
+            .select('cold_mass_kg, condemnation_deduction_nad');
+
+        if (!data?.length) return noData('m6', 'Keine Schlachtdaten');
+
+        const totalMass = data.reduce((s, r) => s + (r.cold_mass_kg || 0), 0);
+        const totalDeduction = data.reduce((s, r) => s + (r.condemnation_deduction_nad || 0), 0);
+
+        if (totalMass <= 0) return noData('m6', 'Keine Masseangaben');
+
+        // Condemnation rate as % of value lost
+        // Since deduction is in NAD, we approximate rate as deduction per kg
+        const ratePerKg = totalDeduction / totalMass;
+        const pct = (ratePerKg * 100).toFixed(2);
+
+        const status = ratePerKg < 0.5 ? 'green' : ratePerKg < 2 ? 'yellow' : 'red';
+
+        setCard('m6', {
+            value: pct + ' %',
+            subtitle: 'N$ ' + Math.round(totalDeduction).toLocaleString('de-DE') + ' Verlust gesamt',
+            status
+        });
+    } catch { noData('m6'); }
+}
+
+// ── M7 — Shortages (Placeholder) ────────────────────────────────
+async function loadM7() {
+    try {
+        // Try to compare announced vs actual from slaughter_reports
+        const { data } = await supabase
+            .from('slaughter_reports')
+            .select('announced_head, actual_head')
+            .order('slaughter_date', { ascending: false })
+            .limit(20);
+
+        if (!data?.length || !data[0].announced_head) {
+            return noData('m7', 'Daten nicht verfuegbar');
+        }
+
+        const totalAnnounced = data.reduce((s, r) => s + (r.announced_head || 0), 0);
+        const totalActual = data.reduce((s, r) => s + (r.actual_head || 0), 0);
+        const shortage = totalAnnounced - totalActual;
+        const pct = totalAnnounced > 0 ? Math.round(shortage / totalAnnounced * 100) : 0;
+
+        const status = pct <= 2 ? 'green' : pct <= 10 ? 'yellow' : 'red';
+
+        setCard('m7', {
+            value: shortage + ' Tiere',
+            subtitle: pct + '% Differenz (' + totalAnnounced + ' vs. ' + totalActual + ')',
+            status
+        });
+    } catch { noData('m7', 'Daten nicht verfuegbar'); }
+}
+
+// ── M8 — LPO Benchmark (Placeholder) ────────────────────────────
+async function loadM8() {
+    noData('m8', 'LPO-Parser noch nicht implementiert');
+}
+
+// ── Load All ─────────────────────────────────────────────────────
+async function loadAll() {
+    document.getElementById('last-update').textContent = 'Aktualisiere...';
+
+    await Promise.allSettled([
+        loadM1(), loadM2(), loadM3(), loadM4(),
+        loadM5(), loadM6(), loadM7(), loadM8()
+    ]);
+
+    const now = new Date();
+    const ts = now.toLocaleString('de-DE', {
+        day: '2-digit', month: '2-digit', year: 'numeric',
+        hour: '2-digit', minute: '2-digit'
+    });
+    document.getElementById('last-update').textContent = 'Letztes Update: ' + ts;
+}
+
+// ── Init ─────────────────────────────────────────────────────────
+(async function init() {
+    const user = await checkAuth();
+    if (!user) return;
+    loadAll();
+    setInterval(loadAll, 5 * 60 * 1000);
+})();
+</script>
+
+</body>
+</html>

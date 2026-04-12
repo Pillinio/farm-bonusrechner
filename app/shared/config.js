@@ -8,6 +8,7 @@ export const PAGES = {
   finanzen:  'finanzen.html',
   herde:     'herde.html',
   weide:     'weide.html',
+  markt:     'markt.html',
   operativ:  'operativ.html',
   bonus:     '../farm_bonussystem_komplett.html',
   admin:     'admin.html',

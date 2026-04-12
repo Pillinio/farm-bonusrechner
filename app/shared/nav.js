@@ -10,6 +10,7 @@ const NAV_ITEMS = [
   { key: 'finanzen', label: 'Finanzen',       href: PAGES.finanzen },
   { key: 'herde',    label: 'Herde',          href: PAGES.herde },
   { key: 'weide',    label: 'Weide & Klima',  href: PAGES.weide },
+  { key: 'markt',    label: 'Markt',          href: PAGES.markt },
   { key: 'operativ', label: 'Operativ',       href: PAGES.operativ },
   { key: 'bonus',    label: 'Bonus',          href: PAGES.bonus },
   { key: 'forecast', label: 'Prognose',       href: PAGES.forecast },

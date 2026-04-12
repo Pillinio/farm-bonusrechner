@@ -2392,5 +2392,13 @@
             }
         };
     </script>
+    <script type="module">
+      import { initLiveDefaults } from './shared/bonus-live-loader.js';
+      window.addEventListener('load', () => {
+        setTimeout(() => {
+          initLiveDefaults('https://vhwlcnfxslkftswksqrw.supabase.co', 'sb_publishable_2a5cKq6CF2Qfe1D1DqLrTw_0kHRD4Cd');
+        }, 500); // Delay to let existing localStorage init run first
+      });
+    </script>
 </body>
 </html>
