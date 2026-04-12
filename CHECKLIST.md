@@ -185,11 +185,12 @@ Stand: 2026-04-12 | Letzte Prüfung: manuell verifiziert gegen DB + Codebase
 
 ### Wichtig (Feature-Gaps)
 - [x] Markt-Tab (app/markt.html) mit M1-M8 KPIs ✓
-- [ ] **LPO-Parser fehlt** (Meatco-Wochenpreise aus Mail)
-- [ ] **Compliance-Tracking C1-C4** (FMD, Brucellose, EU-Approval — Schema + UI)
-- [ ] **NDVI Sentinel-2** echte Implementierung (Copernicus-Registrierung)
-- [ ] **PDF-Report-Generierung** (aktuell nur JSON)
-- [ ] **pg_cron einrichten** für Alerts + Health-Check
+- [x] LPO-Parser (scripts/parse-lpo.js) — OCR-basiert, 28 Grades × 3-4 Abattoirs ✓
+- [x] Compliance-Tracking C1-C4 — Schema, Seed, UI in operativ.html, Alert-Check ✓
+- [ ] **NDVI Sentinel-2** echte Implementierung (Copernicus-Registrierung durch User nötig)
+- [ ] **PDF-Report-Generierung** (aktuell nur JSON, braucht Resend API Key)
+- [x] pg_cron vorbereitet — Migration + Anleitung, manuelles Setup im Dashboard nötig ✓
+- [x] 5-Jahre-Wetter-Backfill (2020-2024, 1.827 Tage, Dürren verifiziert) ✓
 
 ### Nice-to-have
 - [ ] Telegram Bot erstellen und Env Vars setzen
