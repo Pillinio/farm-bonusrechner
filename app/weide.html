@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weide &amp; Klima - Farm Erichsfelde</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: white;
+            padding: 20px 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 30px;
+        }
+
+        .header-logo {
+            width: 120px;
+            height: auto;
+            max-height: 100px;
+            object-fit: contain;
+        }
+
+        .header-content {
+            flex: 1;
+            max-width: 800px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.2em;
+            margin-bottom: 6px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.85;
+        }
+
+        /* Nav */
+        .nav {
+            display: flex;
+            gap: 0;
+            background: #1a1a2e;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .nav a {
+            flex: 1;
+            text-align: center;
+            padding: 10px 16px;
+            color: rgba(255,255,255,0.7);
+            text-decoration: none;
+            font-size: 0.9em;
+            font-weight: 500;
+            transition: background 0.2s, color 0.2s;
+            border-right: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .nav a:last-child { border-right: none; }
+
+        .nav a:hover {
+            background: rgba(255,255,255,0.1);
+            color: white;
+        }
+
+        .nav a.active {
+            background: rgba(46, 117, 182, 0.3);
+            color: white;
+            font-weight: 600;
+        }
+
+        /* Toolbar */
+        .toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 24px;
+            background: #f8f9fa;
+            border-bottom: 2px solid #dee2e6;
+            font-size: 0.9em;
+            color: #6b7280;
+        }
+
+        .toolbar button {
+            background: #2E75B6;
+            color: white;
+            border: none;
+            padding: 6px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: background 0.2s;
+        }
+
+        .toolbar button:hover {
+            background: #1F4E78;
+        }
+
+        /* Section */
+        .section {
+            padding: 24px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .section:last-of-type {
+            border-bottom: none;
+        }
+
+        .section-title {
+            font-size: 1.3em;
+            font-weight: 700;
+            color: #1a1a2e;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-icon {
+            font-size: 1.2em;
+        }
+
+        /* KPI Row */
+        .kpi-row {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .kpi-card {
+            flex: 1;
+            min-width: 200px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 18px 20px;
+            border: 1px solid #e5e7eb;
+        }
+
+        .kpi-label {
+            font-size: 0.85em;
+            color: #6b7280;
+            margin-bottom: 4px;
+        }
+
+        .kpi-value {
+            font-size: 2em;
+            font-weight: 700;
+            color: #111827;
+            line-height: 1.1;
+        }
+
+        .kpi-sub {
+            font-size: 0.8em;
+            color: #9ca3af;
+            margin-top: 4px;
+        }
+
+        /* Status colors */
+        .status-green  { background-color: #22c55e; }
+        .status-yellow { background-color: #eab308; }
+        .status-red    { background-color: #ef4444; }
+        .status-gray   { background-color: #9ca3af; }
+
+        .status-dot {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 6px;
+            vertical-align: middle;
+        }
+
+        .kpi-status-bar {
+            height: 4px;
+            border-radius: 2px;
+            margin-top: 8px;
+        }
+
+        /* Camp Grid */
+        .camp-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 14px;
+        }
+
+        .camp-card {
+            background: #fff;
+            border-radius: 10px;
+            padding: 14px 16px;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+        }
+
+        .camp-name {
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 6px;
+        }
+
+        .camp-detail {
+            font-size: 0.85em;
+            color: #6b7280;
+            margin-bottom: 2px;
+        }
+
+        .condition-badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: 600;
+            color: white;
+            margin-top: 6px;
+        }
+
+        .condition-1 { background: #ef4444; }
+        .condition-2 { background: #f97316; }
+        .condition-3 { background: #eab308; }
+        .condition-4 { background: #84cc16; }
+        .condition-5 { background: #22c55e; }
+
+        /* Chart */
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 900px;
+            height: 350px;
+            margin: 0 auto;
+        }
+
+        /* Placeholder */
+        .placeholder {
+            background: #f3f4f6;
+            border: 2px dashed #d1d5db;
+            border-radius: 12px;
+            padding: 30px;
+            text-align: center;
+            color: #9ca3af;
+            font-size: 0.95em;
+        }
+
+        .placeholder-icon {
+            font-size: 2em;
+            margin-bottom: 8px;
+        }
+
+        /* Loading */
+        .loading-spinner {
+            display: inline-block;
+            width: 18px;
+            height: 18px;
+            border: 2px solid #d1d5db;
+            border-top-color: #2E75B6;
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* No-data */
+        .no-data {
+            color: #9ca3af;
+            font-style: italic;
+            padding: 12px 0;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 14px;
+            color: #9ca3af;
+            font-size: 0.8em;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            body { padding: 10px; }
+
+            .header {
+                flex-direction: column;
+                gap: 12px;
+                padding: 16px 20px;
+            }
+            .header-logo { width: 70px; }
+            .header h1 { font-size: 1.5em; }
+
+            .nav a {
+                padding: 8px 6px;
+                font-size: 0.75em;
+            }
+
+            .section { padding: 16px; }
+
+            .kpi-row { flex-direction: column; gap: 12px; }
+            .kpi-value { font-size: 1.6em; }
+
+            .camp-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .chart-container { height: 250px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- Header -->
+    <div class="header">
+        <img src="../logo.png" alt="Erichsfelde Logo" class="header-logo">
+        <div class="header-content">
+            <h1>Weide &amp; Klima</h1>
+            <p>Erichsfelde &mdash; Pommersche Farmgesellschaft</p>
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="nav">
+        <a href="cockpit.html">Cockpit</a>
+        <a href="finanzen.html">Finanzen</a>
+        <a href="herde.html">Herde</a>
+        <a href="weide.html" class="active">Weide &amp; Klima</a>
+        <a href="operativ.html">Operativ</a>
+    </nav>
+
+    <!-- Toolbar -->
+    <div class="toolbar">
+        <span id="last-update">Wird geladen...</span>
+        <button onclick="loadAll()">Aktualisieren</button>
+    </div>
+
+    <!-- W1: Stocking Rate -->
+    <div class="section">
+        <div class="section-title">
+            <span class="section-icon">&#x1F331;</span>
+            Besatzdichte (W1)
+        </div>
+        <div class="kpi-row" id="stocking-kpis">
+            <div class="kpi-card">
+                <div class="kpi-label">Aktuelle GVE</div>
+                <div class="kpi-value" id="kpi-lsu"><span class="loading-spinner"></span></div>
+                <div class="kpi-sub">Letzer Herdensnapshot</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-label">Tragekapazitaet</div>
+                <div class="kpi-value" id="kpi-capacity"><span class="loading-spinner"></span></div>
+                <div class="kpi-sub">Gesamt ueber alle Camps</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-label">Auslastung</div>
+                <div class="kpi-value" id="kpi-ratio"><span class="loading-spinner"></span></div>
+                <div class="kpi-sub" id="kpi-ratio-sub">GVE / Kapazitaet</div>
+                <div class="kpi-status-bar status-gray" id="kpi-ratio-bar"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Camp Overview -->
+    <div class="section">
+        <div class="section-title">
+            <span class="section-icon">&#x1F3D5;&#xFE0F;</span>
+            Camp-Uebersicht
+        </div>
+        <div class="camp-grid" id="camp-grid">
+            <div class="no-data"><span class="loading-spinner"></span> Lade Camps...</div>
+        </div>
+    </div>
+
+    <!-- Rainfall Chart -->
+    <div class="section">
+        <div class="section-title">
+            <span class="section-icon">&#x1F327;&#xFE0F;</span>
+            Niederschlag (W3)
+        </div>
+        <div class="chart-container">
+            <canvas id="rainfall-chart"></canvas>
+        </div>
+        <div class="no-data" id="rainfall-nodata" style="display:none;">Keine Niederschlagsdaten vorhanden.</div>
+    </div>
+
+    <!-- Weather Placeholder (K1-K4) -->
+    <div class="section">
+        <div class="section-title">
+            <span class="section-icon">&#x2600;&#xFE0F;</span>
+            Wetter &amp; Klima-KPIs (K1&ndash;K4)
+        </div>
+        <div class="placeholder">
+            <div class="placeholder-icon">&#x1F6A7;</div>
+            Wetterdaten werden in Phase 3 automatisiert.<br>
+            Temperatur, Verdunstung, Windgeschwindigkeit und Klimaprognosen werden dann hier angezeigt.
+        </div>
+    </div>
+
+    <div class="footer">
+        Farm Controlling &mdash; Erichsfelde &copy; 2026 &middot; Weide &amp; Klima
+    </div>
+</div>
+
+<script>
+// ── Supabase Client ──────────────────────────────────────────────
+const SUPABASE_URL = 'https://vhwlcnfxslkftswksqrw.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_2a5cKq6CF2Qfe1D1DqLrTw_0kHRD4Cd';
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// ── Auth Guard ───────────────────────────────────────────────────
+async function checkAuth() {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+        alert('Bitte zuerst einloggen.');
+    }
+}
+
+// ── W1: Stocking Rate ───────────────────────────────────────────
+async function loadStockingRate() {
+    try {
+        const { data: snap } = await supabase
+            .from('herd_snapshots')
+            .select('total_lsu')
+            .order('snapshot_date', { ascending: false })
+            .limit(1);
+
+        const { data: camps } = await supabase
+            .from('farm_camps')
+            .select('area_ha, carrying_capacity_ha_per_lsu');
+
+        const lsuEl = document.getElementById('kpi-lsu');
+        const capEl = document.getElementById('kpi-capacity');
+        const ratEl = document.getElementById('kpi-ratio');
+        const barEl = document.getElementById('kpi-ratio-bar');
+        const subEl = document.getElementById('kpi-ratio-sub');
+
+        if (!snap?.length) {
+            lsuEl.textContent = '\u2014';
+        } else {
+            lsuEl.textContent = Math.round(snap[0].total_lsu);
+        }
+
+        if (!camps?.length) {
+            capEl.textContent = '\u2014';
+            ratEl.textContent = '\u2014';
+            return;
+        }
+
+        const totalCapacity = camps.reduce((s, c) => {
+            if (c.carrying_capacity_ha_per_lsu > 0) {
+                return s + c.area_ha / c.carrying_capacity_ha_per_lsu;
+            }
+            return s;
+        }, 0);
+
+        capEl.textContent = Math.round(totalCapacity) + ' GVE';
+
+        if (!snap?.length || totalCapacity <= 0) {
+            ratEl.textContent = '\u2014';
+            return;
+        }
+
+        const totalLSU = snap[0].total_lsu;
+        const ratio = Math.round(totalLSU / totalCapacity * 100);
+
+        ratEl.textContent = ratio + ' %';
+        subEl.textContent = Math.round(totalLSU) + ' GVE / ' + Math.round(totalCapacity) + ' Kap.';
+
+        // Color the bar
+        ['status-green','status-yellow','status-red','status-gray'].forEach(c => barEl.classList.remove(c));
+        barEl.classList.add(ratio <= 80 ? 'status-green' : ratio <= 100 ? 'status-yellow' : 'status-red');
+    } catch {
+        document.getElementById('kpi-lsu').textContent = '\u2014';
+        document.getElementById('kpi-capacity').textContent = '\u2014';
+        document.getElementById('kpi-ratio').textContent = '\u2014';
+    }
+}
+
+// ── Camp Overview ────────────────────────────────────────────────
+async function loadCamps() {
+    const grid = document.getElementById('camp-grid');
+    try {
+        const { data: camps } = await supabase
+            .from('farm_camps')
+            .select('id, name, area_ha, carrying_capacity_ha_per_lsu')
+            .order('name');
+
+        if (!camps?.length) {
+            grid.innerHTML = '<div class="no-data">Keine Camps gefunden.</div>';
+            return;
+        }
+
+        // Get latest veld observation per camp
+        const { data: obs } = await supabase
+            .from('veld_observations')
+            .select('camp_id, condition_score, observed_at')
+            .order('observed_at', { ascending: false });
+
+        // Build a map: camp_id -> latest observation
+        const latestObs = {};
+        if (obs) {
+            obs.forEach(o => {
+                if (!latestObs[o.camp_id]) {
+                    latestObs[o.camp_id] = o;
+                }
+            });
+        }
+
+        grid.innerHTML = camps.map(c => {
+            const ob = latestObs[c.id];
+            const score = ob ? ob.condition_score : null;
+            const condClass = score ? 'condition-' + Math.min(5, Math.max(1, score)) : '';
+            const condLabel = score
+                ? 'Zustand: ' + score + '/5'
+                : 'Keine Bewertung';
+
+            const capLSU = c.carrying_capacity_ha_per_lsu > 0
+                ? Math.round(c.area_ha / c.carrying_capacity_ha_per_lsu)
+                : '\u2014';
+
+            return `
+                <div class="camp-card">
+                    <div class="camp-name">${escHtml(c.name)}</div>
+                    <div class="camp-detail">${c.area_ha} ha</div>
+                    <div class="camp-detail">Kapazitaet: ${capLSU} GVE</div>
+                    <span class="condition-badge ${condClass}">${condLabel}</span>
+                </div>
+            `;
+        }).join('');
+    } catch {
+        grid.innerHTML = '<div class="no-data">Fehler beim Laden der Camps.</div>';
+    }
+}
+
+// ── Rainfall Chart ───────────────────────────────────────────────
+let rainfallChart = null;
+
+async function loadRainfall() {
+    try {
+        const { data } = await supabase
+            .from('weather_observations')
+            .select('station_name, observed_date, rainfall_mm')
+            .not('rainfall_mm', 'is', null)
+            .order('observed_date', { ascending: true });
+
+        const noDataEl = document.getElementById('rainfall-nodata');
+        const canvas = document.getElementById('rainfall-chart');
+
+        if (!data?.length) {
+            noDataEl.style.display = 'block';
+            canvas.style.display = 'none';
+            return;
+        }
+
+        noDataEl.style.display = 'none';
+        canvas.style.display = 'block';
+
+        // Group by station + month
+        const stationMonths = {};
+        const allMonths = new Set();
+
+        data.forEach(r => {
+            const month = r.observed_date.substring(0, 7); // YYYY-MM
+            allMonths.add(month);
+            const key = r.station_name || 'Unbekannt';
+            if (!stationMonths[key]) stationMonths[key] = {};
+            if (!stationMonths[key][month]) stationMonths[key][month] = 0;
+            stationMonths[key][month] += r.rainfall_mm;
+        });
+
+        const months = Array.from(allMonths).sort();
+        const colors = ['#2E75B6', '#22c55e', '#eab308', '#ef4444', '#8b5cf6', '#06b6d4'];
+
+        const datasets = Object.keys(stationMonths).map((station, i) => ({
+            label: station,
+            data: months.map(m => Math.round((stationMonths[station][m] || 0) * 10) / 10),
+            backgroundColor: colors[i % colors.length] + '99',
+            borderColor: colors[i % colors.length],
+            borderWidth: 1
+        }));
+
+        const labels = months.map(m => {
+            const [y, mo] = m.split('-');
+            const names = ['Jan','Feb','Marz','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'];
+            return names[parseInt(mo) - 1] + ' ' + y.substring(2);
+        });
+
+        if (rainfallChart) rainfallChart.destroy();
+
+        rainfallChart = new Chart(canvas, {
+            type: 'bar',
+            data: { labels, datasets },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'top' },
+                    title: {
+                        display: true,
+                        text: 'Monatlicher Niederschlag (mm) nach Station'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: { display: true, text: 'mm' }
+                    }
+                }
+            }
+        });
+    } catch {
+        document.getElementById('rainfall-nodata').style.display = 'block';
+        document.getElementById('rainfall-chart').style.display = 'none';
+    }
+}
+
+// ── Helpers ──────────────────────────────────────────────────────
+function escHtml(str) {
+    const d = document.createElement('div');
+    d.textContent = str;
+    return d.innerHTML;
+}
+
+// ── Load All ─────────────────────────────────────────────────────
+async function loadAll() {
+    document.getElementById('last-update').textContent = 'Aktualisiere...';
+
+    await Promise.allSettled([
+        loadStockingRate(),
+        loadCamps(),
+        loadRainfall()
+    ]);
+
+    const now = new Date();
+    const ts = now.toLocaleString('de-DE', {
+        day: '2-digit', month: '2-digit', year: 'numeric',
+        hour: '2-digit', minute: '2-digit'
+    });
+    document.getElementById('last-update').textContent = 'Letztes Update: ' + ts;
+}
+
+// ── Init ─────────────────────────────────────────────────────────
+checkAuth();
+loadAll();
+
+// Auto-refresh every 5 minutes
+setInterval(loadAll, 5 * 60 * 1000);
+</script>
+
+</body>
+</html>

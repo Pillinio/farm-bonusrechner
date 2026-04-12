@@ -1,0 +1,123 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "title": "Ingest Payload",
+  "oneOf": [
+    { "$ref": "#/definitions/bank-statement" },
+    { "$ref": "#/definitions/slaughter-report-meatco" },
+    { "$ref": "#/definitions/market-prices-lpo" }
+  ],
+  "definitions": {
+    "bank-statement": {
+      "type": "object",
+      "required": ["kind", "source", "data"],
+      "properties": {
+        "kind": { "const": "bank-statement" },
+        "source": { "type": "string" },
+        "data": {
+          "type": "object",
+          "required": ["account_name", "statement_date", "closing_balance", "transactions"],
+          "properties": {
+            "account_name": { "type": "string" },
+            "statement_date": { "type": "string", "format": "date" },
+            "closing_balance": { "type": "number" },
+            "transactions": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["date", "description", "amount"],
+                "properties": {
+                  "date": { "type": "string", "format": "date" },
+                  "description": { "type": "string" },
+                  "amount": { "type": "number" },
+                  "reference": { "type": "string" }
+                },
+                "additionalProperties": false
+              }
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "slaughter-report-meatco": {
+      "type": "object",
+      "required": ["kind", "source", "data"],
+      "properties": {
+        "kind": { "const": "slaughter-report-meatco" },
+        "source": { "type": "string" },
+        "data": {
+          "type": "object",
+          "required": ["report_date", "line_items", "totals"],
+          "properties": {
+            "statement_number": { "type": "string" },
+            "report_date": { "type": "string", "format": "date" },
+            "line_items": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["cold_mass_kg"],
+                "properties": {
+                  "ear_tag_id": { "type": "string" },
+                  "grade": { "type": "string" },
+                  "gender": { "type": "string", "enum": ["COW", "BULL", "OX", "HEIFER", "CALF"] },
+                  "cold_mass_kg": { "type": "number" },
+                  "announced_price_per_kg": { "type": "number" },
+                  "bruising_deduction_nad": { "type": "number" },
+                  "condemnation_deduction_nad": { "type": "number" },
+                  "hide_value_nad": { "type": "number" },
+                  "gross_price_per_kg": { "type": "number" },
+                  "gross_proceeds_nad": { "type": "number" }
+                },
+                "additionalProperties": false
+              }
+            },
+            "totals": {
+              "type": "object",
+              "properties": {
+                "total_animals": { "type": "integer" },
+                "total_cold_mass_kg": { "type": "number" },
+                "total_gross_nad": { "type": "number" },
+                "total_deductions_nad": { "type": "number" },
+                "total_net_nad": { "type": "number" }
+              },
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "market-prices-lpo": {
+      "type": "object",
+      "required": ["kind", "source", "data"],
+      "properties": {
+        "kind": { "const": "market-prices-lpo" },
+        "source": { "type": "string" },
+        "data": {
+          "type": "object",
+          "required": ["price_date", "prices"],
+          "properties": {
+            "price_date": { "type": "string", "format": "date" },
+            "prices": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["commodity", "price_nad", "unit"],
+                "properties": {
+                  "commodity": { "type": "string" },
+                  "price_nad": { "type": "number" },
+                  "unit": { "type": "string" }
+                },
+                "additionalProperties": false
+              }
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

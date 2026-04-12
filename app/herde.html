@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Herde - Farm Erichsfelde</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: white;
+            padding: 20px 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 30px;
+        }
+
+        .header-logo {
+            width: 120px;
+            height: auto;
+            max-height: 100px;
+            object-fit: contain;
+        }
+
+        .header-content {
+            flex: 1;
+            max-width: 800px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.2em;
+            margin-bottom: 6px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.85;
+        }
+
+        /* Navigation */
+        .nav {
+            display: flex;
+            gap: 0;
+            background: #f8f9fa;
+            border-bottom: 2px solid #dee2e6;
+            overflow-x: auto;
+        }
+
+        .nav a {
+            padding: 12px 24px;
+            text-decoration: none;
+            color: #6b7280;
+            font-size: 0.9em;
+            font-weight: 500;
+            white-space: nowrap;
+            border-bottom: 3px solid transparent;
+            transition: color 0.2s, border-color 0.2s;
+        }
+
+        .nav a:hover {
+            color: #374151;
+            background: #f0f0f0;
+        }
+
+        .nav a.active {
+            color: #2E75B6;
+            border-bottom-color: #2E75B6;
+            font-weight: 600;
+        }
+
+        /* Toolbar */
+        .toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 24px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e5e7eb;
+            font-size: 0.9em;
+            color: #6b7280;
+        }
+
+        .toolbar button {
+            background: #2E75B6;
+            color: white;
+            border: none;
+            padding: 6px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: background 0.2s;
+        }
+
+        .toolbar button:hover {
+            background: #1F4E78;
+        }
+
+        /* Content */
+        .content {
+            padding: 24px;
+        }
+
+        /* Section cards */
+        .section {
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+            margin-bottom: 24px;
+            overflow: hidden;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 16px 20px;
+            background: #f9fafb;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .section-icon {
+            font-size: 1.4em;
+            line-height: 1;
+        }
+
+        .section-title {
+            font-size: 1em;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .section-badge {
+            margin-left: auto;
+            font-size: 0.8em;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-weight: 500;
+        }
+
+        .badge-gray {
+            background: #f3f4f6;
+            color: #6b7280;
+        }
+
+        .section-body {
+            padding: 20px;
+        }
+
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-height: 320px;
+        }
+
+        /* Placeholder */
+        .placeholder {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 200px;
+            color: #9ca3af;
+            gap: 8px;
+        }
+
+        .placeholder-icon {
+            font-size: 2.5em;
+            opacity: 0.4;
+        }
+
+        .placeholder-text {
+            font-size: 0.95em;
+        }
+
+        /* Grid for two-column layout */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+
+        /* Herd Entry Button */
+        .entry-button-section {
+            text-align: center;
+            padding: 32px 20px;
+        }
+
+        .entry-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: linear-gradient(135deg, #2E75B6 0%, #1F4E78 100%);
+            color: white;
+            text-decoration: none;
+            padding: 16px 40px;
+            border-radius: 12px;
+            font-size: 1.1em;
+            font-weight: 600;
+            box-shadow: 0 4px 16px rgba(46,117,182,0.3);
+            transition: transform 0.15s, box-shadow 0.15s;
+        }
+
+        .entry-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 24px rgba(46,117,182,0.4);
+        }
+
+        .entry-button-icon {
+            font-size: 1.3em;
+        }
+
+        .entry-button-hint {
+            margin-top: 10px;
+            font-size: 0.85em;
+            color: #6b7280;
+        }
+
+        /* Loading */
+        .loading-spinner {
+            display: inline-block;
+            width: 18px;
+            height: 18px;
+            border: 2px solid #d1d5db;
+            border-top-color: #2E75B6;
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 14px;
+            color: #9ca3af;
+            font-size: 0.8em;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            body { padding: 10px; }
+
+            .header {
+                flex-direction: column;
+                gap: 12px;
+                padding: 16px 20px;
+            }
+            .header-logo { width: 70px; }
+            .header h1 { font-size: 1.5em; }
+
+            .nav a { padding: 10px 16px; font-size: 0.85em; }
+
+            .content { padding: 16px; }
+
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+
+            .section-body { padding: 14px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- Header -->
+    <div class="header">
+        <img src="../logo.png" alt="Erichsfelde Logo" class="header-logo">
+        <div class="header-content">
+            <h1>Herdenmanagement</h1>
+            <p>Erichsfelde &mdash; Pommersche Farmgesellschaft</p>
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <div class="nav">
+        <a href="cockpit.html">Cockpit</a>
+        <a href="herde.html" class="active">Herde</a>
+        <a href="weide.html">Weide</a>
+        <a href="finanzen.html">Finanzen</a>
+        <a href="operativ.html">Operativ</a>
+    </div>
+
+    <!-- Toolbar -->
+    <div class="toolbar">
+        <span id="last-update">Wird geladen...</span>
+        <button onclick="loadAll()">Aktualisieren</button>
+    </div>
+
+    <div class="content">
+
+        <!-- H1: Herd Size in LSU -->
+        <div class="section">
+            <div class="section-header">
+                <span class="section-icon">&#x1F404;</span>
+                <span class="section-title">H1 &mdash; Herdengr&ouml;&szlig;e in GVE</span>
+                <span class="section-badge badge-gray" id="badge-h1"><span class="loading-spinner"></span></span>
+            </div>
+            <div class="section-body">
+                <div class="chart-container">
+                    <canvas id="chart-h1"></canvas>
+                </div>
+                <div class="placeholder" id="placeholder-h1" style="display:none;">
+                    <span class="placeholder-icon">&#x1F4C9;</span>
+                    <span class="placeholder-text">Keine GVE-Daten vorhanden</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid-2">
+
+            <!-- H2: Calving Rate rolling 12M -->
+            <div class="section">
+                <div class="section-header">
+                    <span class="section-icon">&#x1F42E;</span>
+                    <span class="section-title">H2 &mdash; Abkalberate (12 Mon.)</span>
+                    <span class="section-badge badge-gray" id="badge-h2"><span class="loading-spinner"></span></span>
+                </div>
+                <div class="section-body">
+                    <div class="chart-container">
+                        <canvas id="chart-h2"></canvas>
+                    </div>
+                    <div class="placeholder" id="placeholder-h2" style="display:none;">
+                        <span class="placeholder-icon">&#x1F4C9;</span>
+                        <span class="placeholder-text">Keine Abkalbedaten vorhanden</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- H3: Mortality Rate -->
+            <div class="section">
+                <div class="section-header">
+                    <span class="section-icon">&#x2620;&#xFE0F;</span>
+                    <span class="section-title">H3 &mdash; Mortalit&auml;tsrate</span>
+                    <span class="section-badge badge-gray" id="badge-h3"><span class="loading-spinner"></span></span>
+                </div>
+                <div class="section-body">
+                    <div class="chart-container">
+                        <canvas id="chart-h3"></canvas>
+                    </div>
+                    <div class="placeholder" id="placeholder-h3" style="display:none;">
+                        <span class="placeholder-icon">&#x1F4C9;</span>
+                        <span class="placeholder-text">Keine Mortalit&auml;tsdaten vorhanden</span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- H4: Net Herd Growth -->
+        <div class="section">
+            <div class="section-header">
+                <span class="section-icon">&#x1F4C8;</span>
+                <span class="section-title">H4 &mdash; Netto-Herdenwachstum</span>
+                <span class="section-badge badge-gray" id="badge-h4"><span class="loading-spinner"></span></span>
+            </div>
+            <div class="section-body">
+                <div class="chart-container">
+                    <canvas id="chart-h4"></canvas>
+                </div>
+                <div class="placeholder" id="placeholder-h4" style="display:none;">
+                    <span class="placeholder-icon">&#x1F4C9;</span>
+                    <span class="placeholder-text">Keine Wachstumsdaten vorhanden</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- H5: Gender/Age Structure -->
+        <div class="section">
+            <div class="section-header">
+                <span class="section-icon">&#x1F4CA;</span>
+                <span class="section-title">H5 &mdash; Geschlechts- und Altersstruktur</span>
+                <span class="section-badge badge-gray" id="badge-h5"><span class="loading-spinner"></span></span>
+            </div>
+            <div class="section-body">
+                <div class="chart-container">
+                    <canvas id="chart-h5"></canvas>
+                </div>
+                <div class="placeholder" id="placeholder-h5" style="display:none;">
+                    <span class="placeholder-icon">&#x1F4C9;</span>
+                    <span class="placeholder-text">Keine Strukturdaten vorhanden</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Herd Entry Link -->
+        <div class="section">
+            <div class="entry-button-section">
+                <a href="herd-entry.html" class="entry-button">
+                    <span class="entry-button-icon">&#x270F;&#xFE0F;</span>
+                    Monatsmeldung erfassen
+                </a>
+                <div class="entry-button-hint">
+                    Neue Herdendaten f&uuml;r den aktuellen Monat eingeben
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="footer">
+        Farm Controlling &mdash; Erichsfelde &copy; 2026
+    </div>
+</div>
+
+<script>
+// ── Supabase Client ──────────────────────────────────────────────
+const SUPABASE_URL = 'https://vhwlcnfxslkftswksqrw.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_2a5cKq6CF2Qfe1D1DqLrTw_0kHRD4Cd';
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// ── Auth Guard ───────────────────────────────────────────────────
+async function checkAuth() {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+        alert('Bitte zuerst einloggen.');
+    }
+}
+
+// ── Chart instances (for destroy on reload) ─────────────────────
+const charts = {};
+
+function destroyChart(id) {
+    if (charts[id]) {
+        charts[id].destroy();
+        charts[id] = null;
+    }
+}
+
+function showPlaceholder(id) {
+    const canvas = document.getElementById('chart-' + id);
+    const ph = document.getElementById('placeholder-' + id);
+    if (canvas) canvas.style.display = 'none';
+    if (ph) ph.style.display = 'flex';
+    setBadge(id, '—');
+}
+
+function hidePlaceholder(id) {
+    const canvas = document.getElementById('chart-' + id);
+    const ph = document.getElementById('placeholder-' + id);
+    if (canvas) canvas.style.display = 'block';
+    if (ph) ph.style.display = 'none';
+}
+
+function setBadge(id, text) {
+    const badge = document.getElementById('badge-' + id);
+    if (badge) badge.textContent = text;
+}
+
+function formatDate(dateStr) {
+    const d = new Date(dateStr);
+    return d.toLocaleDateString('de-DE', { month: 'short', year: '2-digit' });
+}
+
+// ── H1: Herd Size in LSU ────────────────────────────────────────
+async function loadH1() {
+    try {
+        const { data, error } = await supabase
+            .from('herd_snapshots')
+            .select('snapshot_date, total_lsu')
+            .order('snapshot_date', { ascending: true });
+
+        if (error) throw error;
+        if (!data || data.length === 0) return showPlaceholder('h1');
+
+        hidePlaceholder('h1');
+        destroyChart('h1');
+
+        const labels = data.map(r => formatDate(r.snapshot_date));
+        const values = data.map(r => r.total_lsu);
+        const latest = values[values.length - 1];
+        setBadge('h1', Math.round(latest) + ' GVE');
+
+        charts['h1'] = new Chart(document.getElementById('chart-h1'), {
+            type: 'line',
+            data: {
+                labels,
+                datasets: [{
+                    label: 'GVE (Gro\u00dfvieheinheiten)',
+                    data: values,
+                    borderColor: '#2E75B6',
+                    backgroundColor: 'rgba(46,117,182,0.08)',
+                    fill: true,
+                    tension: 0.3,
+                    pointRadius: 3,
+                    pointBackgroundColor: '#2E75B6',
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { beginAtZero: false, title: { display: true, text: 'GVE' } }
+                }
+            }
+        });
+    } catch (e) {
+        console.error('H1 error:', e);
+        showPlaceholder('h1');
+    }
+}
+
+// ── H2: Calving Rate rolling 12M ────────────────────────────────
+async function loadH2() {
+    try {
+        const { data, error } = await supabase
+            .from('herd_snapshots')
+            .select('snapshot_date, births, cows')
+            .order('snapshot_date', { ascending: true });
+
+        if (error) throw error;
+        if (!data || data.length < 2) return showPlaceholder('h2');
+
+        // Rolling 12-month calving rate
+        const rates = [];
+        const labels = [];
+
+        for (let i = 0; i < data.length; i++) {
+            // Look back up to 12 months
+            const cutoff = new Date(data[i].snapshot_date);
+            cutoff.setMonth(cutoff.getMonth() - 12);
+
+            let sumBirths = 0;
+            let avgCows = 0;
+            let count = 0;
+
+            for (let j = 0; j <= i; j++) {
+                if (new Date(data[j].snapshot_date) >= cutoff) {
+                    sumBirths += (data[j].births || 0);
+                    avgCows += (data[j].cows || 0);
+                    count++;
+                }
+            }
+
+            if (count > 0 && avgCows > 0) {
+                const rate = (sumBirths / (avgCows / count)) * 100;
+                rates.push(Math.round(rate * 10) / 10);
+                labels.push(formatDate(data[i].snapshot_date));
+            }
+        }
+
+        if (rates.length === 0) return showPlaceholder('h2');
+
+        hidePlaceholder('h2');
+        destroyChart('h2');
+
+        const latest = rates[rates.length - 1];
+        setBadge('h2', latest + ' %');
+
+        charts['h2'] = new Chart(document.getElementById('chart-h2'), {
+            type: 'line',
+            data: {
+                labels,
+                datasets: [{
+                    label: 'Abkalberate (%)',
+                    data: rates,
+                    borderColor: '#22c55e',
+                    backgroundColor: 'rgba(34,197,94,0.08)',
+                    fill: true,
+                    tension: 0.3,
+                    pointRadius: 3,
+                    pointBackgroundColor: '#22c55e',
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { beginAtZero: true, title: { display: true, text: '%' } }
+                }
+            }
+        });
+    } catch (e) {
+        console.error('H2 error:', e);
+        showPlaceholder('h2');
+    }
+}
+
+// ── H3: Mortality Rate ──────────────────────────────────────────
+async function loadH3() {
+    try {
+        const { data, error } = await supabase
+            .from('herd_snapshots')
+            .select('snapshot_date, deaths_calves, deaths_adult, total_head')
+            .order('snapshot_date', { ascending: true });
+
+        if (error) throw error;
+        if (!data || data.length === 0) return showPlaceholder('h3');
+
+        const labels = [];
+        const calfRates = [];
+        const adultRates = [];
+
+        data.forEach(r => {
+            const total = r.total_head || 1;
+            labels.push(formatDate(r.snapshot_date));
+            calfRates.push(Math.round(((r.deaths_calves || 0) / total) * 1000) / 10);
+            adultRates.push(Math.round(((r.deaths_adult || 0) / total) * 1000) / 10);
+        });
+
+        hidePlaceholder('h3');
+        destroyChart('h3');
+
+        const latestCalf = calfRates[calfRates.length - 1];
+        const latestAdult = adultRates[adultRates.length - 1];
+        setBadge('h3', (latestCalf + latestAdult).toFixed(1) + ' %');
+
+        charts['h3'] = new Chart(document.getElementById('chart-h3'), {
+            type: 'line',
+            data: {
+                labels,
+                datasets: [
+                    {
+                        label: 'K\u00e4lber (%)',
+                        data: calfRates,
+                        borderColor: '#f59e0b',
+                        backgroundColor: 'rgba(245,158,11,0.08)',
+                        fill: false,
+                        tension: 0.3,
+                        pointRadius: 3,
+                        pointBackgroundColor: '#f59e0b',
+                    },
+                    {
+                        label: 'Erwachsene (%)',
+                        data: adultRates,
+                        borderColor: '#ef4444',
+                        backgroundColor: 'rgba(239,68,68,0.08)',
+                        fill: false,
+                        tension: 0.3,
+                        pointRadius: 3,
+                        pointBackgroundColor: '#ef4444',
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom', labels: { boxWidth: 12 } }
+                },
+                scales: {
+                    y: { beginAtZero: true, title: { display: true, text: '% der Herde' } }
+                }
+            }
+        });
+    } catch (e) {
+        console.error('H3 error:', e);
+        showPlaceholder('h3');
+    }
+}
+
+// ── H4: Net Herd Growth ─────────────────────────────────────────
+async function loadH4() {
+    try {
+        const { data, error } = await supabase
+            .from('herd_snapshots')
+            .select('snapshot_date, births, deaths_calves, deaths_adult, sales, purchases')
+            .order('snapshot_date', { ascending: true });
+
+        if (error) throw error;
+        if (!data || data.length === 0) return showPlaceholder('h4');
+
+        const labels = [];
+        const netValues = [];
+
+        data.forEach(r => {
+            labels.push(formatDate(r.snapshot_date));
+            const births = r.births || 0;
+            const deaths = (r.deaths_calves || 0) + (r.deaths_adult || 0);
+            const sales = r.sales || 0;
+            const purchases = r.purchases || 0;
+            netValues.push(births - deaths - sales + purchases);
+        });
+
+        hidePlaceholder('h4');
+        destroyChart('h4');
+
+        const latestNet = netValues[netValues.length - 1];
+        const sign = latestNet > 0 ? '+' : '';
+        setBadge('h4', sign + latestNet + ' Tiere');
+
+        // Color bars: green for positive, red for negative
+        const bgColors = netValues.map(v => v >= 0 ? 'rgba(34,197,94,0.7)' : 'rgba(239,68,68,0.7)');
+        const borderColors = netValues.map(v => v >= 0 ? '#22c55e' : '#ef4444');
+
+        charts['h4'] = new Chart(document.getElementById('chart-h4'), {
+            type: 'bar',
+            data: {
+                labels,
+                datasets: [{
+                    label: 'Nettover\u00e4nderung',
+                    data: netValues,
+                    backgroundColor: bgColors,
+                    borderColor: borderColors,
+                    borderWidth: 1,
+                    borderRadius: 4,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { title: { display: true, text: 'Tiere' } }
+                }
+            }
+        });
+    } catch (e) {
+        console.error('H4 error:', e);
+        showPlaceholder('h4');
+    }
+}
+
+// ── H5: Gender/Age Structure ────────────────────────────────────
+async function loadH5() {
+    try {
+        const { data, error } = await supabase
+            .from('herd_snapshots')
+            .select('snapshot_date, cows, bulls, heifers, oxen, calves')
+            .order('snapshot_date', { ascending: false })
+            .limit(1);
+
+        if (error) throw error;
+        if (!data || data.length === 0) return showPlaceholder('h5');
+
+        const snap = data[0];
+        const categories = [
+            { label: 'K\u00fche', value: snap.cows || 0, color: '#2E75B6' },
+            { label: 'Bullen', value: snap.bulls || 0, color: '#1F4E78' },
+            { label: 'F\u00e4rsen', value: snap.heifers || 0, color: '#60a5fa' },
+            { label: 'Ochsen', value: snap.oxen || 0, color: '#93c5fd' },
+            { label: 'K\u00e4lber', value: snap.calves || 0, color: '#bfdbfe' },
+        ];
+
+        const total = categories.reduce((s, c) => s + c.value, 0);
+        if (total === 0) return showPlaceholder('h5');
+
+        hidePlaceholder('h5');
+        destroyChart('h5');
+
+        setBadge('h5', total + ' Tiere (' + formatDate(snap.snapshot_date) + ')');
+
+        charts['h5'] = new Chart(document.getElementById('chart-h5'), {
+            type: 'bar',
+            data: {
+                labels: categories.map(c => c.label),
+                datasets: [{
+                    label: 'Anzahl',
+                    data: categories.map(c => c.value),
+                    backgroundColor: categories.map(c => c.color),
+                    borderRadius: 6,
+                    barPercentage: 0.6,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                indexAxis: 'y',
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(ctx) {
+                                const pct = Math.round(ctx.raw / total * 100);
+                                return ctx.raw + ' Tiere (' + pct + ' %)';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: { beginAtZero: true, title: { display: true, text: 'Anzahl' } }
+                }
+            }
+        });
+    } catch (e) {
+        console.error('H5 error:', e);
+        showPlaceholder('h5');
+    }
+}
+
+// ── Load All ─────────────────────────────────────────────────────
+async function loadAll() {
+    document.getElementById('last-update').textContent = 'Aktualisiere...';
+
+    await Promise.allSettled([
+        loadH1(), loadH2(), loadH3(), loadH4(), loadH5()
+    ]);
+
+    const now = new Date();
+    const ts = now.toLocaleString('de-DE', {
+        day: '2-digit', month: '2-digit', year: 'numeric',
+        hour: '2-digit', minute: '2-digit'
+    });
+    document.getElementById('last-update').textContent = 'Letztes Update: ' + ts;
+}
+
+// ── Init ─────────────────────────────────────────────────────────
+checkAuth();
+loadAll();
+</script>
+
+</body>
+</html>

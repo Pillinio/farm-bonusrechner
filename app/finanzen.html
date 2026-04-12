@@ -1,0 +1,946 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Finanzen - Farm Erichsfelde</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: white;
+            padding: 20px 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 30px;
+        }
+
+        .header-logo {
+            width: 120px;
+            height: auto;
+            max-height: 100px;
+            object-fit: contain;
+        }
+
+        .header-content {
+            flex: 1;
+            max-width: 800px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.2em;
+            margin-bottom: 6px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.85;
+        }
+
+        /* Navigation */
+        .nav {
+            display: flex;
+            gap: 0;
+            background: #1a1a2e;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            overflow-x: auto;
+        }
+
+        .nav a {
+            color: rgba(255,255,255,0.7);
+            text-decoration: none;
+            padding: 10px 20px;
+            font-size: 0.9em;
+            white-space: nowrap;
+            transition: background 0.2s, color 0.2s;
+        }
+
+        .nav a:hover {
+            background: rgba(255,255,255,0.1);
+            color: white;
+        }
+
+        .nav a.active {
+            color: white;
+            background: rgba(255,255,255,0.15);
+            border-bottom: 2px solid #667eea;
+            font-weight: 600;
+        }
+
+        /* Toolbar */
+        .toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 24px;
+            background: #f8f9fa;
+            border-bottom: 2px solid #dee2e6;
+            font-size: 0.9em;
+            color: #6b7280;
+        }
+
+        .toolbar button {
+            background: #2E75B6;
+            color: white;
+            border: none;
+            padding: 6px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: background 0.2s;
+        }
+
+        .toolbar button:hover {
+            background: #1F4E78;
+        }
+
+        /* Content */
+        .content {
+            padding: 24px;
+        }
+
+        /* Section */
+        .section {
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 16px 22px;
+            border-bottom: 1px solid #e5e7eb;
+            background: #f9fafb;
+        }
+
+        .section-icon {
+            font-size: 1.4em;
+        }
+
+        .section-title {
+            font-size: 1.05em;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .section-badge {
+            margin-left: auto;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: 600;
+        }
+
+        .badge-green  { background: #dcfce7; color: #166534; }
+        .badge-yellow { background: #fef9c3; color: #854d0e; }
+        .badge-red    { background: #fee2e2; color: #991b1b; }
+        .badge-gray   { background: #f3f4f6; color: #6b7280; }
+
+        .section-body {
+            padding: 20px 22px;
+        }
+
+        /* KPI Big Number */
+        .kpi-big {
+            display: flex;
+            align-items: baseline;
+            gap: 12px;
+            margin-bottom: 8px;
+        }
+
+        .kpi-big .value {
+            font-size: 2.4em;
+            font-weight: 700;
+            color: #111827;
+        }
+
+        .kpi-big .unit {
+            font-size: 1em;
+            color: #6b7280;
+        }
+
+        .kpi-detail {
+            font-size: 0.9em;
+            color: #6b7280;
+            margin-bottom: 4px;
+        }
+
+        /* Table */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9em;
+        }
+
+        .data-table th {
+            text-align: left;
+            padding: 10px 12px;
+            background: #f9fafb;
+            color: #374151;
+            font-weight: 600;
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+        .data-table td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #f3f4f6;
+            color: #374151;
+        }
+
+        .data-table tr:hover {
+            background: #f9fafb;
+        }
+
+        .data-table .num {
+            text-align: right;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .dev-green  { color: #166534; }
+        .dev-yellow { color: #854d0e; background: #fef9c3; border-radius: 4px; padding: 2px 6px; }
+        .dev-red    { color: #991b1b; background: #fee2e2; border-radius: 4px; padding: 2px 6px; }
+
+        /* Chart container */
+        .chart-container {
+            position: relative;
+            height: 280px;
+            width: 100%;
+        }
+
+        /* Monthly grid */
+        .monthly-grid {
+            overflow-x: auto;
+        }
+
+        .monthly-grid table {
+            min-width: 900px;
+        }
+
+        .monthly-grid th, .monthly-grid td {
+            font-size: 0.82em;
+            padding: 8px 6px;
+            text-align: right;
+            white-space: nowrap;
+        }
+
+        .monthly-grid th:first-child,
+        .monthly-grid td:first-child {
+            text-align: left;
+            position: sticky;
+            left: 0;
+            background: white;
+            z-index: 1;
+            min-width: 130px;
+        }
+
+        /* No data placeholder */
+        .no-data {
+            text-align: center;
+            color: #9ca3af;
+            padding: 32px 16px;
+            font-size: 0.95em;
+        }
+
+        /* Loading */
+        .loading-spinner {
+            display: inline-block;
+            width: 18px;
+            height: 18px;
+            border: 2px solid #d1d5db;
+            border-top-color: #2E75B6;
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-block {
+            text-align: center;
+            padding: 40px;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 14px;
+            color: #9ca3af;
+            font-size: 0.8em;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            body { padding: 10px; }
+
+            .header {
+                flex-direction: column;
+                gap: 12px;
+                padding: 16px 20px;
+            }
+            .header-logo { width: 70px; }
+            .header h1 { font-size: 1.5em; }
+
+            .content { padding: 16px; }
+
+            .kpi-big .value { font-size: 1.8em; }
+
+            .nav { flex-wrap: nowrap; }
+            .nav a { padding: 8px 14px; font-size: 0.82em; }
+
+            .chart-container { height: 220px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- Header -->
+    <div class="header">
+        <img src="../logo.png" alt="Erichsfelde Logo" class="header-logo">
+        <div class="header-content">
+            <h1>Finanzen</h1>
+            <p>Erichsfelde &mdash; Pommersche Farmgesellschaft</p>
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="nav">
+        <a href="cockpit.html">Cockpit</a>
+        <a href="finanzen.html" class="active">Finanzen</a>
+        <a href="herde.html">Herde</a>
+        <a href="weide.html">Weide</a>
+        <a href="operativ.html">Operativ</a>
+        <a href="../farm_bonussystem_komplett.html">Bonus</a>
+    </nav>
+
+    <!-- Toolbar -->
+    <div class="toolbar">
+        <span id="last-update">Wird geladen...</span>
+        <button onclick="loadAll()">Aktualisieren</button>
+    </div>
+
+    <div class="content">
+
+        <!-- F1: Cash Runway -->
+        <div class="section" id="sec-f1">
+            <div class="section-header">
+                <span class="section-icon">&#x1F4B0;</span>
+                <span class="section-title">F1 &mdash; Liquiditaetsreichweite (Cash Runway)</span>
+                <span class="section-badge badge-gray" id="badge-f1">...</span>
+            </div>
+            <div class="section-body" id="body-f1">
+                <div class="loading-block"><span class="loading-spinner"></span></div>
+            </div>
+        </div>
+
+        <!-- F2: Budget vs Actual -->
+        <div class="section" id="sec-f2">
+            <div class="section-header">
+                <span class="section-icon">&#x1F4CA;</span>
+                <span class="section-title">F2 &mdash; Budget vs. Ist</span>
+                <span class="section-badge badge-gray" id="badge-f2">...</span>
+            </div>
+            <div class="section-body" id="body-f2">
+                <div class="loading-block"><span class="loading-spinner"></span></div>
+            </div>
+        </div>
+
+        <!-- F3: Revenue YTD -->
+        <div class="section" id="sec-f3">
+            <div class="section-header">
+                <span class="section-icon">&#x1F4B5;</span>
+                <span class="section-title">F3 &mdash; Umsatz YTD</span>
+                <span class="section-badge badge-gray" id="badge-f3">...</span>
+            </div>
+            <div class="section-body" id="body-f3">
+                <div class="loading-block"><span class="loading-spinner"></span></div>
+            </div>
+        </div>
+
+        <!-- F4: Cost per kg -->
+        <div class="section" id="sec-f4">
+            <div class="section-header">
+                <span class="section-icon">&#x1F4C8;</span>
+                <span class="section-title">F4 &mdash; Kosten pro kg verkauft</span>
+                <span class="section-badge badge-gray" id="badge-f4">...</span>
+            </div>
+            <div class="section-body" id="body-f4">
+                <div class="loading-block"><span class="loading-spinner"></span></div>
+            </div>
+        </div>
+
+        <!-- F5: EBIT Margin -->
+        <div class="section" id="sec-f5">
+            <div class="section-header">
+                <span class="section-icon">&#x1F4B9;</span>
+                <span class="section-title">F5 &mdash; EBIT-Marge</span>
+                <span class="section-badge badge-gray" id="badge-f5">...</span>
+            </div>
+            <div class="section-body" id="body-f5">
+                <div class="loading-block"><span class="loading-spinner"></span></div>
+            </div>
+        </div>
+
+        <!-- F6: Monthly Actual vs Plan -->
+        <div class="section" id="sec-f6">
+            <div class="section-header">
+                <span class="section-icon">&#x1F4C5;</span>
+                <span class="section-title">F6 &mdash; Monatsvergleich Ist vs. Plan</span>
+                <span class="section-badge badge-gray" id="badge-f6">...</span>
+            </div>
+            <div class="section-body" id="body-f6">
+                <div class="loading-block"><span class="loading-spinner"></span></div>
+            </div>
+        </div>
+
+        <!-- F7: Hunt & Lease Revenue -->
+        <div class="section" id="sec-f7">
+            <div class="section-header">
+                <span class="section-icon">&#x1F3AF;</span>
+                <span class="section-title">F7 &mdash; Jagd- &amp; Pachteinnahmen</span>
+                <span class="section-badge badge-gray" id="badge-f7">...</span>
+            </div>
+            <div class="section-body" id="body-f7">
+                <div class="loading-block"><span class="loading-spinner"></span></div>
+            </div>
+        </div>
+
+        <!-- F8: Cost per LSU/Month -->
+        <div class="section" id="sec-f8">
+            <div class="section-header">
+                <span class="section-icon">&#x1F4A1;</span>
+                <span class="section-title">F8 &mdash; Kosten pro GVE / Monat</span>
+                <span class="section-badge badge-gray" id="badge-f8">...</span>
+            </div>
+            <div class="section-body" id="body-f8">
+                <div class="loading-block"><span class="loading-spinner"></span></div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="footer">
+        Farm Controlling &mdash; Erichsfelde &copy; 2026 &middot; <a href="cockpit.html" style="color:#6b7280;">Zurueck zum Cockpit</a>
+    </div>
+</div>
+
+<script>
+// ── Supabase Client ──────────────────────────────────────────────
+const SUPABASE_URL = 'https://vhwlcnfxslkftswksqrw.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_2a5cKq6CF2Qfe1D1DqLrTw_0kHRD4Cd';
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+const YEAR = new Date().getFullYear();
+const MONTH_NAMES = ['Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'];
+
+// ── Auth Guard ───────────────────────────────────────────────────
+async function checkAuth() {
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) {
+        alert('Bitte zuerst einloggen.');
+    }
+}
+
+// ── Helpers ──────────────────────────────────────────────────────
+function fmt(n) {
+    if (n == null) return '—';
+    return n.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function fmtInt(n) {
+    if (n == null) return '—';
+    return Math.round(n).toLocaleString('de-DE');
+}
+
+function setBadge(id, text, color) {
+    const el = document.getElementById('badge-' + id);
+    if (!el) return;
+    el.textContent = text;
+    el.className = 'section-badge badge-' + color;
+}
+
+function showNoData(id) {
+    document.getElementById('body-' + id).innerHTML =
+        '<div class="no-data">Noch keine Daten</div>';
+    setBadge(id, 'Keine Daten', 'gray');
+}
+
+// ── F1: Cash Runway ──────────────────────────────────────────────
+async function loadF1() {
+    try {
+        const { data: balRows } = await sb
+            .from('account_balances')
+            .select('balance_nad, balance_date, account_name')
+            .order('balance_date', { ascending: false })
+            .limit(1);
+
+        const { data: costs } = await sb
+            .from('budgets')
+            .select('actual_nad, category')
+            .eq('fiscal_year', YEAR)
+            .neq('month', 0);
+
+        if (!balRows?.length || !costs?.length) return showNoData('f1');
+
+        const balance = balRows[0].balance_nad;
+        const balDate = balRows[0].balance_date;
+        const expenseRows = costs.filter(r => (r.actual_nad || 0) > 0);
+        const totalSpend = expenseRows.reduce((s, r) => s + (r.actual_nad || 0), 0);
+
+        // Count distinct months in data
+        const distinctMonths = new Set(costs.map(r => r.category)).size || costs.length;
+        const avgMonthly = totalSpend / Math.max(distinctMonths, 1);
+
+        if (avgMonthly <= 0) {
+            document.getElementById('body-f1').innerHTML = `
+                <div class="kpi-big"><span class="value">&infin;</span><span class="unit">Monate</span></div>
+                <div class="kpi-detail">Kontostand: N$ ${fmt(balance)} (${balDate})</div>
+                <div class="kpi-detail">Keine Ausgaben erfasst</div>`;
+            setBadge('f1', 'Keine Ausgaben', 'gray');
+            return;
+        }
+
+        const months = Math.round(balance / avgMonthly * 10) / 10;
+        const status = months >= 6 ? 'green' : months >= 3 ? 'yellow' : 'red';
+        const statusText = months >= 6 ? 'Gut' : months >= 3 ? 'Achtung' : 'Kritisch';
+
+        document.getElementById('body-f1').innerHTML = `
+            <div class="kpi-big">
+                <span class="value">${months}</span>
+                <span class="unit">Monate Deckung</span>
+            </div>
+            <div class="kpi-detail">Kontostand: N$ ${fmt(balance)} (Stand: ${balDate || '—'})</div>
+            <div class="kpi-detail">Durchschnittlicher Monatsaufwand: N$ ${fmt(avgMonthly)}</div>`;
+        setBadge('f1', statusText, status);
+    } catch (e) {
+        console.error('F1:', e);
+        showNoData('f1');
+    }
+}
+
+// ── F2: Budget vs Actual ─────────────────────────────────────────
+async function loadF2() {
+    try {
+        const { data } = await sb
+            .from('budgets')
+            .select('category, planned_nad, actual_nad')
+            .eq('fiscal_year', YEAR)
+            .eq('month', 0);
+
+        if (!data?.length) return showNoData('f2');
+
+        // Build category rows
+        const rows = data.map(r => {
+            const planned = r.planned_nad || 0;
+            const actual = r.actual_nad || 0;
+            const dev = planned !== 0 ? ((actual - planned) / Math.abs(planned)) * 100 : 0;
+            return { category: r.category, planned, actual, dev };
+        });
+
+        // Sort by absolute deviation descending
+        rows.sort((a, b) => Math.abs(b.dev) - Math.abs(a.dev));
+
+        const maxDev = rows.length ? Math.abs(rows[0].dev) : 0;
+        const status = maxDev <= 10 ? 'green' : maxDev <= 20 ? 'yellow' : 'red';
+        const statusText = maxDev <= 10 ? 'Im Rahmen' : maxDev <= 20 ? 'Leichte Abweichung' : 'Hohe Abweichung';
+        setBadge('f2', statusText, status);
+
+        let html = `<table class="data-table">
+            <thead><tr>
+                <th>Kategorie</th>
+                <th class="num">Plan (N$)</th>
+                <th class="num">Ist (N$)</th>
+                <th class="num">Abweichung</th>
+            </tr></thead><tbody>`;
+
+        rows.forEach(r => {
+            const absDev = Math.abs(r.dev);
+            const devClass = absDev > 20 ? 'dev-red' : absDev > 10 ? 'dev-yellow' : 'dev-green';
+            const sign = r.dev > 0 ? '+' : '';
+            html += `<tr>
+                <td>${r.category}</td>
+                <td class="num">${fmt(r.planned)}</td>
+                <td class="num">${fmt(r.actual)}</td>
+                <td class="num"><span class="${devClass}">${sign}${r.dev.toFixed(1)} %</span></td>
+            </tr>`;
+        });
+
+        html += '</tbody></table>';
+        document.getElementById('body-f2').innerHTML = html;
+    } catch (e) {
+        console.error('F2:', e);
+        showNoData('f2');
+    }
+}
+
+// ── F3: Revenue YTD (bar chart) ──────────────────────────────────
+async function loadF3() {
+    try {
+        const { data } = await sb
+            .from('transactions')
+            .select('amount_nad, transaction_date')
+            .gte('transaction_date', YEAR + '-01-01')
+            .gt('amount_nad', 0);
+
+        if (!data?.length) return showNoData('f3');
+
+        // Group by month
+        const byMonth = new Array(12).fill(0);
+        data.forEach(r => {
+            const m = new Date(r.transaction_date).getMonth();
+            byMonth[m] += r.amount_nad || 0;
+        });
+
+        const total = byMonth.reduce((a, b) => a + b, 0);
+        setBadge('f3', 'N$ ' + fmtInt(total), 'green');
+
+        document.getElementById('body-f3').innerHTML = `
+            <div class="kpi-detail" style="margin-bottom:12px;">Gesamtumsatz YTD: N$ ${fmt(total)}</div>
+            <div class="chart-container"><canvas id="chart-f3"></canvas></div>`;
+
+        new Chart(document.getElementById('chart-f3'), {
+            type: 'bar',
+            data: {
+                labels: MONTH_NAMES,
+                datasets: [{
+                    label: 'Umsatz (N$)',
+                    data: byMonth,
+                    backgroundColor: '#667eea',
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: { callback: v => 'N$ ' + fmtInt(v) }
+                    }
+                }
+            }
+        });
+    } catch (e) {
+        console.error('F3:', e);
+        showNoData('f3');
+    }
+}
+
+// ── F4: Cost per kg sold ─────────────────────────────────────────
+async function loadF4() {
+    try {
+        const { data: items } = await sb
+            .from('slaughter_line_items')
+            .select('cold_mass_kg, slaughter_date');
+
+        const { data: costs } = await sb
+            .from('budgets')
+            .select('actual_nad, fiscal_year')
+            .eq('fiscal_year', YEAR);
+
+        if (!items?.length || !costs?.length) return showNoData('f4');
+
+        const totalKg = items.reduce((s, r) => s + (r.cold_mass_kg || 0), 0);
+        const totalCost = costs.reduce((s, r) => s + (r.actual_nad || 0), 0);
+
+        if (totalKg <= 0) return showNoData('f4');
+
+        const costPerKg = totalCost / totalKg;
+        setBadge('f4', 'N$ ' + costPerKg.toFixed(2) + ' / kg', 'gray');
+
+        // Try to build trend by year
+        const { data: allCosts } = await sb
+            .from('budgets')
+            .select('actual_nad, fiscal_year')
+            .order('fiscal_year');
+
+        const yearCosts = {};
+        (allCosts || []).forEach(r => {
+            if (!yearCosts[r.fiscal_year]) yearCosts[r.fiscal_year] = 0;
+            yearCosts[r.fiscal_year] += r.actual_nad || 0;
+        });
+
+        const years = Object.keys(yearCosts).sort();
+        const hasMultipleYears = years.length > 1;
+
+        let html = `
+            <div class="kpi-big">
+                <span class="value">N$ ${costPerKg.toFixed(2)}</span>
+                <span class="unit">pro kg Kaltmasse</span>
+            </div>
+            <div class="kpi-detail">Gesamtkosten: N$ ${fmt(totalCost)} | Gesamtgewicht: ${fmt(totalKg)} kg</div>`;
+
+        if (hasMultipleYears) {
+            html += `<div class="chart-container" style="margin-top:16px;"><canvas id="chart-f4"></canvas></div>`;
+        }
+
+        document.getElementById('body-f4').innerHTML = html;
+
+        if (hasMultipleYears) {
+            // Approximate cost/kg per year (use same total kg as proxy)
+            const perKgByYear = years.map(y => yearCosts[y] / totalKg);
+            new Chart(document.getElementById('chart-f4'), {
+                type: 'line',
+                data: {
+                    labels: years,
+                    datasets: [{
+                        label: 'Kosten/kg (N$)',
+                        data: perKgByYear,
+                        borderColor: '#667eea',
+                        backgroundColor: 'rgba(102,126,234,0.1)',
+                        fill: true,
+                        tension: 0.3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { callback: v => 'N$ ' + v.toFixed(2) }
+                        }
+                    }
+                }
+            });
+        }
+    } catch (e) {
+        console.error('F4:', e);
+        showNoData('f4');
+    }
+}
+
+// ── F5: EBIT Margin ──────────────────────────────────────────────
+async function loadF5() {
+    try {
+        const { data: rev } = await sb
+            .from('transactions')
+            .select('amount_nad, transaction_date')
+            .gte('transaction_date', YEAR + '-01-01')
+            .gt('amount_nad', 0);
+
+        const { data: costs } = await sb
+            .from('budgets')
+            .select('actual_nad')
+            .eq('fiscal_year', YEAR);
+
+        if (!rev?.length || !costs?.length) return showNoData('f5');
+
+        const totalRevenue = rev.reduce((s, r) => s + (r.amount_nad || 0), 0);
+        const totalCost = costs.reduce((s, r) => s + (r.actual_nad || 0), 0);
+
+        if (totalRevenue <= 0) return showNoData('f5');
+
+        const ebit = totalRevenue - totalCost;
+        const margin = (ebit / totalRevenue) * 100;
+        const status = margin >= 10 ? 'green' : margin >= 0 ? 'yellow' : 'red';
+        const statusText = margin >= 10 ? 'Gesund' : margin >= 0 ? 'Knapp' : 'Negativ';
+        setBadge('f5', statusText, status);
+
+        document.getElementById('body-f5').innerHTML = `
+            <div class="kpi-big">
+                <span class="value">${margin.toFixed(1)} %</span>
+                <span class="unit">EBIT-Marge</span>
+            </div>
+            <div class="kpi-detail">Umsatz: N$ ${fmt(totalRevenue)} | Kosten: N$ ${fmt(totalCost)}</div>
+            <div class="kpi-detail">EBIT: N$ ${fmt(ebit)}</div>`;
+    } catch (e) {
+        console.error('F5:', e);
+        showNoData('f5');
+    }
+}
+
+// ── F6: Monthly Actual vs Plan ───────────────────────────────────
+async function loadF6() {
+    try {
+        const { data } = await sb
+            .from('budgets')
+            .select('category, month, planned_nad, actual_nad')
+            .eq('fiscal_year', YEAR);
+
+        if (!data?.length) return showNoData('f6');
+
+        // Separate plan (month=0) and actuals (month 1-12)
+        const planByCategory = {};
+        const actualByCategory = {};
+        const categories = new Set();
+
+        data.forEach(r => {
+            categories.add(r.category);
+            if (r.month === 0) {
+                planByCategory[r.category] = r.planned_nad || 0;
+            } else {
+                if (!actualByCategory[r.category]) actualByCategory[r.category] = {};
+                actualByCategory[r.category][r.month] = r.actual_nad || 0;
+            }
+        });
+
+        const catList = [...categories].sort();
+        setBadge('f6', catList.length + ' Kategorien', 'gray');
+
+        let html = '<div class="monthly-grid"><table class="data-table"><thead><tr><th>Kategorie</th><th class="num">Plan</th>';
+        for (let m = 1; m <= 12; m++) {
+            html += `<th class="num">${MONTH_NAMES[m - 1]}</th>`;
+        }
+        html += '</tr></thead><tbody>';
+
+        catList.forEach(cat => {
+            html += `<tr><td>${cat}</td><td class="num">${fmtInt(planByCategory[cat] || 0)}</td>`;
+            for (let m = 1; m <= 12; m++) {
+                const val = actualByCategory[cat]?.[m];
+                html += `<td class="num">${val != null ? fmtInt(val) : '—'}</td>`;
+            }
+            html += '</tr>';
+        });
+
+        html += '</tbody></table></div>';
+        document.getElementById('body-f6').innerHTML = html;
+    } catch (e) {
+        console.error('F6:', e);
+        showNoData('f6');
+    }
+}
+
+// ── F7: Hunt & Lease Revenue ─────────────────────────────────────
+async function loadF7() {
+    try {
+        const { data } = await sb
+            .from('transactions')
+            .select('amount_nad, category, transaction_date, description')
+            .or('category.ilike.%jagd%,category.ilike.%hunt%,category.ilike.%pacht%,category.ilike.%rent%,category.ilike.%lease%,category.ilike.%miete%');
+
+        if (!data?.length) return showNoData('f7');
+
+        const total = data.reduce((s, r) => s + (r.amount_nad || 0), 0);
+        const status = total > 0 ? 'green' : 'gray';
+        setBadge('f7', 'N$ ' + fmtInt(total), status);
+
+        // Group by category
+        const byCat = {};
+        data.forEach(r => {
+            const cat = r.category || 'Sonstige';
+            if (!byCat[cat]) byCat[cat] = 0;
+            byCat[cat] += r.amount_nad || 0;
+        });
+
+        let html = `
+            <div class="kpi-big">
+                <span class="value">N$ ${fmt(total)}</span>
+                <span class="unit">Gesamt</span>
+            </div>
+            <table class="data-table" style="margin-top:12px;">
+            <thead><tr><th>Kategorie</th><th class="num">Betrag (N$)</th></tr></thead><tbody>`;
+
+        Object.entries(byCat).sort((a, b) => b[1] - a[1]).forEach(([cat, amt]) => {
+            html += `<tr><td>${cat}</td><td class="num">${fmt(amt)}</td></tr>`;
+        });
+
+        html += '</tbody></table>';
+        document.getElementById('body-f7').innerHTML = html;
+    } catch (e) {
+        console.error('F7:', e);
+        showNoData('f7');
+    }
+}
+
+// ── F8: Cost per LSU / Month ─────────────────────────────────────
+async function loadF8() {
+    try {
+        const { data: snap } = await sb
+            .from('herd_snapshots')
+            .select('total_lsu, snapshot_date')
+            .order('snapshot_date', { ascending: false })
+            .limit(1);
+
+        const { data: costs } = await sb
+            .from('budgets')
+            .select('actual_nad, month')
+            .eq('fiscal_year', YEAR)
+            .neq('month', 0);
+
+        if (!snap?.length || !costs?.length) return showNoData('f8');
+
+        const lsu = snap[0].total_lsu;
+        if (!lsu || lsu <= 0) return showNoData('f8');
+
+        const totalCost = costs.reduce((s, r) => s + (r.actual_nad || 0), 0);
+        const distinctMonths = new Set(costs.map(r => r.month)).size;
+        const avgMonthlyCost = totalCost / Math.max(distinctMonths, 1);
+        const costPerLSU = avgMonthlyCost / lsu;
+
+        setBadge('f8', 'N$ ' + costPerLSU.toFixed(2) + ' / GVE', 'gray');
+
+        document.getElementById('body-f8').innerHTML = `
+            <div class="kpi-big">
+                <span class="value">N$ ${costPerLSU.toFixed(2)}</span>
+                <span class="unit">pro GVE / Monat</span>
+            </div>
+            <div class="kpi-detail">Aktuelle GVE: ${fmt(lsu)} (Stand: ${snap[0].snapshot_date || '—'})</div>
+            <div class="kpi-detail">Durchschn. Monatskosten: N$ ${fmt(avgMonthlyCost)} (${distinctMonths} Monate erfasst)</div>
+            <div class="kpi-detail" style="margin-top:8px; font-style:italic; color:#9ca3af;">Leitindikator fuer Kosteneffizienz</div>`;
+    } catch (e) {
+        console.error('F8:', e);
+        showNoData('f8');
+    }
+}
+
+// ── Load All ─────────────────────────────────────────────────────
+async function loadAll() {
+    document.getElementById('last-update').textContent = 'Aktualisiere...';
+
+    await Promise.allSettled([
+        loadF1(), loadF2(), loadF3(), loadF4(),
+        loadF5(), loadF6(), loadF7(), loadF8()
+    ]);
+
+    const now = new Date();
+    const ts = now.toLocaleString('de-DE', {
+        day: '2-digit', month: '2-digit', year: 'numeric',
+        hour: '2-digit', minute: '2-digit'
+    });
+    document.getElementById('last-update').textContent = 'Letztes Update: ' + ts;
+}
+
+// ── Init ─────────────────────────────────────────────────────────
+checkAuth();
+loadAll();
+</script>
+
+</body>
+</html>

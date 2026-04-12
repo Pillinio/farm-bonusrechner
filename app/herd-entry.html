@@ -1,0 +1,1196 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Monatsmeldung - Erichsfelde</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f0f2f5;
+            min-height: 100vh;
+        }
+
+        /* ── Header ── */
+        .header {
+            background: linear-gradient(135deg, #1F4E78 0%, #2E75B6 100%);
+            color: white;
+            padding: 16px 20px;
+            text-align: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .header h1 { font-size: 1.3em; margin-bottom: 2px; }
+        .header p  { font-size: 0.85em; opacity: 0.85; }
+
+        /* ── Auth ── */
+        .auth-container {
+            max-width: 400px;
+            margin: 60px auto;
+            padding: 20px;
+        }
+        .auth-card {
+            background: white;
+            border-radius: 12px;
+            padding: 32px 24px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .auth-card h2 { color: #1F4E78; margin-bottom: 8px; }
+        .auth-card p  { color: #666; margin-bottom: 24px; font-size: 0.9em; }
+        .auth-card input[type="email"] {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            font-size: 1em;
+            margin-bottom: 16px;
+        }
+        .auth-card input[type="email"]:focus {
+            outline: none;
+            border-color: #2E75B6;
+        }
+        .auth-msg {
+            margin-top: 16px;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 0.9em;
+            display: none;
+        }
+        .auth-msg.success { display: block; background: #d4edda; color: #155724; }
+        .auth-msg.error   { display: block; background: #f8d7da; color: #721c24; }
+
+        /* ── Main form ── */
+        .form-container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 12px 16px 100px;
+        }
+
+        .section {
+            background: white;
+            border-radius: 12px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            overflow: hidden;
+        }
+        .section-header {
+            background: #1F4E78;
+            color: white;
+            padding: 14px 18px;
+            font-weight: 600;
+            font-size: 1em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .section-header .chevron {
+            margin-left: auto;
+            transition: transform 0.2s;
+            font-size: 0.8em;
+        }
+        .section-header.collapsed .chevron { transform: rotate(-90deg); }
+        .section-body {
+            padding: 16px 18px;
+        }
+        .section-body.collapsed { display: none; }
+
+        /* ── Form elements ── */
+        .field { margin-bottom: 16px; }
+        .field:last-child { margin-bottom: 0; }
+        .field label {
+            display: block;
+            font-size: 0.85em;
+            font-weight: 600;
+            color: #444;
+            margin-bottom: 6px;
+        }
+        .field input[type="number"],
+        .field input[type="date"],
+        .field input[type="text"],
+        .field textarea,
+        .field select {
+            width: 100%;
+            padding: 12px 14px;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            font-size: 1em;
+            font-family: inherit;
+            background: white;
+            -webkit-appearance: none;
+            appearance: none;
+            min-height: 44px;
+        }
+        .field input:focus,
+        .field textarea:focus,
+        .field select:focus {
+            outline: none;
+            border-color: #2E75B6;
+            box-shadow: 0 0 0 3px rgba(46,117,182,0.15);
+        }
+        .field textarea { min-height: 80px; resize: vertical; }
+        .field select {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 14px center;
+            padding-right: 36px;
+        }
+
+        .row { display: flex; gap: 12px; }
+        .row .field { flex: 1; }
+
+        .sub-heading {
+            font-size: 0.8em;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #888;
+            margin: 20px 0 10px;
+            padding-bottom: 6px;
+            border-bottom: 1px solid #eee;
+        }
+        .sub-heading:first-child { margin-top: 0; }
+
+        /* ── Camp / Asset rows ── */
+        .dynamic-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .dynamic-row:last-child { border-bottom: none; }
+        .dynamic-row .name {
+            flex: 1;
+            font-size: 0.9em;
+            font-weight: 500;
+            color: #333;
+        }
+        .dynamic-row select,
+        .dynamic-row input {
+            padding: 10px 12px;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            font-size: 0.9em;
+            min-height: 44px;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+        .dynamic-row select {
+            min-width: 120px;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            padding-right: 30px;
+        }
+        .dynamic-row input[type="number"] {
+            width: 80px;
+        }
+        .dynamic-row select:focus,
+        .dynamic-row input:focus {
+            outline: none;
+            border-color: #2E75B6;
+        }
+
+        /* ── Task checklist ── */
+        .task-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .task-row:last-child { border-bottom: none; }
+        .task-row input[type="checkbox"] {
+            width: 24px;
+            height: 24px;
+            accent-color: #2E75B6;
+            flex-shrink: 0;
+        }
+        .task-info { flex: 1; }
+        .task-info .task-name { font-size: 0.9em; font-weight: 500; color: #333; }
+        .task-info .task-meta { font-size: 0.78em; color: #888; margin-top: 2px; }
+        .task-counts {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 0.85em;
+        }
+        .task-counts input[type="number"] {
+            width: 50px;
+            padding: 8px;
+            border: 2px solid #dee2e6;
+            border-radius: 6px;
+            text-align: center;
+            font-size: 0.9em;
+            min-height: 38px;
+        }
+        .task-counts input:focus {
+            outline: none;
+            border-color: #2E75B6;
+        }
+        .task-counts span { color: #888; }
+
+        /* ── Incident ── */
+        .incident-card {
+            background: #fafafa;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            padding: 14px;
+            margin-bottom: 12px;
+        }
+        .incident-card .row { margin-bottom: 10px; }
+        .remove-incident {
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 8px 14px;
+            font-size: 0.85em;
+            cursor: pointer;
+            min-height: 38px;
+        }
+
+        /* ── Photo upload ── */
+        .photo-slot {
+            border: 2px dashed #ccc;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 12px;
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+            min-height: 80px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            position: relative;
+        }
+        .photo-slot.has-photo {
+            border-style: solid;
+            border-color: #2E75B6;
+            padding: 10px;
+        }
+        .photo-slot .photo-icon { font-size: 1.5em; color: #aaa; }
+        .photo-slot .photo-text { font-size: 0.85em; color: #888; }
+        .photo-slot img {
+            max-width: 100%;
+            max-height: 200px;
+            border-radius: 4px;
+        }
+        .photo-slot input[type="file"] { display: none; }
+        .photo-label-input {
+            width: 100%;
+            padding: 8px 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 0.85em;
+            margin-top: 6px;
+        }
+        .photo-remove {
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            background: rgba(220,53,69,0.9);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 28px;
+            height: 28px;
+            font-size: 1em;
+            cursor: pointer;
+            line-height: 28px;
+            text-align: center;
+        }
+
+        /* ── Buttons ── */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 14px 24px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            min-height: 48px;
+            transition: background 0.2s, transform 0.1s;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .btn:active { transform: scale(0.97); }
+        .btn-primary {
+            background: linear-gradient(135deg, #1F4E78, #2E75B6);
+            color: white;
+            width: 100%;
+            font-size: 1.1em;
+        }
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        .btn-secondary {
+            background: #e9ecef;
+            color: #495057;
+        }
+        .btn-outline {
+            background: transparent;
+            color: #2E75B6;
+            border: 2px solid #2E75B6;
+        }
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+        .btn-small {
+            padding: 10px 16px;
+            font-size: 0.9em;
+            min-height: 44px;
+        }
+
+        /* ── Bottom bar ── */
+        .bottom-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            padding: 12px 16px;
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
+            z-index: 100;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .draft-indicator {
+            font-size: 0.75em;
+            color: #888;
+            text-align: center;
+            margin-top: 6px;
+        }
+
+        /* ── Success screen ── */
+        .success-screen {
+            text-align: center;
+            padding: 40px 20px;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+        .success-icon {
+            font-size: 3em;
+            margin-bottom: 16px;
+        }
+        .success-screen h2 {
+            color: #1F4E78;
+            margin-bottom: 12px;
+        }
+        .success-screen p {
+            color: #666;
+            margin-bottom: 24px;
+            line-height: 1.6;
+        }
+        .summary-table {
+            text-align: left;
+            width: 100%;
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 24px;
+        }
+        .summary-table .row-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+            font-size: 0.9em;
+            border-bottom: 1px solid #eee;
+        }
+        .summary-table .row-item:last-child { border-bottom: none; }
+        .summary-table .row-item .label { color: #666; }
+        .summary-table .row-item .value { font-weight: 600; color: #333; }
+
+        /* ── Loading / spinner ── */
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .loading-placeholder {
+            padding: 20px;
+            text-align: center;
+            color: #888;
+            font-size: 0.9em;
+        }
+
+        /* ── Logout ── */
+        .logout-btn {
+            position: absolute;
+            top: 14px;
+            right: 16px;
+            background: rgba(255,255,255,0.15);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 6px;
+            padding: 6px 12px;
+            font-size: 0.78em;
+            cursor: pointer;
+        }
+
+        /* ── Utilities ── */
+        .hidden { display: none !important; }
+        .text-danger { color: #dc3545; }
+        .text-muted  { color: #888; font-size: 0.85em; }
+        .mt-8 { margin-top: 8px; }
+        .mb-12 { margin-bottom: 12px; }
+    </style>
+</head>
+<body>
+
+<!-- ═══════════ HEADER ═══════════ -->
+<div class="header" style="position:relative;">
+    <h1>Monatsmeldung</h1>
+    <p>Farm Erichsfelde</p>
+    <button class="logout-btn hidden" id="logoutBtn" onclick="logout()">Abmelden</button>
+</div>
+
+<!-- ═══════════ AUTH SCREEN ═══════════ -->
+<div id="authScreen" class="auth-container">
+    <div class="auth-card">
+        <h2>Anmeldung</h2>
+        <p>Geben Sie Ihre E-Mail-Adresse ein. Sie erhalten einen Link zur Anmeldung.</p>
+        <input type="email" id="authEmail" placeholder="verwalter@erichsfelde.com" autocomplete="email" inputmode="email">
+        <button class="btn btn-primary" onclick="sendMagicLink()">Anmeldelink senden</button>
+        <div id="authMsg" class="auth-msg"></div>
+    </div>
+</div>
+
+<!-- ═══════════ FORM SCREEN ═══════════ -->
+<div id="formScreen" class="hidden">
+    <div class="form-container">
+
+        <!-- Section 1: Herde -->
+        <div class="section">
+            <div class="section-header" onclick="toggleSection(this)">
+                Herde
+                <span class="chevron">&#9660;</span>
+            </div>
+            <div class="section-body">
+                <div class="field">
+                    <label>Stichtag</label>
+                    <input type="date" id="snapshotDate">
+                </div>
+
+                <div class="sub-heading">Aktueller Bestand</div>
+                <div class="row">
+                    <div class="field">
+                        <label>Kuehe</label>
+                        <input type="number" id="cows" min="0" inputmode="numeric">
+                    </div>
+                    <div class="field">
+                        <label>Bullen</label>
+                        <input type="number" id="bulls" min="0" inputmode="numeric">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="field">
+                        <label>Faersen</label>
+                        <input type="number" id="heifers" min="0" inputmode="numeric">
+                    </div>
+                    <div class="field">
+                        <label>Ochsen</label>
+                        <input type="number" id="oxen" min="0" inputmode="numeric">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="field">
+                        <label>Kaelber</label>
+                        <input type="number" id="calves" min="0" inputmode="numeric">
+                    </div>
+                    <div class="field"></div>
+                </div>
+
+                <div class="sub-heading">Seit letzter Zaehlung</div>
+                <div class="row">
+                    <div class="field">
+                        <label>Geburten</label>
+                        <input type="number" id="births" min="0" value="0" inputmode="numeric">
+                    </div>
+                    <div class="field">
+                        <label>Tode Kaelber</label>
+                        <input type="number" id="deathsCalves" min="0" value="0" inputmode="numeric">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="field">
+                        <label>Tode Adult</label>
+                        <input type="number" id="deathsAdult" min="0" value="0" inputmode="numeric">
+                    </div>
+                    <div class="field">
+                        <label>Verkaeufe</label>
+                        <input type="number" id="sales" min="0" value="0" inputmode="numeric">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="field">
+                        <label>Zukaeufe</label>
+                        <input type="number" id="purchases" min="0" value="0" inputmode="numeric">
+                    </div>
+                    <div class="field"></div>
+                </div>
+
+                <div class="sub-heading">Kranke Tiere (optional)</div>
+                <div class="row">
+                    <div class="field">
+                        <label>Anzahl</label>
+                        <input type="number" id="sickCount" min="0" inputmode="numeric">
+                    </div>
+                </div>
+                <div class="field">
+                    <label>Beschreibung</label>
+                    <textarea id="sickNotes" placeholder="z.B. 2 Kuehe mit Durchfall, Camp 3..."></textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 2: Weide & Wasser -->
+        <div class="section">
+            <div class="section-header" onclick="toggleSection(this)">
+                Weide &amp; Wasser
+                <span class="chevron">&#9660;</span>
+            </div>
+            <div class="section-body">
+                <div class="sub-heading">Veld Condition pro Camp</div>
+                <div id="campList">
+                    <div class="loading-placeholder">Camps werden geladen...</div>
+                </div>
+
+                <div class="sub-heading">Bohrlocher &amp; Daemme</div>
+                <div id="assetList">
+                    <div class="loading-placeholder">Assets werden geladen...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 3: Operatives -->
+        <div class="section">
+            <div class="section-header" onclick="toggleSection(this)">
+                Operatives
+                <span class="chevron">&#9660;</span>
+            </div>
+            <div class="section-body">
+                <div class="sub-heading">Aufgaben-Checkliste</div>
+                <div id="taskList">
+                    <div class="loading-placeholder">Aufgaben werden geladen...</div>
+                </div>
+
+                <div class="sub-heading">Neue Vorfaelle</div>
+                <div id="incidentList"></div>
+                <button class="btn btn-outline btn-small" onclick="addIncident()" style="margin-top:8px;">
+                    + Vorfall hinzufuegen
+                </button>
+
+                <div class="sub-heading">Offene Punkte / Wuensche</div>
+                <div class="field">
+                    <textarea id="openNotes" placeholder="Freitext fuer offene Themen, Wuensche, Hinweise..."></textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 4: Fotos -->
+        <div class="section">
+            <div class="section-header" onclick="toggleSection(this)">
+                Fotos (optional)
+                <span class="chevron">&#9660;</span>
+            </div>
+            <div class="section-body">
+                <div id="photoSlots">
+                    <div class="photo-slot" onclick="this.querySelector('input').click()">
+                        <span class="photo-icon">&#128247;</span>
+                        <span class="photo-text">Foto aufnehmen oder auswaehlen</span>
+                        <input type="file" accept="image/*" capture="environment" onchange="handlePhoto(this, 0)">
+                    </div>
+                    <div class="photo-slot" onclick="this.querySelector('input').click()">
+                        <span class="photo-icon">&#128247;</span>
+                        <span class="photo-text">Foto aufnehmen oder auswaehlen</span>
+                        <input type="file" accept="image/*" capture="environment" onchange="handlePhoto(this, 1)">
+                    </div>
+                    <div class="photo-slot" onclick="this.querySelector('input').click()">
+                        <span class="photo-icon">&#128247;</span>
+                        <span class="photo-text">Foto aufnehmen oder auswaehlen</span>
+                        <input type="file" accept="image/*" capture="environment" onchange="handlePhoto(this, 2)">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div><!-- /form-container -->
+
+    <!-- Bottom submit bar -->
+    <div class="bottom-bar">
+        <button class="btn btn-primary" id="submitBtn" onclick="submitForm()">
+            Monatsmeldung absenden
+        </button>
+        <div class="draft-indicator" id="draftIndicator"></div>
+    </div>
+</div>
+
+<!-- ═══════════ SUCCESS SCREEN ═══════════ -->
+<div id="successScreen" class="hidden">
+    <div class="success-screen">
+        <div class="success-icon">&#9989;</div>
+        <h2>Meldung erfolgreich gesendet!</h2>
+        <p id="successText"></p>
+        <div class="summary-table" id="summaryTable"></div>
+        <button class="btn btn-primary" onclick="resetForm()">Neue Meldung</button>
+    </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════
+// Supabase Init
+// ═══════════════════════════════════════
+const SUPABASE_URL = 'https://vhwlcnfxslkftswksqrw.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_2a5cKq6CF2Qfe1D1DqLrTw_0kHRD4Cd';
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// State
+let currentUser = null;
+let camps = [];
+let assets = [];
+let tasks = [];
+let photoFiles = [null, null, null];
+let photoLabels = ['', '', ''];
+let draftTimer = null;
+
+// ═══════════════════════════════════════
+// Auth
+// ═══════════════════════════════════════
+async function checkAuth() {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session) {
+        currentUser = session.user;
+        showForm();
+    } else {
+        document.getElementById('authScreen').classList.remove('hidden');
+    }
+}
+
+async function sendMagicLink() {
+    const email = document.getElementById('authEmail').value.trim();
+    const msgEl = document.getElementById('authMsg');
+    if (!email) {
+        msgEl.className = 'auth-msg error';
+        msgEl.textContent = 'Bitte E-Mail-Adresse eingeben.';
+        return;
+    }
+    const { error } = await supabase.auth.signInWithOtp({
+        email,
+        options: { emailRedirectTo: window.location.href }
+    });
+    if (error) {
+        msgEl.className = 'auth-msg error';
+        msgEl.textContent = 'Fehler: ' + error.message;
+    } else {
+        msgEl.className = 'auth-msg success';
+        msgEl.textContent = 'Link gesendet! Bitte pruefen Sie Ihre E-Mails.';
+    }
+}
+
+async function logout() {
+    await supabase.auth.signOut();
+    currentUser = null;
+    document.getElementById('formScreen').classList.add('hidden');
+    document.getElementById('successScreen').classList.add('hidden');
+    document.getElementById('authScreen').classList.remove('hidden');
+    document.getElementById('logoutBtn').classList.add('hidden');
+}
+
+// Listen for auth state changes (magic link redirect)
+supabase.auth.onAuthStateChange((event, session) => {
+    if (event === 'SIGNED_IN' && session) {
+        currentUser = session.user;
+        showForm();
+    }
+});
+
+// ═══════════════════════════════════════
+// Show form & load reference data
+// ═══════════════════════════════════════
+async function showForm() {
+    document.getElementById('authScreen').classList.add('hidden');
+    document.getElementById('formScreen').classList.remove('hidden');
+    document.getElementById('logoutBtn').classList.remove('hidden');
+
+    // Set default date to 1st of current month
+    const now = new Date();
+    const firstOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    document.getElementById('snapshotDate').value = formatDate(firstOfMonth);
+
+    // Load reference data in parallel
+    await Promise.all([loadCamps(), loadAssets(), loadTasks()]);
+
+    // Restore draft if available
+    restoreDraft();
+
+    // Start auto-save
+    draftTimer = setInterval(saveDraft, 30000);
+}
+
+async function loadCamps() {
+    const container = document.getElementById('campList');
+    const { data, error } = await supabase.from('farm_camps').select('id, name').order('name');
+    if (error || !data || data.length === 0) {
+        container.innerHTML = '<div class="text-muted">Keine Camps gefunden.</div>';
+        return;
+    }
+    camps = data;
+    container.innerHTML = camps.map((c, i) => `
+        <div class="dynamic-row">
+            <span class="name">${esc(c.name)}</span>
+            <select id="camp_score_${i}" data-camp-id="${c.id}" data-camp-name="${esc(c.name)}">
+                <option value="">--</option>
+                <option value="5">5 Exzellent</option>
+                <option value="4">4 Gut</option>
+                <option value="3">3 Mittel</option>
+                <option value="2">2 Schlecht</option>
+                <option value="1">1 Kritisch</option>
+            </select>
+        </div>
+    `).join('');
+}
+
+async function loadAssets() {
+    const container = document.getElementById('assetList');
+    const { data, error } = await supabase
+        .from('farm_assets')
+        .select('id, name, asset_type')
+        .in('asset_type', ['borehole', 'dam'])
+        .order('name');
+    if (error || !data || data.length === 0) {
+        container.innerHTML = '<div class="text-muted">Keine Bohrlocher/Daemme gefunden.</div>';
+        return;
+    }
+    assets = data;
+    container.innerHTML = assets.map((a, i) => {
+        const unit = a.asset_type === 'borehole' ? 'l/h' : 'Fuellstand %';
+        const typeLabel = a.asset_type === 'borehole' ? 'Bohrloch' : 'Damm';
+        return `
+        <div class="dynamic-row" style="flex-wrap:wrap;">
+            <span class="name">${esc(a.name)} <span class="text-muted">(${typeLabel})</span></span>
+            <select id="asset_status_${i}" data-asset-id="${a.id}">
+                <option value="">--</option>
+                <option value="gruen">Gruen</option>
+                <option value="gelb">Gelb</option>
+                <option value="rot">Rot</option>
+                <option value="offline">Offline</option>
+            </select>
+            <input type="number" id="asset_metric_${i}" placeholder="${unit}" min="0" step="any" style="width:90px;" inputmode="decimal">
+        </div>`;
+    }).join('');
+}
+
+async function loadTasks() {
+    const container = document.getElementById('taskList');
+    const { data, error } = await supabase.from('task_templates').select('id, name, description, target_count').order('name');
+    if (error || !data || data.length === 0) {
+        container.innerHTML = '<div class="text-muted">Keine Aufgabenvorlagen gefunden.</div>';
+        return;
+    }
+    tasks = data;
+    container.innerHTML = tasks.map((t, i) => `
+        <div class="task-row">
+            <input type="checkbox" id="task_done_${i}" data-task-id="${t.id}">
+            <div class="task-info">
+                <div class="task-name">${esc(t.name)}</div>
+                ${t.description ? `<div class="task-meta">${esc(t.description)}</div>` : ''}
+            </div>
+            ${t.target_count ? `
+            <div class="task-counts">
+                <input type="number" id="task_count_${i}" min="0" value="0" inputmode="numeric">
+                <span>/ ${t.target_count}</span>
+            </div>` : ''}
+        </div>
+    `).join('');
+}
+
+// ═══════════════════════════════════════
+// Incidents
+// ═══════════════════════════════════════
+let incidentCount = 0;
+
+function addIncident() {
+    const idx = incidentCount++;
+    const html = `
+    <div class="incident-card" id="incident_${idx}">
+        <div class="row mb-12">
+            <div class="field">
+                <label>Art</label>
+                <select id="inc_type_${idx}">
+                    <option value="Diebstahl">Diebstahl</option>
+                    <option value="Raubtier">Raubtier</option>
+                    <option value="Unfall">Unfall</option>
+                    <option value="Krankheit">Krankheit</option>
+                    <option value="Verletzung">Verletzung</option>
+                    <option value="Sonstiges">Sonstiges</option>
+                </select>
+            </div>
+            <div class="field">
+                <label>Schwere</label>
+                <select id="inc_severity_${idx}">
+                    <option value="niedrig">Niedrig</option>
+                    <option value="mittel" selected>Mittel</option>
+                    <option value="hoch">Hoch</option>
+                    <option value="kritisch">Kritisch</option>
+                </select>
+            </div>
+        </div>
+        <div class="row mb-12">
+            <div class="field">
+                <label>Betroffene Tiere</label>
+                <input type="number" id="inc_count_${idx}" min="0" value="1" inputmode="numeric">
+            </div>
+        </div>
+        <div class="field mb-12">
+            <label>Beschreibung</label>
+            <textarea id="inc_desc_${idx}" placeholder="Was ist passiert?"></textarea>
+        </div>
+        <button class="remove-incident" onclick="removeIncident(${idx})">Entfernen</button>
+    </div>`;
+    document.getElementById('incidentList').insertAdjacentHTML('beforeend', html);
+}
+
+function removeIncident(idx) {
+    const el = document.getElementById('incident_' + idx);
+    if (el) el.remove();
+}
+
+// ═══════════════════════════════════════
+// Photos
+// ═══════════════════════════════════════
+function handlePhoto(input, idx) {
+    const file = input.files[0];
+    if (!file) return;
+    photoFiles[idx] = file;
+    const slot = input.closest('.photo-slot');
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        slot.classList.add('has-photo');
+        slot.innerHTML = `
+            <button class="photo-remove" onclick="event.stopPropagation(); removePhoto(${idx})">&times;</button>
+            <img src="${e.target.result}" alt="Foto ${idx + 1}">
+            <input type="text" class="photo-label-input" placeholder="Beschriftung..." value="${esc(photoLabels[idx])}" onchange="photoLabels[${idx}]=this.value">
+            <input type="file" accept="image/*" capture="environment" onchange="handlePhoto(this, ${idx})">
+        `;
+    };
+    reader.readAsDataURL(file);
+}
+
+function removePhoto(idx) {
+    photoFiles[idx] = null;
+    photoLabels[idx] = '';
+    const slots = document.getElementById('photoSlots').children;
+    slots[idx].classList.remove('has-photo');
+    slots[idx].innerHTML = `
+        <span class="photo-icon">&#128247;</span>
+        <span class="photo-text">Foto aufnehmen oder auswaehlen</span>
+        <input type="file" accept="image/*" capture="environment" onchange="handlePhoto(this, ${idx})">
+    `;
+}
+
+async function uploadPhotos(snapshotDate) {
+    const urls = [];
+    for (let i = 0; i < 3; i++) {
+        if (!photoFiles[i]) continue;
+        const ext = photoFiles[i].name.split('.').pop();
+        const path = `herd-photos/${snapshotDate}/${Date.now()}_${i}.${ext}`;
+        const { error } = await supabase.storage.from('farm-uploads').upload(path, photoFiles[i]);
+        if (!error) {
+            urls.push({ path, label: photoLabels[i] || '' });
+        }
+    }
+    return urls;
+}
+
+// ═══════════════════════════════════════
+// Draft save / restore
+// ═══════════════════════════════════════
+const DRAFT_KEY = 'herd_entry_draft';
+
+function saveDraft() {
+    try {
+        const draft = {
+            snapshotDate: val('snapshotDate'),
+            cows: val('cows'), bulls: val('bulls'), heifers: val('heifers'),
+            oxen: val('oxen'), calves: val('calves'),
+            births: val('births'), deathsCalves: val('deathsCalves'),
+            deathsAdult: val('deathsAdult'), sales: val('sales'), purchases: val('purchases'),
+            sickCount: val('sickCount'), sickNotes: val('sickNotes'),
+            openNotes: val('openNotes'),
+            campScores: {},
+            assetStatuses: {},
+            assetMetrics: {},
+            savedAt: new Date().toISOString()
+        };
+        // Camp scores
+        camps.forEach((c, i) => {
+            const el = document.getElementById('camp_score_' + i);
+            if (el) draft.campScores[c.id] = el.value;
+        });
+        // Asset statuses
+        assets.forEach((a, i) => {
+            const sEl = document.getElementById('asset_status_' + i);
+            const mEl = document.getElementById('asset_metric_' + i);
+            if (sEl) draft.assetStatuses[a.id] = sEl.value;
+            if (mEl) draft.assetMetrics[a.id] = mEl.value;
+        });
+        localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+        const indicator = document.getElementById('draftIndicator');
+        indicator.textContent = 'Entwurf gespeichert ' + new Date().toLocaleTimeString('de-DE', {hour:'2-digit',minute:'2-digit'});
+    } catch(e) { /* ignore storage errors */ }
+}
+
+function restoreDraft() {
+    try {
+        const raw = localStorage.getItem(DRAFT_KEY);
+        if (!raw) return;
+        const d = JSON.parse(raw);
+        if (d.snapshotDate) setVal('snapshotDate', d.snapshotDate);
+        ['cows','bulls','heifers','oxen','calves','births','deathsCalves','deathsAdult','sales','purchases','sickCount'].forEach(k => {
+            if (d[k]) setVal(k, d[k]);
+        });
+        if (d.sickNotes) setVal('sickNotes', d.sickNotes);
+        if (d.openNotes) setVal('openNotes', d.openNotes);
+        // Camp scores (after load)
+        if (d.campScores) {
+            camps.forEach((c, i) => {
+                const el = document.getElementById('camp_score_' + i);
+                if (el && d.campScores[c.id]) el.value = d.campScores[c.id];
+            });
+        }
+        // Asset statuses
+        if (d.assetStatuses) {
+            assets.forEach((a, i) => {
+                const sEl = document.getElementById('asset_status_' + i);
+                const mEl = document.getElementById('asset_metric_' + i);
+                if (sEl && d.assetStatuses[a.id]) sEl.value = d.assetStatuses[a.id];
+                if (mEl && d.assetMetrics && d.assetMetrics[a.id]) mEl.value = d.assetMetrics[a.id];
+            });
+        }
+        const savedAt = d.savedAt ? new Date(d.savedAt).toLocaleString('de-DE') : '';
+        document.getElementById('draftIndicator').textContent = savedAt ? 'Entwurf vom ' + savedAt + ' wiederhergestellt' : '';
+    } catch(e) { /* ignore */ }
+}
+
+function clearDraft() {
+    localStorage.removeItem(DRAFT_KEY);
+    if (draftTimer) clearInterval(draftTimer);
+}
+
+// ═══════════════════════════════════════
+// Submit
+// ═══════════════════════════════════════
+async function submitForm() {
+    const btn = document.getElementById('submitBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> Wird gesendet...';
+
+    try {
+        const snapshotDate = val('snapshotDate');
+        if (!snapshotDate) throw new Error('Bitte Stichtag angeben.');
+
+        const cows = num('cows');
+        const bulls = num('bulls');
+        const heifers = num('heifers');
+        const oxen = num('oxen');
+        const calves = num('calves');
+        const births = num('births');
+        const deathsCalves = num('deathsCalves');
+        const deathsAdult = num('deathsAdult');
+        const salesVal = num('sales');
+        const purchasesVal = num('purchases');
+        const sickCount = num('sickCount');
+        const sickNotes = val('sickNotes');
+        const openNotes = val('openNotes');
+
+        // Build notes
+        let notes = '';
+        if (sickCount > 0) notes += `Kranke Tiere: ${sickCount} - ${sickNotes}\n`;
+        if (openNotes) notes += `Offene Punkte: ${openNotes}\n`;
+
+        // Upload photos
+        const photoRefs = await uploadPhotos(snapshotDate);
+
+        // 1. Insert herd_snapshot
+        const { data: snapshot, error: snapErr } = await supabase.from('herd_snapshots').insert({
+            snapshot_date: snapshotDate,
+            cows, bulls, heifers, calves, oxen,
+            births,
+            deaths: deathsCalves + deathsAdult,
+            sales: salesVal,
+            purchases: purchasesVal,
+            notes: notes || null,
+            photos_ref: photoRefs.length > 0 ? photoRefs : null
+        }).select().single();
+
+        if (snapErr) throw new Error('Herde speichern fehlgeschlagen: ' + snapErr.message);
+
+        // 2. Insert veld_observations
+        let veldCount = 0;
+        for (let i = 0; i < camps.length; i++) {
+            const scoreEl = document.getElementById('camp_score_' + i);
+            if (!scoreEl || !scoreEl.value) continue;
+            const { error } = await supabase.from('veld_observations').insert({
+                snapshot_date: snapshotDate,
+                camp_name: camps[i].name,
+                condition_score: parseInt(scoreEl.value)
+            });
+            if (!error) veldCount++;
+        }
+
+        // 3. Insert asset_status_reports
+        let assetCount = 0;
+        for (let i = 0; i < assets.length; i++) {
+            const statusEl = document.getElementById('asset_status_' + i);
+            const metricEl = document.getElementById('asset_metric_' + i);
+            if (!statusEl || !statusEl.value) continue;
+            const { error } = await supabase.from('asset_status_reports').insert({
+                snapshot_date: snapshotDate,
+                asset_id: assets[i].id,
+                status: statusEl.value,
+                metric_value: metricEl && metricEl.value ? parseFloat(metricEl.value) : null
+            });
+            if (!error) assetCount++;
+        }
+
+        // 4. Insert task_executions
+        let taskCount = 0;
+        for (let i = 0; i < tasks.length; i++) {
+            const doneEl = document.getElementById('task_done_' + i);
+            if (!doneEl || !doneEl.checked) continue;
+            const countEl = document.getElementById('task_count_' + i);
+            const { error } = await supabase.from('task_executions').insert({
+                snapshot_date: snapshotDate,
+                task_template_id: tasks[i].id,
+                completed: true,
+                covered_count: countEl ? parseInt(countEl.value) || 0 : 0
+            });
+            if (!error) taskCount++;
+        }
+
+        // 5. Insert incidents
+        let incCount = 0;
+        const incidentCards = document.querySelectorAll('.incident-card');
+        for (const card of incidentCards) {
+            const idx = card.id.split('_')[1];
+            const { error } = await supabase.from('incidents').insert({
+                snapshot_date: snapshotDate,
+                incident_type: val('inc_type_' + idx),
+                severity: val('inc_severity_' + idx),
+                affected_count: num('inc_count_' + idx),
+                description: val('inc_desc_' + idx)
+            });
+            if (!error) incCount++;
+        }
+
+        // Success
+        clearDraft();
+        showSuccess({
+            snapshotDate,
+            total: cows + bulls + heifers + oxen + calves,
+            cows, bulls, heifers, oxen, calves,
+            births, deaths: deathsCalves + deathsAdult,
+            salesVal, purchasesVal,
+            veldCount, assetCount, taskCount, incCount,
+            photoCount: photoRefs.length
+        });
+
+    } catch (err) {
+        alert('Fehler: ' + err.message);
+        btn.disabled = false;
+        btn.textContent = 'Monatsmeldung absenden';
+    }
+}
+
+function showSuccess(s) {
+    document.getElementById('formScreen').classList.add('hidden');
+    document.getElementById('successScreen').classList.remove('hidden');
+    document.getElementById('successText').textContent =
+        `Monatsmeldung fuer ${formatDateDE(s.snapshotDate)} wurde gespeichert.`;
+
+    document.getElementById('summaryTable').innerHTML = `
+        <div class="row-item"><span class="label">Gesamtbestand</span><span class="value">${s.total} Tiere</span></div>
+        <div class="row-item"><span class="label">Kuehe / Bullen / Faersen</span><span class="value">${s.cows} / ${s.bulls} / ${s.heifers}</span></div>
+        <div class="row-item"><span class="label">Ochsen / Kaelber</span><span class="value">${s.oxen} / ${s.calves}</span></div>
+        <div class="row-item"><span class="label">Geburten / Tode</span><span class="value">${s.births} / ${s.deaths}</span></div>
+        <div class="row-item"><span class="label">Verkaeufe / Zukaeufe</span><span class="value">${s.salesVal} / ${s.purchasesVal}</span></div>
+        <div class="row-item"><span class="label">Veld-Bewertungen</span><span class="value">${s.veldCount} Camps</span></div>
+        <div class="row-item"><span class="label">Asset-Status</span><span class="value">${s.assetCount} gemeldet</span></div>
+        <div class="row-item"><span class="label">Aufgaben erledigt</span><span class="value">${s.taskCount}</span></div>
+        <div class="row-item"><span class="label">Vorfaelle</span><span class="value">${s.incCount}</span></div>
+        <div class="row-item"><span class="label">Fotos</span><span class="value">${s.photoCount}</span></div>
+    `;
+}
+
+function resetForm() {
+    document.getElementById('successScreen').classList.add('hidden');
+    document.getElementById('formScreen').classList.remove('hidden');
+    // Reset all inputs
+    document.querySelectorAll('#formScreen input[type="number"]').forEach(el => el.value = el.defaultValue || '');
+    document.querySelectorAll('#formScreen textarea').forEach(el => el.value = '');
+    document.querySelectorAll('#formScreen select').forEach(el => el.selectedIndex = 0);
+    document.querySelectorAll('#formScreen input[type="checkbox"]').forEach(el => el.checked = false);
+    document.getElementById('incidentList').innerHTML = '';
+    incidentCount = 0;
+    photoFiles = [null, null, null];
+    photoLabels = ['', '', ''];
+    const slots = document.getElementById('photoSlots').children;
+    for (let i = 0; i < 3; i++) removePhoto(i);
+    // Reset date
+    const now = new Date();
+    document.getElementById('snapshotDate').value = formatDate(new Date(now.getFullYear(), now.getMonth(), 1));
+    // Restart auto-save
+    draftTimer = setInterval(saveDraft, 30000);
+}
+
+// ═══════════════════════════════════════
+// Section toggle
+// ═══════════════════════════════════════
+function toggleSection(headerEl) {
+    headerEl.classList.toggle('collapsed');
+    headerEl.nextElementSibling.classList.toggle('collapsed');
+}
+
+// ═══════════════════════════════════════
+// Helpers
+// ═══════════════════════════════════════
+function val(id) { const el = document.getElementById(id); return el ? el.value.trim() : ''; }
+function num(id) { return parseInt(val(id)) || 0; }
+function setVal(id, v) { const el = document.getElementById(id); if (el) el.value = v; }
+function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+function formatDate(d) {
+    return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+function formatDateDE(iso) {
+    const [y,m,d] = iso.split('-');
+    return `${d}.${m}.${y}`;
+}
+
+// ═══════════════════════════════════════
+// Init
+// ═══════════════════════════════════════
+checkAuth();
+</script>
+</body>
+</html>

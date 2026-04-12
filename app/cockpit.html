@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cockpit - Farm Erichsfelde</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        /* Header — matches farm_bonussystem_komplett.html */
+        .header {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: white;
+            padding: 20px 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 30px;
+        }
+
+        .header-logo {
+            width: 120px;
+            height: auto;
+            max-height: 100px;
+            object-fit: contain;
+        }
+
+        .header-content {
+            flex: 1;
+            max-width: 800px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.2em;
+            margin-bottom: 6px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.85;
+        }
+
+        /* Toolbar */
+        .toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 24px;
+            background: #f8f9fa;
+            border-bottom: 2px solid #dee2e6;
+            font-size: 0.9em;
+            color: #6b7280;
+        }
+
+        .toolbar button {
+            background: #2E75B6;
+            color: white;
+            border: none;
+            padding: 6px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: background 0.2s;
+        }
+
+        .toolbar button:hover {
+            background: #1F4E78;
+        }
+
+        /* Grid */
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            padding: 24px;
+        }
+
+        /* Card */
+        .card {
+            display: flex;
+            align-items: stretch;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+            overflow: hidden;
+            cursor: pointer;
+            transition: transform 0.15s, box-shadow 0.15s;
+            text-decoration: none;
+            color: inherit;
+            border: 1px solid #e5e7eb;
+        }
+
+        .card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 24px rgba(0,0,0,0.13);
+        }
+
+        .card-status-bar {
+            width: 6px;
+            flex-shrink: 0;
+        }
+
+        .card-body {
+            flex: 1;
+            padding: 20px 22px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .card-top {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 4px;
+        }
+
+        .card-icon {
+            font-size: 1.6em;
+            line-height: 1;
+        }
+
+        .card-title {
+            font-size: 0.95em;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .card-value {
+            font-size: 2em;
+            font-weight: 700;
+            color: #111827;
+            line-height: 1.1;
+        }
+
+        .card-subtitle {
+            font-size: 0.85em;
+            color: #6b7280;
+            margin-top: 2px;
+        }
+
+        /* Status dot in card */
+        .card-status-dot {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-left: auto;
+            flex-shrink: 0;
+        }
+
+        /* Colors */
+        .status-green  { background-color: #22c55e; }
+        .status-yellow { background-color: #eab308; }
+        .status-red    { background-color: #ef4444; }
+        .status-gray   { background-color: #9ca3af; }
+
+        /* Loading */
+        .loading-spinner {
+            display: inline-block;
+            width: 18px;
+            height: 18px;
+            border: 2px solid #d1d5db;
+            border-top-color: #2E75B6;
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            body { padding: 10px; }
+
+            .header {
+                flex-direction: column;
+                gap: 12px;
+                padding: 16px 20px;
+            }
+            .header-logo { width: 70px; }
+            .header h1 { font-size: 1.5em; }
+
+            .grid {
+                grid-template-columns: 1fr;
+                gap: 14px;
+                padding: 16px;
+            }
+
+            .card-value { font-size: 1.6em; }
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 14px;
+            color: #9ca3af;
+            font-size: 0.8em;
+            border-top: 1px solid #e5e7eb;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- Header -->
+    <div class="header">
+        <img src="../logo.png" alt="Erichsfelde Logo" class="header-logo">
+        <div class="header-content">
+            <h1>Farm Cockpit</h1>
+            <p>Erichsfelde &mdash; Pommersche Farmgesellschaft</p>
+        </div>
+    </div>
+
+    <!-- Toolbar -->
+    <div class="toolbar">
+        <span id="last-update">Wird geladen...</span>
+        <button onclick="loadAll()">Aktualisieren</button>
+    </div>
+
+    <!-- 8 Indicator Cards -->
+    <div class="grid">
+        <!-- Q1 Cash Runway -->
+        <a class="card" id="card-f1" href="finanzen.html">
+            <div class="card-status-bar status-gray"></div>
+            <div class="card-body">
+                <div class="card-top">
+                    <span class="card-icon">&#x1F4B0;</span>
+                    <span class="card-title">Liquiditaetsreichweite</span>
+                    <span class="card-status-dot status-gray"></span>
+                </div>
+                <div class="card-value" data-kpi="f1"><span class="loading-spinner"></span></div>
+                <div class="card-subtitle">Monate Deckung</div>
+            </div>
+        </a>
+
+        <!-- Q2 Budget Deviation -->
+        <a class="card" id="card-f2" href="finanzen.html">
+            <div class="card-status-bar status-gray"></div>
+            <div class="card-body">
+                <div class="card-top">
+                    <span class="card-icon">&#x1F4CA;</span>
+                    <span class="card-title">Budgettreue</span>
+                    <span class="card-status-dot status-gray"></span>
+                </div>
+                <div class="card-value" data-kpi="f2"><span class="loading-spinner"></span></div>
+                <div class="card-subtitle">Max. Abweichung Kategorie</div>
+            </div>
+        </a>
+
+        <!-- Q3 Herd Growth -->
+        <a class="card" id="card-h4" href="herde.html">
+            <div class="card-status-bar status-gray"></div>
+            <div class="card-body">
+                <div class="card-top">
+                    <span class="card-icon">&#x1F404;</span>
+                    <span class="card-title">Herdenwachstum</span>
+                    <span class="card-status-dot status-gray"></span>
+                </div>
+                <div class="card-value" data-kpi="h4"><span class="loading-spinner"></span></div>
+                <div class="card-subtitle">Nettoveraenderung Herde</div>
+            </div>
+        </a>
+
+        <!-- Q4 Stocking Rate -->
+        <a class="card" id="card-w1" href="weide.html">
+            <div class="card-status-bar status-gray"></div>
+            <div class="card-body">
+                <div class="card-top">
+                    <span class="card-icon">&#x1F331;</span>
+                    <span class="card-title">Besatzdichte</span>
+                    <span class="card-status-dot status-gray"></span>
+                </div>
+                <div class="card-value" data-kpi="w1"><span class="loading-spinner"></span></div>
+                <div class="card-subtitle">GVE vs. Kapazitaet</div>
+            </div>
+        </a>
+
+        <!-- Q5 Cost per kg -->
+        <a class="card" id="card-f4" href="finanzen.html">
+            <div class="card-status-bar status-gray"></div>
+            <div class="card-body">
+                <div class="card-top">
+                    <span class="card-icon">&#x1F4C8;</span>
+                    <span class="card-title">Rentabilitaet je kg</span>
+                    <span class="card-status-dot status-gray"></span>
+                </div>
+                <div class="card-value" data-kpi="f4"><span class="loading-spinner"></span></div>
+                <div class="card-subtitle">Kosten pro kg verkauft</div>
+            </div>
+        </a>
+
+        <!-- Q6 Rain Outlook -->
+        <a class="card" id="card-k2" href="weide.html">
+            <div class="card-status-bar status-gray"></div>
+            <div class="card-body">
+                <div class="card-top">
+                    <span class="card-icon">&#x1F327;&#xFE0F;</span>
+                    <span class="card-title">Regenprognose</span>
+                    <span class="card-status-dot status-gray"></span>
+                </div>
+                <div class="card-value" data-kpi="k2"><span class="loading-spinner"></span></div>
+                <div class="card-subtitle">Saisonprognose vs. Normal</div>
+            </div>
+        </a>
+
+        <!-- Q7 Open Tickets -->
+        <a class="card" id="card-o2" href="operativ.html">
+            <div class="card-status-bar status-gray"></div>
+            <div class="card-body">
+                <div class="card-top">
+                    <span class="card-icon">&#x2699;&#xFE0F;</span>
+                    <span class="card-title">Betriebssicherheit</span>
+                    <span class="card-status-dot status-gray"></span>
+                </div>
+                <div class="card-value" data-kpi="o2"><span class="loading-spinner"></span></div>
+                <div class="card-subtitle">Offene Tickets &gt; 30 Tage</div>
+            </div>
+        </a>
+
+        <!-- Q8 Export Certification -->
+        <a class="card" id="card-c1" href="operativ.html">
+            <div class="card-status-bar status-gray"></div>
+            <div class="card-body">
+                <div class="card-top">
+                    <span class="card-icon">&#x1F4CB;</span>
+                    <span class="card-title">EU-Exportzertifizierung</span>
+                    <span class="card-status-dot status-gray"></span>
+                </div>
+                <div class="card-value" data-kpi="c1"><span class="loading-spinner"></span></div>
+                <div class="card-subtitle">Tage bis Ablauf</div>
+            </div>
+        </a>
+    </div>
+
+    <div class="footer">
+        Farm Controlling &mdash; Erichsfelde &copy; 2026 &middot; Auto-Refresh alle 5 Min.
+    </div>
+</div>
+
+<script>
+// ── Supabase Client ──────────────────────────────────────────────
+const SUPABASE_URL = 'https://vhwlcnfxslkftswksqrw.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_2a5cKq6CF2Qfe1D1DqLrTw_0kHRD4Cd';
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// ── Auth Guard ───────────────────────────────────────────────────
+async function checkAuth() {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+        alert('Bitte zuerst einloggen.');
+        // Redirect could go here when login page exists
+        // window.location.href = 'login.html';
+    }
+}
+
+// ── Helpers ──────────────────────────────────────────────────────
+function setCard(id, { value, subtitle, status }) {
+    const card = document.getElementById('card-' + id);
+    if (!card) return;
+
+    const bar = card.querySelector('.card-status-bar');
+    const dot = card.querySelector('.card-status-dot');
+    const valEl = card.querySelector('.card-value');
+    const subEl = card.querySelector('.card-subtitle');
+
+    // Remove old status classes
+    ['status-green','status-yellow','status-red','status-gray'].forEach(c => {
+        bar.classList.remove(c);
+        dot.classList.remove(c);
+    });
+
+    const cls = 'status-' + status;
+    bar.classList.add(cls);
+    dot.classList.add(cls);
+
+    valEl.textContent = value;
+    if (subtitle) subEl.textContent = subtitle;
+}
+
+function noData(id, subtitle) {
+    setCard(id, { value: '—', subtitle: subtitle || 'Keine Daten', status: 'gray' });
+}
+
+// ── KPI Loaders ──────────────────────────────────────────────────
+
+// F1 — Cash Runway (months)
+async function loadF1() {
+    try {
+        const { data: balRows } = await supabase
+            .from('account_balances')
+            .select('balance_nad')
+            .order('balance_date', { ascending: false })
+            .limit(1);
+
+        const { data: costs } = await supabase
+            .from('budgets')
+            .select('actual_nad')
+            .eq('fiscal_year', new Date().getFullYear())
+            .neq('month', 0);
+
+        if (!balRows?.length || !costs?.length) return noData('f1');
+
+        const balance = balRows[0].balance_nad;
+        const totalSpend = costs.reduce((s, r) => s + (r.actual_nad || 0), 0);
+        const avgMonthly = totalSpend / costs.length;
+
+        if (avgMonthly <= 0) return noData('f1', 'Keine Ausgaben');
+
+        const months = Math.round(balance / avgMonthly * 10) / 10;
+        const status = months >= 6 ? 'green' : months >= 3 ? 'yellow' : 'red';
+
+        setCard('f1', {
+            value: months + ' Mon.',
+            subtitle: 'Monate Deckung',
+            status
+        });
+    } catch { noData('f1'); }
+}
+
+// F2 — Budget deviation (max category %)
+async function loadF2() {
+    try {
+        const { data } = await supabase
+            .from('budgets')
+            .select('category, planned_nad, actual_nad')
+            .eq('fiscal_year', new Date().getFullYear());
+
+        if (!data?.length) return noData('f2');
+
+        // Aggregate by category
+        const cats = {};
+        data.forEach(r => {
+            if (!cats[r.category]) cats[r.category] = { planned: 0, actual: 0 };
+            cats[r.category].planned += r.planned_nad || 0;
+            cats[r.category].actual += r.actual_nad || 0;
+        });
+
+        let maxDev = 0;
+        Object.values(cats).forEach(c => {
+            if (c.planned > 0) {
+                const dev = Math.abs((c.actual - c.planned) / c.planned) * 100;
+                if (dev > maxDev) maxDev = dev;
+            }
+        });
+
+        const pct = Math.round(maxDev);
+        const status = pct <= 10 ? 'green' : pct <= 25 ? 'yellow' : 'red';
+
+        setCard('f2', {
+            value: pct + ' %',
+            subtitle: 'Max. Abweichung Kategorie',
+            status
+        });
+    } catch { noData('f2'); }
+}
+
+// H4 — Net herd growth
+async function loadH4() {
+    try {
+        const { data } = await supabase
+            .from('herd_snapshots')
+            .select('snapshot_date, total_head')
+            .order('snapshot_date', { ascending: false })
+            .limit(2);
+
+        if (!data || data.length < 2) return noData('h4');
+
+        const diff = data[0].total_head - data[1].total_head;
+        const pct = Math.round(diff / data[1].total_head * 1000) / 10;
+        const status = diff > 0 ? 'green' : diff === 0 ? 'yellow' : 'red';
+        const sign = diff > 0 ? '+' : '';
+
+        setCard('h4', {
+            value: sign + diff,
+            subtitle: sign + pct + ' % seit letztem Snapshot',
+            status
+        });
+    } catch { noData('h4'); }
+}
+
+// W1 — Stocking rate vs capacity
+async function loadW1() {
+    try {
+        const { data: snap } = await supabase
+            .from('herd_snapshots')
+            .select('total_lsu')
+            .order('snapshot_date', { ascending: false })
+            .limit(1);
+
+        const { data: camps } = await supabase
+            .from('farm_camps')
+            .select('area_ha, carrying_capacity_ha_per_lsu');
+
+        if (!snap?.length || !camps?.length) return noData('w1');
+
+        const totalLSU = snap[0].total_lsu;
+        const totalCapacity = camps.reduce((s, c) => {
+            if (c.carrying_capacity_ha_per_lsu > 0) {
+                return s + c.area_ha / c.carrying_capacity_ha_per_lsu;
+            }
+            return s;
+        }, 0);
+
+        if (totalCapacity <= 0) return noData('w1', 'Kapazitaet unbekannt');
+
+        const ratio = Math.round(totalLSU / totalCapacity * 100);
+        const status = ratio <= 80 ? 'green' : ratio <= 100 ? 'yellow' : 'red';
+
+        setCard('w1', {
+            value: ratio + ' %',
+            subtitle: Math.round(totalLSU) + ' GVE / ' + Math.round(totalCapacity) + ' Kap.',
+            status
+        });
+    } catch { noData('w1'); }
+}
+
+// F4 — Cost per kg sold
+async function loadF4() {
+    try {
+        const { data: sales } = await supabase
+            .from('sales')
+            .select('weight_kg, revenue_nad')
+            .gte('sale_date', new Date().getFullYear() + '-01-01');
+
+        const { data: costs } = await supabase
+            .from('budgets')
+            .select('actual_nad')
+            .eq('fiscal_year', new Date().getFullYear());
+
+        if (!sales?.length || !costs?.length) return noData('f4');
+
+        const totalKg = sales.reduce((s, r) => s + (r.weight_kg || 0), 0);
+        const totalCost = costs.reduce((s, r) => s + (r.actual_nad || 0), 0);
+
+        if (totalKg <= 0) return noData('f4', 'Keine Verkaufsmengen');
+
+        const costPerKg = Math.round(totalCost / totalKg * 100) / 100;
+        const revenuePerKg = sales.reduce((s, r) => s + (r.revenue_nad || 0), 0) / totalKg;
+        const profitable = revenuePerKg > costPerKg;
+        const status = profitable ? 'green' : 'red';
+
+        setCard('f4', {
+            value: 'N$ ' + costPerKg.toFixed(2),
+            subtitle: 'Kosten pro kg verkauft',
+            status
+        });
+    } catch { noData('f4'); }
+}
+
+// K2 — Seasonal rainfall forecast
+async function loadK2() {
+    try {
+        const { data } = await supabase
+            .from('climate_forecasts')
+            .select('forecast_pct_of_normal')
+            .order('forecast_date', { ascending: false })
+            .limit(1);
+
+        if (!data?.length) return noData('k2');
+
+        const pct = Math.round(data[0].forecast_pct_of_normal);
+        const status = pct >= 90 ? 'green' : pct >= 70 ? 'yellow' : 'red';
+
+        setCard('k2', {
+            value: pct + ' %',
+            subtitle: 'Saisonprognose vs. Normal',
+            status
+        });
+    } catch { noData('k2'); }
+}
+
+// O2 — Open tickets > 30 days
+async function loadO2() {
+    try {
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        const cutoff = thirtyDaysAgo.toISOString().split('T')[0];
+
+        const { data, count } = await supabase
+            .from('tickets')
+            .select('id', { count: 'exact', head: true })
+            .eq('status', 'open')
+            .lte('created_at', cutoff);
+
+        if (count === null || count === undefined) return noData('o2');
+
+        const status = count === 0 ? 'green' : count <= 3 ? 'yellow' : 'red';
+
+        setCard('o2', {
+            value: count,
+            subtitle: 'Offene Tickets > 30 Tage',
+            status
+        });
+    } catch { noData('o2'); }
+}
+
+// C1 — Days until cert expiry
+async function loadC1() {
+    try {
+        const { data } = await supabase
+            .from('certifications')
+            .select('expiry_date, cert_name')
+            .order('expiry_date', { ascending: true })
+            .limit(1);
+
+        if (!data?.length) return noData('c1');
+
+        const expiry = new Date(data[0].expiry_date);
+        const today = new Date();
+        const days = Math.ceil((expiry - today) / (1000 * 60 * 60 * 24));
+        const status = days > 90 ? 'green' : days > 30 ? 'yellow' : 'red';
+
+        setCard('c1', {
+            value: days + ' Tage',
+            subtitle: data[0].cert_name || 'Tage bis Ablauf',
+            status
+        });
+    } catch { noData('c1'); }
+}
+
+// ── Load All ─────────────────────────────────────────────────────
+async function loadAll() {
+    document.getElementById('last-update').textContent = 'Aktualisiere...';
+
+    await Promise.allSettled([
+        loadF1(), loadF2(), loadH4(), loadW1(),
+        loadF4(), loadK2(), loadO2(), loadC1()
+    ]);
+
+    const now = new Date();
+    const ts = now.toLocaleString('de-DE', {
+        day: '2-digit', month: '2-digit', year: 'numeric',
+        hour: '2-digit', minute: '2-digit'
+    });
+    document.getElementById('last-update').textContent = 'Letztes Update: ' + ts;
+}
+
+// ── Init ─────────────────────────────────────────────────────────
+checkAuth();
+loadAll();
+
+// Auto-refresh every 5 minutes
+setInterval(loadAll, 5 * 60 * 1000);
+</script>
+
+</body>
+</html>
