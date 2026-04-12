@@ -1217,7 +1217,11 @@
         </div>
     </div>
 
-    <script>
+    <script type="module">
+        import { DEFAULTS, calculateEbitBonus, calculateProductivityIndex, productivityFactor, calculateBonus, calculateEbit } from './shared/bonus-engine.js';
+
+        let bonusChart, comparisonChart;
+
         // ===== Admin Mode Management =====
         let isAdminMode = false;
         const ADMIN_PASSWORD = 'farm2025'; // Ändern Sie dieses Passwort!
@@ -1414,7 +1418,8 @@
             const productivityIndex = (baseCosts > 0) ? (totalWeight / baseCosts) * 1000 : 0;
 
             // Get EBIT breakdown
-            const ebitBonusResult = calculateEbitBonus(ebit);
+            const params = getDomParams();
+            const ebitBonusResult = calculateEbitBonus(ebit, params);
             const ebitBonusRaw = ebitBonusResult.total;
             const ebitBonusWeighted = ebitBonusRaw * 0.7;
 
@@ -1985,73 +1990,16 @@
             if (id === 'ebitCap') document.getElementById('ebitCapDisplay').textContent = value.toFixed(1);
         }
         
-        function calculateEbitBonus(ebit) {
-            const tier1Rate = parseFloat(document.getElementById('tier1Rate').value) / 100;
-            const tier2Rate = parseFloat(document.getElementById('tier2Rate').value) / 100;
-            const tier3Rate = parseFloat(document.getElementById('tier3Rate').value) / 100;
-            const tier4Rate = parseFloat(document.getElementById('tier4Rate').value) / 100;
-            const ebitCap = parseFloat(document.getElementById('ebitCap').value) * 1000000;
-            
-            const cappedEbit = Math.min(ebit, ebitCap);
-            let totalBonus = 0;
-            const breakdown = [];
-            
-            // Stufe 1: 0-100k
-            if (cappedEbit > 0) {
-                const amount = Math.min(cappedEbit, 100000);
-                const bonus = amount * tier1Rate;
-                totalBonus += bonus;
-                breakdown.push({
-                    stufe: 'Stufe 1 (0-100k)',
-                    betrag: amount,
-                    rate: tier1Rate * 100,
-                    bonus: bonus
-                });
-            }
-            
-            // Stufe 2: 100k-500k
-            if (cappedEbit > 100000) {
-                const amount = Math.min(cappedEbit - 100000, 400000);
-                const bonus = amount * tier2Rate;
-                totalBonus += bonus;
-                breakdown.push({
-                    stufe: 'Stufe 2 (100k-500k)',
-                    betrag: amount,
-                    rate: tier2Rate * 100,
-                    bonus: bonus
-                });
-            }
-            
-            // Stufe 3: 500k-2M
-            if (cappedEbit > 500000) {
-                const amount = Math.min(cappedEbit - 500000, 1500000);
-                const bonus = amount * tier3Rate;
-                totalBonus += bonus;
-                breakdown.push({
-                    stufe: 'Stufe 3 (500k-2M)',
-                    betrag: amount,
-                    rate: tier3Rate * 100,
-                    bonus: bonus
-                });
-            }
-            
-            // Stufe 4: 2M-4M
-            if (cappedEbit > 2000000) {
-                const amount = cappedEbit - 2000000;
-                const bonus = amount * tier4Rate;
-                totalBonus += bonus;
-                breakdown.push({
-                    stufe: 'Stufe 4 (2M+)',
-                    betrag: amount,
-                    rate: tier4Rate * 100,
-                    bonus: bonus
-                });
-            }
-            
-            return {
-                total: totalBonus,
-                breakdown: breakdown
-            };
+        function getDomParams() {
+          return {
+            ...DEFAULTS,
+            tier1Rate: parseFloat(document.getElementById('tier1Rate').value),
+            tier2Rate: parseFloat(document.getElementById('tier2Rate').value),
+            tier3Rate: parseFloat(document.getElementById('tier3Rate').value),
+            tier4Rate: parseFloat(document.getElementById('tier4Rate').value),
+            ebitCap: parseFloat(document.getElementById('ebitCap').value),
+            ebitWeight: parseFloat(document.getElementById('ebitWeight').value),
+          };
         }
         
         function calculate() {
@@ -2082,38 +2030,36 @@
             const ebit = totalRevenue - totalCost;
             
             // Get dynamic weighting
-            const ebitWeightPercent = parseFloat(document.getElementById('ebitWeight').value);
+            const params = getDomParams();
+            const ebitWeightPercent = params.ebitWeight;
             const ebitWeight = ebitWeightPercent / 100;
             const prodWeight = 1 - ebitWeight;
 
             // Calculate EBIT Bonus (PROGRESSIVE - KORRIGIERT!)
-            const ebitBonusResult = calculateEbitBonus(ebit);
+            const ebitBonusResult = calculateEbitBonus(ebit, params);
             const ebitBonusRaw = ebitBonusResult.total;
             const ebitBonusTotal = ebitBonusRaw * ebitWeight; // Dynamic weighting
-            
+
             // Calculate Productivity Index and Bonus (KORREKT nach PDF!)
             // Formel: (kg Schlachtgewicht verkauft ÷ Gesamtkosten) × 1000
             // Protection against division by zero
             const productivityIndex = (totalCost > 0) ? (totalSlaughterWeight / totalCost) * 1000 : 0;
 
             // Bonus-Faktor basierend auf Index (laut PDF Seite 4)
-            let prodBonusFactor = 0;
-            let prodRating = "";
+            const prodResult = productivityFactor(productivityIndex, params);
+            const prodBonusFactor = prodResult.factor;
+            // Add emoji prefixes to match existing display
+            let prodRating;
             if (totalCost <= 0) {
-                prodBonusFactor = 0;
-                prodRating = "⚠️ Keine Kosten - nicht berechenbar - Faktor 0×";
-            } else if (productivityIndex < 15) {
-                prodBonusFactor = 0;
-                prodRating = "🔴 Kritisch - Faktor 0×";
-            } else if (productivityIndex <= 20) {
-                prodBonusFactor = 1;
-                prodRating = "🟡 Ok - Faktor 1,0×";
-            } else if (productivityIndex <= 25) {
-                prodBonusFactor = 1.5;
-                prodRating = "🟢 Gut - Faktor 1,5×";
+                prodRating = "⚠️ " + prodResult.rating;
+            } else if (prodBonusFactor === 0) {
+                prodRating = "🔴 " + prodResult.rating;
+            } else if (prodBonusFactor === 1) {
+                prodRating = "🟡 " + prodResult.rating;
+            } else if (prodBonusFactor === 1.5) {
+                prodRating = "🟢 " + prodResult.rating;
             } else {
-                prodBonusFactor = 2;
-                prodRating = "💗 Exzellent - Faktor 2,0×";
+                prodRating = "💗 " + prodResult.rating;
             }
             
             // KORRIGIERTE BERECHNUNG mit dynamischer Gewichtung:
@@ -2221,11 +2167,12 @@
         function updateDashboard() {
             const baseSalary = parseInput(document.getElementById('baseSalary'));
             const investment = parseFloat(document.getElementById('investment').value);
-            
+            const params = getDomParams();
+
             // Calculate key statistics
-            const bonus1M = calculateEbitBonus(1000000).total * 0.7;
-            const bonus2M = calculateEbitBonus(2000000).total * 0.7;
-            const maxBonus = calculateEbitBonus(parseFloat(document.getElementById('ebitCap').value) * 1000000).total * 0.7;
+            const bonus1M = calculateEbitBonus(1000000, params).total * 0.7;
+            const bonus2M = calculateEbitBonus(2000000, params).total * 0.7;
+            const maxBonus = calculateEbitBonus(parseFloat(document.getElementById('ebitCap').value) * 1000000, params).total * 0.7;
             
             document.getElementById('bonus1M').textContent = formatNumber(bonus1M);
             document.getElementById('bonus2M').textContent = formatNumber(bonus2M);
@@ -2235,12 +2182,12 @@
             const ebitCapValue = parseFloat(document.getElementById('ebitCap').value) * 1000000;
             let breakEven = 0;
             for (let ebit = 0; ebit <= ebitCapValue; ebit += 10000) {
-                if (calculateEbitBonus(ebit).total * 0.7 >= baseSalary * 0.01) {
+                if (calculateEbitBonus(ebit, params).total * 0.7 >= baseSalary * 0.01) {
                     breakEven = ebit;
                     break;
                 }
             }
-            if (breakEven === 0 && calculateEbitBonus(ebitCapValue).total * 0.7 < baseSalary * 0.01) {
+            if (breakEven === 0 && calculateEbitBonus(ebitCapValue, params).total * 0.7 < baseSalary * 0.01) {
                 document.getElementById('breakEven').textContent = '> ' + formatNumber(ebitCapValue);
             } else {
                 document.getElementById('breakEven').textContent = formatNumber(breakEven);
@@ -2254,12 +2201,13 @@
         
         function updateBonusChart() {
             const ctx = document.getElementById('bonusChart').getContext('2d');
+            const params = getDomParams();
             const ebitPoints = [];
             const bonusPoints = [];
-            
+
             for (let ebit = 0; ebit <= 5000000; ebit += 250000) {
                 ebitPoints.push(ebit);
-                bonusPoints.push(calculateEbitBonus(ebit).total * 0.7);
+                bonusPoints.push(calculateEbitBonus(ebit, params).total * 0.7);
             }
             
             if (bonusChart) {
@@ -2306,13 +2254,14 @@
         
         function updateComparisonChart() {
             const ctx = document.getElementById('comparisonChart').getContext('2d');
+            const params = getDomParams();
             const ebitPoints = [];
-            
+
             for (let ebit = 0; ebit <= 5000000; ebit += 250000) {
                 ebitPoints.push(ebit);
             }
-            
-            const currentBonus = ebitPoints.map(ebit => calculateEbitBonus(ebit).total * 0.7);
+
+            const currentBonus = ebitPoints.map(ebit => calculateEbitBonus(ebit, params).total * 0.7);
             
             // Conservative scenario
             const conservativeBonus = ebitPoints.map(ebit => {
@@ -2390,12 +2339,13 @@
         
         function updateDetailTable() {
             const baseSalary = parseInput(document.getElementById('baseSalary'));
+            const params = getDomParams();
             const tbody = document.getElementById('detailTable');
             const keyPoints = [100000, 250000, 500000, 750000, 1000000, 1500000, 2000000, 2500000, 3000000, 3500000, 4000000];
-            
+
             let html = '';
             keyPoints.forEach(ebit => {
-                const bonus = calculateEbitBonus(ebit).total * 0.7;
+                const bonus = calculateEbitBonus(ebit, params).total * 0.7;
                 const percentage = calcPercent(bonus, baseSalary).toFixed(1);
                 const effectiveRate = calcPercent(bonus, ebit).toFixed(1);
                 
@@ -2413,6 +2363,16 @@
             tbody.innerHTML = html;
         }
         
+        // Expose DOM-called functions on window (modules don't auto-expose)
+        window.calculate = calculate;
+        window.switchTab = switchTab;
+        window.toggleAdminMode = toggleAdminMode;
+        window.exportToJSON = exportToJSON;
+        window.importFromJSON = importFromJSON;
+        window.exportToPDF = exportToPDF;
+        window.updateValue = updateValue;
+        window.formatInput = formatInput;
+
         // Initialize
         window.onload = function() {
             // Try to load from localStorage first

@@ -54,6 +54,9 @@ yarn-debug.log*
 yarn-error.log*
 package-lock.json
 
+# Cloudflare
+.wrangler/
+
 # Supabase local
 supabase/.branches/
 supabase/.temp/
