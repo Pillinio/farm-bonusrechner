@@ -766,8 +766,8 @@ function toggleSection(name) {
 }
 window.toggleSection = toggleSection;
 
-// ── Load s (for dropdowns) ───────────────────────────────────
-async function loadKamps() {
+// ── Load Kamps (for dropdowns) ───────────────────────────────────
+async function loadCamps() {
     const { data, error } = await sb
         .from('farm_camps')
         .select('name')

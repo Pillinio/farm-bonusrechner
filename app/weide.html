@@ -2284,7 +2284,7 @@ async function loadAll() {
     document.getElementById('last-update').textContent = 'Aktualisiere...';
 
     // loads must run before loadMap (populates campOccupancyMap)
-    await loadKamps();
+    await loadCamps();
 
     await Promise.allSettled([
         loadStockingRate(),

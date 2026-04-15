@@ -742,7 +742,7 @@ async function showForm() {
     document.getElementById('snapshotDate').value = formatDate(firstOfMonth);
 
     // Load reference data in parallel
-    await Promise.all([loads(), loadAssets(), loadTasks()]);
+    await Promise.all([loadCamps(), loadAssets(), loadTasks()]);
 
     // Restore draft if available
     restoreDraft();
@@ -751,7 +751,7 @@ async function showForm() {
     draftTimer = setInterval(saveDraft, 30000);
 }
 
-async function loadKamps() {
+async function loadCamps() {
     const container = document.getElementById('campList');
     const { data, error } = await sb.from('farm_camps').select('id, name').order('name');
     if (error || !data || data.length === 0) {
