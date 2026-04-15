@@ -66,36 +66,34 @@
             opacity: 0.85;
         }
 
-        /* Nav */
+        /* Navigation */
         .nav {
             display: flex;
             gap: 0;
-            background: #1a1a2e;
-            border-top: 1px solid rgba(255,255,255,0.1);
+            background: #f8f9fa;
+            border-bottom: 2px solid #dee2e6;
+            overflow-x: auto;
         }
 
         .nav a {
-            flex: 1;
-            text-align: center;
-            padding: 10px 16px;
-            color: rgba(255,255,255,0.7);
+            padding: 12px 24px;
             text-decoration: none;
+            color: #6b7280;
             font-size: 0.9em;
             font-weight: 500;
-            transition: background 0.2s, color 0.2s;
-            border-right: 1px solid rgba(255,255,255,0.05);
+            white-space: nowrap;
+            border-bottom: 3px solid transparent;
+            transition: color 0.2s, border-color 0.2s;
         }
 
-        .nav a:last-child { border-right: none; }
-
         .nav a:hover {
-            background: rgba(255,255,255,0.1);
-            color: white;
+            color: #374151;
+            background: #f0f0f0;
         }
 
         .nav a.active {
-            background: rgba(46, 117, 182, 0.3);
-            color: white;
+            color: #2E75B6;
+            border-bottom-color: #2E75B6;
             font-weight: 600;
         }
 

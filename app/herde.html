@@ -436,6 +436,18 @@
 
     <div class="content">
 
+        <!-- Global Year Selector (applies to H1-H4) -->
+        <div class="section" id="year-nav-section">
+            <div class="section-body" style="padding:14px 20px;">
+                <div id="year-nav" style="display:flex; align-items:center; justify-content:center; gap:14px; flex-wrap:wrap;">
+                    <button id="prev-year" onclick="changeYear(-1)" style="background:#f1f5f9; border:1px solid #d1d5db; border-radius:6px; padding:6px 14px; cursor:pointer;">&larr; Vorjahr</button>
+                    <span style="color:#6b7280; font-size:0.85em;">Jahresansicht</span>
+                    <span id="year-label" style="font-size:1.3em; font-weight:700; min-width:80px; text-align:center;">...</span>
+                    <button id="next-year" onclick="changeYear(1)" style="background:#f1f5f9; border:1px solid #d1d5db; border-radius:6px; padding:6px 14px; cursor:pointer;">Nachfolge Jahr &rarr;</button>
+                </div>
+            </div>
+        </div>
+
         <!-- H1: Herd Size in LSU -->
         <div class="section">
             <div class="section-header">
@@ -444,11 +456,6 @@
                 <span class="section-badge badge-gray" id="badge-h1"><span class="loading-spinner"></span></span>
             </div>
             <div class="section-body">
-                <div id="h1-year-nav" style="display:flex; align-items:center; justify-content:center; gap:12px; margin-bottom:12px;">
-                    <button id="h1-prev-year" onclick="changeH1Year(-1)" style="background:#f1f5f9; border:1px solid #d1d5db; border-radius:6px; padding:6px 14px; cursor:pointer;">&larr; Vorjahr</button>
-                    <span id="h1-year-label" style="font-size:1.15em; font-weight:700; min-width:80px; text-align:center;">...</span>
-                    <button id="h1-next-year" onclick="changeH1Year(1)" style="background:#f1f5f9; border:1px solid #d1d5db; border-radius:6px; padding:6px 14px; cursor:pointer;">Nachfolge Jahr &rarr;</button>
-                </div>
                 <div class="chart-container">
                     <canvas id="chart-h1"></canvas>
                 </div>
@@ -628,101 +635,247 @@ function setBadge(id, text) {
     if (badge) badge.textContent = text;
 }
 
-function formatDate(dateStr) {
-    const d = new Date(dateStr);
-    return d.toLocaleDateString('de-DE', { month: 'short', year: '2-digit' });
-}
-
-// ── H1: Herd Size in LSU (yearly monthly view with navigation) ───
-let _h1AllData = [];
-let _h1CurrentYear = new Date().getFullYear();
-let _h1AvailableYears = [];
+// ── Global state shared across H1-H4 ────────────────────────────
 const MONTH_NAMES_DE = ['Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'];
+let _allSnapshots = [];
+let _monthlyMap = new Map();   // "YYYY-M" → { stock: latestRow, flow: {births,deaths,sales,purchases} }
+let _availableYears = [];
+let _selectedYear = new Date().getFullYear();
 
-async function loadH1() {
-    try {
-        const { data, error } = await sb
-            .from('herd_snapshots')
-            .select('snapshot_date, total_lsu')
-            .order('snapshot_date', { ascending: true });
-
-        if (error) throw error;
-        if (!data || data.length === 0) {
-            setBadge('h1', '—');
-            showPlaceholder('h1');
-            return;
+function buildMonthlyMap(snapshots) {
+    const map = new Map();
+    snapshots.forEach(r => {
+        const d = new Date(r.snapshot_date);
+        const key = d.getFullYear() + '-' + d.getMonth();
+        if (!map.has(key)) {
+            map.set(key, { stock: null, flow: { births: 0, deaths: 0, sales: 0, purchases: 0 } });
         }
+        const e = map.get(key);
+        if (!e.stock || new Date(r.snapshot_date) > new Date(e.stock.snapshot_date)) e.stock = r;
+        e.flow.births    += r.births    || 0;
+        e.flow.deaths    += r.deaths    || 0;
+        e.flow.sales     += r.sales     || 0;
+        e.flow.purchases += r.purchases || 0;
+    });
+    return map;
+}
 
-        _h1AllData = data;
-        _h1AvailableYears = [...new Set(data.map(r => new Date(r.snapshot_date).getFullYear()))].sort();
+function getMonth(year, month) {
+    const total = year * 12 + month;
+    const y = Math.floor(total / 12);
+    const m = ((total % 12) + 12) % 12;
+    return _monthlyMap.get(y + '-' + m) || null;
+}
 
-        // Default to most recent year with data
-        _h1CurrentYear = _h1AvailableYears[_h1AvailableYears.length - 1];
+function sliceYear(year) {
+    const today = new Date();
+    const currentYear = today.getFullYear();
+    let maxMonth;
+    if (year < currentYear) maxMonth = 11;
+    else if (year === currentYear) maxMonth = today.getMonth();
+    else return { labels: [], stock: [], flow: [], maxMonth: -1 };
 
-        renderH1Year();
-    } catch (e) {
-        console.error('H1 error:', e);
-        showPlaceholder('h1');
+    const labels = MONTH_NAMES_DE.slice(0, maxMonth + 1);
+    const stock = [], flow = [];
+    for (let m = 0; m <= maxMonth; m++) {
+        const e = getMonth(year, m);
+        stock.push(e ? e.stock : null);
+        flow.push(e ? e.flow : null);
     }
+    return { labels, stock, flow, maxMonth };
 }
 
-function changeH1Year(delta) {
-    const newYear = _h1CurrentYear + delta;
-    if (newYear < _h1AvailableYears[0] - 5 || newYear > _h1AvailableYears[_h1AvailableYears.length - 1] + 1) return;
-    _h1CurrentYear = newYear;
-    renderH1Year();
+function headcount(s) {
+    if (!s) return 0;
+    return (s.cows||0)+(s.bulls||0)+(s.heifers||0)+(s.calves||0)+(s.oxen||0);
 }
 
-function renderH1Year() {
-    const label = document.getElementById('h1-year-label');
-    const prev = document.getElementById('h1-prev-year');
-    const next = document.getElementById('h1-next-year');
-    label.textContent = _h1CurrentYear;
+// ── Year navigation ─────────────────────────────────────────────
+function changeYear(delta) {
+    if (_availableYears.length === 0) return;
+    const newYear = _selectedYear + delta;
+    const minY = _availableYears[0];
+    const maxY = _availableYears[_availableYears.length - 1];
+    if (newYear < minY - 1 || newYear > maxY + 1) return;
+    _selectedYear = newYear;
+    renderYearNav();
+    renderH1(); renderH2(); renderH3(); renderH4();
+}
 
-    // Enable/disable nav buttons based on available years
-    const minYear = _h1AvailableYears[0];
-    const maxYear = _h1AvailableYears[_h1AvailableYears.length - 1];
-    prev.disabled = _h1CurrentYear <= minYear;
-    next.disabled = _h1CurrentYear >= maxYear;
-    prev.style.opacity = prev.disabled ? '0.4' : '1';
-    next.style.opacity = next.disabled ? '0.4' : '1';
-
-    // Filter data for current year
-    const yearData = _h1AllData.filter(r => new Date(r.snapshot_date).getFullYear() === _h1CurrentYear);
-
-    if (yearData.length === 0) {
-        setBadge('h1', 'Keine Daten ' + _h1CurrentYear);
-        destroyChart('h1');
-        showPlaceholder('h1');
+function renderYearNav() {
+    const label = document.getElementById('year-label');
+    const prev = document.getElementById('prev-year');
+    const next = document.getElementById('next-year');
+    if (label) label.textContent = _selectedYear;
+    if (!prev || !next) return;
+    if (_availableYears.length === 0) {
+        prev.disabled = next.disabled = true;
+        prev.style.opacity = next.style.opacity = '0.4';
         return;
     }
+    const minY = _availableYears[0];
+    const maxY = _availableYears[_availableYears.length - 1];
+    prev.disabled = _selectedYear <= minY;
+    next.disabled = _selectedYear >= maxY;
+    prev.style.opacity = prev.disabled ? '0.4' : '1';
+    next.style.opacity = next.disabled ? '0.4' : '1';
+}
 
+// ── H1: Herd Size in LSU (line, monthly) ────────────────────────
+function renderH1() {
+    const { labels, stock, maxMonth } = sliceYear(_selectedYear);
+    if (maxMonth < 0 || stock.every(s => s === null)) {
+        setBadge('h1', 'Keine Daten ' + _selectedYear);
+        destroyChart('h1'); showPlaceholder('h1');
+        return;
+    }
     hidePlaceholder('h1');
 
-    // Aggregate: latest snapshot per month
-    const byMonth = new Array(12).fill(null);
-    yearData.forEach(r => {
-        const d = new Date(r.snapshot_date);
-        const m = d.getMonth();
-        if (byMonth[m] === null || new Date(r.snapshot_date) > new Date(byMonth[m].snapshot_date)) {
-            byMonth[m] = r;
-        }
-    });
-
-    const values = byMonth.map(r => r ? Math.round(r.total_lsu) : null);
-    const latestValue = values.filter(v => v != null).pop();
+    const values = stock.map(s => s ? Math.round(s.total_lsu) : null);
+    const latestValue = [...values].reverse().find(v => v != null);
     setBadge('h1', (latestValue || 0) + ' LSU');
 
     destroyChart('h1');
     charts['h1'] = new Chart(document.getElementById('chart-h1'), {
-        type: 'bar',
+        type: 'line',
         data: {
-            labels: MONTH_NAMES_DE,
+            labels,
             datasets: [{
-                label: 'LSU ' + _h1CurrentYear,
+                label: 'LSU ' + _selectedYear,
                 data: values,
-                backgroundColor: values.map(v => v == null ? '#e5e7eb' : '#2E75B6'),
-                borderRadius: 4,
+                borderColor: '#2E75B6',
+                backgroundColor: 'rgba(46,117,182,0.12)',
+                fill: true,
+                tension: 0.3,
+                pointRadius: 4,
+                pointBackgroundColor: '#2E75B6',
+                spanGaps: false,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: { callbacks: { label: ctx => ctx.raw == null ? 'Keine Meldung' : ctx.raw + ' LSU' } }
+            },
+            scales: { y: { beginAtZero: true, title: { display: true, text: 'LSU' } } }
+        }
+    });
+}
+
+// ── H2: Calving Rate rolling 12M (monthly grid) ─────────────────
+function renderH2() {
+    const { labels, maxMonth } = sliceYear(_selectedYear);
+    if (maxMonth < 0) {
+        setBadge('h2', '—'); destroyChart('h2'); showPlaceholder('h2');
+        return;
+    }
+
+    const rates = [];
+    let anyData = false;
+    for (let m = 0; m <= maxMonth; m++) {
+        let sumBirths = 0, sumCows = 0, cowSamples = 0;
+        for (let k = 0; k < 12; k++) {
+            const e = getMonth(_selectedYear, m - k);
+            if (!e) continue;
+            sumBirths += e.flow.births;
+            if (e.stock && e.stock.cows != null) { sumCows += e.stock.cows; cowSamples++; }
+        }
+        if (cowSamples > 0 && sumCows > 0) {
+            const avgCows = sumCows / cowSamples;
+            rates.push(Math.round((sumBirths / avgCows) * 1000) / 10);
+            anyData = true;
+        } else {
+            rates.push(null);
+        }
+    }
+
+    if (!anyData) { setBadge('h2', '—'); destroyChart('h2'); showPlaceholder('h2'); return; }
+    hidePlaceholder('h2');
+
+    const latest = [...rates].reverse().find(v => v != null);
+    setBadge('h2', (latest != null ? latest.toFixed(1) : '—') + ' %');
+
+    destroyChart('h2');
+    charts['h2'] = new Chart(document.getElementById('chart-h2'), {
+        type: 'line',
+        data: {
+            labels,
+            datasets: [{
+                label: 'Abkalberate (rollend 12 Mon.)',
+                data: rates,
+                borderColor: '#22c55e',
+                backgroundColor: 'rgba(34,197,94,0.08)',
+                fill: true,
+                tension: 0.3,
+                pointRadius: 3,
+                pointBackgroundColor: '#22c55e',
+                spanGaps: false,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: { callbacks: { label: ctx => ctx.raw == null ? 'Keine Meldung' : ctx.raw + ' %' } }
+            },
+            scales: { y: { beginAtZero: true, title: { display: true, text: '%' } } }
+        }
+    });
+}
+
+// ── H3: Mortality Rate (monthly, + annualised equivalent) ───────
+function renderH3() {
+    const { labels, stock, flow, maxMonth } = sliceYear(_selectedYear);
+    if (maxMonth < 0) {
+        setBadge('h3', '—'); destroyChart('h3'); showPlaceholder('h3');
+        return;
+    }
+
+    // Seed last-known headcount from months before the selected year
+    let lastKnownHead = null;
+    for (let k = 1; k <= 24; k++) {
+        const e = getMonth(_selectedYear, -k);
+        if (e && e.stock) { lastKnownHead = headcount(e.stock); break; }
+    }
+
+    const rates = [];
+    let anyData = false;
+    for (let m = 0; m <= maxMonth; m++) {
+        const s = stock[m], f = flow[m];
+        if (s) lastKnownHead = headcount(s);
+        if (f && lastKnownHead && lastKnownHead > 0) {
+            rates.push(Math.round((f.deaths / lastKnownHead) * 1000) / 10);
+            anyData = true;
+        } else {
+            rates.push(null);
+        }
+    }
+
+    if (!anyData) { setBadge('h3', '—'); destroyChart('h3'); showPlaceholder('h3'); return; }
+    hidePlaceholder('h3');
+
+    const latest = [...rates].reverse().find(v => v != null) || 0;
+    const latestAnnualised = latest * 12;
+    setBadge('h3', latest.toFixed(1) + ' % (≈ ' + latestAnnualised.toFixed(1) + ' % p.a.)');
+
+    destroyChart('h3');
+    charts['h3'] = new Chart(document.getElementById('chart-h3'), {
+        type: 'line',
+        data: {
+            labels,
+            datasets: [{
+                label: 'Mortalität (%)',
+                data: rates,
+                borderColor: '#ef4444',
+                backgroundColor: 'rgba(239,68,68,0.08)',
+                fill: true,
+                tension: 0.3,
+                pointRadius: 3,
+                pointBackgroundColor: '#ef4444',
+                spanGaps: false,
             }]
         },
         options: {
@@ -732,212 +885,138 @@ function renderH1Year() {
                 legend: { display: false },
                 tooltip: {
                     callbacks: {
-                        label: ctx => ctx.raw == null ? 'Keine Daten' : ctx.raw + ' LSU'
+                        label: ctx => {
+                            if (ctx.raw == null) return 'Keine Meldung';
+                            const v = ctx.raw;
+                            return v.toFixed(1) + ' % (≈ ' + (v * 12).toFixed(1) + ' % p.a.)';
+                        }
                     }
                 }
             },
-            scales: {
-                y: { beginAtZero: true, title: { display: true, text: 'LSU' } }
-            }
+            scales: { y: { beginAtZero: true, title: { display: true, text: '% der Herde / Monat' } } }
         }
     });
 }
 
-// ── H2: Calving Rate rolling 12M ────────────────────────────────
-async function loadH2() {
-    try {
-        const { data, error } = await sb
-            .from('herd_snapshots')
-            .select('snapshot_date, births, cows')
-            .order('snapshot_date', { ascending: true });
+// ── H4: Net Growth (combined bars = monthly + line = cumulative YTD) ──
+function renderH4() {
+    const { labels, flow, maxMonth } = sliceYear(_selectedYear);
+    if (maxMonth < 0) {
+        setBadge('h4', '—'); destroyChart('h4'); showPlaceholder('h4');
+        return;
+    }
 
-        if (error) throw error;
-        if (!data || data.length < 2) return showPlaceholder('h2');
-
-        // Rolling 12-month calving rate
-        const rates = [];
-        const labels = [];
-
-        for (let i = 0; i < data.length; i++) {
-            // Look back up to 12 months
-            const cutoff = new Date(data[i].snapshot_date);
-            cutoff.setMonth(cutoff.getMonth() - 12);
-
-            let sumBirths = 0;
-            let avgCows = 0;
-            let count = 0;
-
-            for (let j = 0; j <= i; j++) {
-                if (new Date(data[j].snapshot_date) >= cutoff) {
-                    sumBirths += (data[j].births || 0);
-                    avgCows += (data[j].cows || 0);
-                    count++;
-                }
-            }
-
-            if (count > 0 && avgCows > 0) {
-                const rate = (sumBirths / (avgCows / count)) * 100;
-                rates.push(Math.round(rate * 10) / 10);
-                labels.push(formatDate(data[i].snapshot_date));
-            }
+    const netValues = [];
+    const cumulative = [];
+    let runningSum = 0;
+    let anyData = false;
+    for (let m = 0; m <= maxMonth; m++) {
+        const f = flow[m];
+        if (f) {
+            const net = (f.births || 0) - (f.deaths || 0) - (f.sales || 0) + (f.purchases || 0);
+            netValues.push(net);
+            runningSum += net;
+            cumulative.push(runningSum);
+            anyData = true;
+        } else {
+            netValues.push(null);
+            cumulative.push(anyData ? runningSum : null);
         }
-
-        if (rates.length === 0) return showPlaceholder('h2');
-
-        hidePlaceholder('h2');
-        destroyChart('h2');
-
-        const latest = rates[rates.length - 1];
-        setBadge('h2', latest + ' %');
-
-        charts['h2'] = new Chart(document.getElementById('chart-h2'), {
-            type: 'line',
-            data: {
-                labels,
-                datasets: [{
-                    label: 'Abkalberate (%)',
-                    data: rates,
-                    borderColor: '#22c55e',
-                    backgroundColor: 'rgba(34,197,94,0.08)',
-                    fill: true,
-                    tension: 0.3,
-                    pointRadius: 3,
-                    pointBackgroundColor: '#22c55e',
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
-                scales: {
-                    y: { beginAtZero: true, title: { display: true, text: '%' } }
-                }
-            }
-        });
-    } catch (e) {
-        console.error('H2 error:', e);
-        showPlaceholder('h2');
     }
-}
 
-// ── H3: Mortality Rate ──────────────────────────────────────────
-async function loadH3() {
-    try {
-        const { data, error } = await sb
-            .from('herd_snapshots')
-            .select('snapshot_date, deaths, cows, bulls, heifers, calves, oxen')
-            .order('snapshot_date', { ascending: true });
+    if (!anyData) { setBadge('h4', '—'); destroyChart('h4'); showPlaceholder('h4'); return; }
+    hidePlaceholder('h4');
 
-        if (error) throw error;
-        if (!data || data.length === 0) return showPlaceholder('h3');
+    const latestNet = [...netValues].reverse().find(v => v != null) || 0;
+    const sign = latestNet > 0 ? '+' : '';
+    const ytdSign = runningSum >= 0 ? '+' : '';
+    setBadge('h4', sign + latestNet + ' Tiere (YTD ' + ytdSign + runningSum + ')');
 
-        const labels = [];
-        const mortalityRates = [];
+    const bgColors = netValues.map(v => v == null ? 'rgba(229,231,235,0.4)' : (v >= 0 ? 'rgba(34,197,94,0.7)' : 'rgba(239,68,68,0.7)'));
+    const borderColors = netValues.map(v => v == null ? '#e5e7eb' : (v >= 0 ? '#22c55e' : '#ef4444'));
 
-        data.forEach(r => {
-            const totalHead = (r.cows || 0) + (r.bulls || 0) + (r.heifers || 0) + (r.calves || 0) + (r.oxen || 0);
-            const total = totalHead || 1;
-            labels.push(formatDate(r.snapshot_date));
-            mortalityRates.push(Math.round(((r.deaths || 0) / total) * 1000) / 10);
-        });
-
-        hidePlaceholder('h3');
-        destroyChart('h3');
-
-        const latest = mortalityRates[mortalityRates.length - 1];
-        setBadge('h3', latest.toFixed(1) + ' %');
-
-        charts['h3'] = new Chart(document.getElementById('chart-h3'), {
-            type: 'line',
-            data: {
-                labels,
-                datasets: [
-                    {
-                        label: 'Mortalit\u00e4t (%)',
-                        data: mortalityRates,
-                        borderColor: '#ef4444',
-                        backgroundColor: 'rgba(239,68,68,0.08)',
-                        fill: true,
-                        tension: 0.3,
-                        pointRadius: 3,
-                        pointBackgroundColor: '#ef4444',
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
-                scales: {
-                    y: { beginAtZero: true, title: { display: true, text: '% der Herde' } }
-                }
-            }
-        });
-    } catch (e) {
-        console.error('H3 error:', e);
-        showPlaceholder('h3');
-    }
-}
-
-// ── H4: Net Herd Growth ─────────────────────────────────────────
-async function loadH4() {
-    try {
-        const { data, error } = await sb
-            .from('herd_snapshots')
-            .select('snapshot_date, births, deaths, sales, purchases')
-            .order('snapshot_date', { ascending: true });
-
-        if (error) throw error;
-        if (!data || data.length === 0) return showPlaceholder('h4');
-
-        const labels = [];
-        const netValues = [];
-
-        data.forEach(r => {
-            labels.push(formatDate(r.snapshot_date));
-            const births = r.births || 0;
-            const deaths = r.deaths || 0;
-            const sales = r.sales || 0;
-            const purchases = r.purchases || 0;
-            netValues.push(births - deaths - sales + purchases);
-        });
-
-        hidePlaceholder('h4');
-        destroyChart('h4');
-
-        const latestNet = netValues[netValues.length - 1];
-        const sign = latestNet > 0 ? '+' : '';
-        setBadge('h4', sign + latestNet + ' Tiere');
-
-        // Color bars: green for positive, red for negative
-        const bgColors = netValues.map(v => v >= 0 ? 'rgba(34,197,94,0.7)' : 'rgba(239,68,68,0.7)');
-        const borderColors = netValues.map(v => v >= 0 ? '#22c55e' : '#ef4444');
-
-        charts['h4'] = new Chart(document.getElementById('chart-h4'), {
-            type: 'bar',
-            data: {
-                labels,
-                datasets: [{
-                    label: 'Nettover\u00e4nderung',
+    destroyChart('h4');
+    charts['h4'] = new Chart(document.getElementById('chart-h4'), {
+        data: {
+            labels,
+            datasets: [
+                {
+                    type: 'bar',
+                    label: 'Monatlich (Netto)',
                     data: netValues,
                     backgroundColor: bgColors,
                     borderColor: borderColors,
                     borderWidth: 1,
                     borderRadius: 4,
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
-                scales: {
-                    y: { title: { display: true, text: 'Tiere' } }
+                    order: 2,
+                },
+                {
+                    type: 'line',
+                    label: 'Kumulativ YTD',
+                    data: cumulative,
+                    borderColor: '#2E75B6',
+                    backgroundColor: 'rgba(46,117,182,0.08)',
+                    fill: false,
+                    tension: 0.3,
+                    pointRadius: 4,
+                    pointBackgroundColor: '#2E75B6',
+                    borderWidth: 2,
+                    order: 1,
+                    spanGaps: true,
                 }
-            }
-        });
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: true, position: 'bottom' },
+                tooltip: {
+                    callbacks: {
+                        label: ctx => {
+                            if (ctx.raw == null) return ctx.dataset.label + ': —';
+                            const s = ctx.raw > 0 ? '+' : '';
+                            return ctx.dataset.label + ': ' + s + ctx.raw + ' Tiere';
+                        }
+                    }
+                }
+            },
+            scales: { y: { title: { display: true, text: 'Tiere' } } }
+        }
+    });
+}
+
+// ── Load snapshots once, populate state, render all year-dependent KPIs ──
+async function loadSnapshotsAndRender() {
+    try {
+        const { data, error } = await sb
+            .from('herd_snapshots')
+            .select('snapshot_date, total_lsu, cows, bulls, heifers, calves, oxen, births, deaths, sales, purchases')
+            .order('snapshot_date', { ascending: true });
+
+        if (error) throw error;
+        _allSnapshots = data || [];
+
+        if (_allSnapshots.length === 0) {
+            _availableYears = [];
+            _monthlyMap = new Map();
+            renderYearNav();
+            ['h1','h2','h3','h4'].forEach(id => { setBadge(id, '—'); destroyChart(id); showPlaceholder(id); });
+            return;
+        }
+
+        _monthlyMap = buildMonthlyMap(_allSnapshots);
+        _availableYears = [...new Set(_allSnapshots.map(r => new Date(r.snapshot_date).getFullYear()))].sort();
+
+        if (!_availableYears.includes(_selectedYear)) {
+            _selectedYear = _availableYears[_availableYears.length - 1];
+        }
+
+        renderYearNav();
+        renderH1(); renderH2(); renderH3(); renderH4();
     } catch (e) {
-        console.error('H4 error:', e);
-        showPlaceholder('h4');
+        console.error('Snapshot load error:', e);
+        ['h1','h2','h3','h4'].forEach(id => { showPlaceholder(id); });
     }
 }
 
@@ -1367,7 +1446,7 @@ async function loadAll() {
     document.getElementById('last-update').textContent = 'Aktualisiere...';
 
     await Promise.allSettled([
-        loadH1(), loadH2(), loadH3(), loadH4(), loadH5(), loadH6()
+        loadSnapshotsAndRender(), loadH5(), loadH6()
     ]);
 
     const now = new Date();

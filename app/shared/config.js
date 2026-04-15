@@ -11,12 +11,13 @@ export const PAGES = {
   weide:     'weide.html',
   markt:     'markt.html',
   operativ:  'operativ.html',
-  bericht:   'bericht.html',
+  berichte:  'berichte.html',
+  bericht:   'berichte.html#monat',
+  wochenbericht: 'berichte.html#woche',
   bonus:     'bonus.html',
   admin:     'admin.html',
   forecast:  'forecast.html',
   herdEntry: 'herd-entry.html',
-  wochenbericht: 'wochenbericht.html',
 };
 
 // LSU (Large Stock Unit) conversion factors

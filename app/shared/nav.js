@@ -1,4 +1,4 @@
-import { PAGES } from './config.js';
+import { PAGES, SUPABASE_URL, SUPABASE_ANON_KEY } from './config.js';
 
 /**
  * Navigation items in display order.
@@ -13,11 +13,23 @@ const NAV_ITEMS = [
   { key: 'weide',    label: 'Weide & Klima',  href: PAGES.weide },
   { key: 'markt',    label: 'Markt',          href: PAGES.markt },
   { key: 'operativ', label: 'Operativ',       href: PAGES.operativ },
-  { key: 'wochenbericht', label: 'Wochenbericht', href: PAGES.wochenbericht },
-  { key: 'bericht',  label: 'Monatsbericht',  href: PAGES.bericht },
+  { key: 'berichte', label: 'Berichte',       href: PAGES.berichte },
   { key: 'bonus',    label: 'Bonus & Prognose', href: PAGES.bonus },
   { key: 'admin',    label: 'Admin',          href: PAGES.admin },
 ];
+
+async function handleLogout(e) {
+  e.preventDefault();
+  try {
+    if (window.supabase && SUPABASE_URL && SUPABASE_ANON_KEY) {
+      const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      await client.auth.signOut();
+    }
+  } catch (err) {
+    console.error('Logout error:', err);
+  }
+  window.location.href = 'login.html';
+}
 
 /**
  * Render the navigation bar and inject it into the page.
@@ -34,8 +46,11 @@ export function renderNav(activePage) {
     return `<a href="${item.href}"${cls}>${item.label}</a>`;
   }).join('\n        ');
 
+  const logoutLink = `<a href="#" id="nav-logout" style="margin-left:auto; color:#b91c1c;" title="Abmelden">&#x23FB; Abmelden</a>`;
+
   const html = `<nav class="nav">
         ${links}
+        ${logoutLink}
     </nav>`;
 
   // Find or create the mount point
@@ -50,4 +65,8 @@ export function renderNav(activePage) {
       header.insertAdjacentHTML('afterend', html);
     }
   }
+
+  // Attach logout handler (element was just injected)
+  const btn = document.getElementById('nav-logout');
+  if (btn) btn.addEventListener('click', handleLogout);
 }

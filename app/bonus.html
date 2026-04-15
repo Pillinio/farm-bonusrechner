@@ -32,7 +32,7 @@
         }
         
         .header {
-            background: linear-gradient(135deg, #1F4E78 0%, #2E75B6 100%);
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
             color: white;
             padding: 20px 30px;
             text-align: center;
@@ -1255,7 +1255,7 @@
     </div>
 
     <script type="module">
-        import { DEFAULTS, calculateEbitBonus, calculateProductivityIndex, productivityFactor, calculateBonus, calculateEbit } from './shared/bonus-engine.js';
+        import { DEFAULTS, calculateEbitBonus, calculateProductivityIndex, productivityFactor, calculateBonus, calculateEbit } from '../shared/bonus-engine.js';
 
         let bonusChart, comparisonChart;
 
@@ -2438,7 +2438,7 @@
         };
     </script>
     <script type="module">
-      import { initLiveDefaults } from './shared/bonus-live-loader.js';
+      import { initLiveDefaults } from '../shared/bonus-live-loader.js';
       import { renderNav } from './shared/nav.js';
       renderNav('bonus');
       window.addEventListener('load', () => {

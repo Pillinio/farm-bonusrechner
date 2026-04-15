@@ -1,0 +1,2243 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="../favicon.ico">
+    <title>Berichte - Farm Controlling</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: white;
+            padding: 20px 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 30px;
+        }
+
+        .header-logo {
+            width: 120px;
+            height: auto;
+            max-height: 100px;
+            object-fit: contain;
+        }
+
+        .header-content {
+            flex: 1;
+            max-width: 800px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.2em;
+            margin-bottom: 6px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.85;
+        }
+
+        /* Navigation */
+        .nav {
+            display: flex;
+            gap: 0;
+            background: #f8f9fa;
+            border-bottom: 2px solid #dee2e6;
+            overflow-x: auto;
+        }
+
+        .nav a {
+            padding: 12px 24px;
+            text-decoration: none;
+            color: #6b7280;
+            font-size: 0.9em;
+            font-weight: 500;
+            white-space: nowrap;
+            border-bottom: 3px solid transparent;
+            transition: color 0.2s, border-color 0.2s;
+        }
+
+        .nav a:hover {
+            color: #374151;
+            background: #f0f0f0;
+        }
+
+        .nav a.active {
+            color: #2E75B6;
+            border-bottom-color: #2E75B6;
+            font-weight: 600;
+        }
+
+        /* Content wrapper around sub-tabs */
+        .content {
+            padding: 24px;
+        }
+
+        /* Sub-tab nav (admin.html section-tabs pattern) */
+        .report-tabs {
+            display: flex;
+            gap: 0;
+            background: #f1f5f9;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 24px;
+        }
+        .report-tabs button {
+            flex: 1;
+            padding: 12px 16px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            font-size: 0.9em;
+            font-weight: 500;
+            color: #64748b;
+            transition: all 0.2s;
+        }
+        .report-tabs button:hover { background: #e2e8f0; }
+        .report-tabs button.active {
+            background: #2E75B6;
+            color: white;
+            font-weight: 600;
+        }
+
+        .report-panel { display: none; }
+        .report-panel.active { display: block; }
+
+        /* Toolbar (shared between both panels) */
+        .toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 24px;
+            background: #f8f9fa;
+            border-bottom: 2px solid #dee2e6;
+            border-top: 2px solid #dee2e6;
+            font-size: 0.9em;
+            color: #6b7280;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin: -24px -24px 20px;
+        }
+
+        .toolbar button {
+            background: #2E75B6;
+            color: white;
+            border: none;
+            padding: 6px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: background 0.2s;
+        }
+
+        .toolbar button:hover {
+            background: #1F4E78;
+        }
+
+        .toolbar select,
+        .toolbar input[type="month"] {
+            padding: 6px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 0.9em;
+            background: white;
+            color: #374151;
+        }
+
+        .toolbar-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .toolbar-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* ============ Monat-specific styles ============ */
+        .section {
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 16px 22px;
+            border-bottom: 1px solid #e5e7eb;
+            background: #f9fafb;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .section-icon {
+            font-size: 1.4em;
+        }
+
+        .section-title {
+            font-size: 1.05em;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .section-badge {
+            margin-left: auto;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: 600;
+        }
+
+        .badge-green  { background: #dcfce7; color: #166534; }
+        .badge-yellow { background: #fef9c3; color: #854d0e; }
+        .badge-red    { background: #fee2e2; color: #991b1b; }
+        .badge-gray   { background: #f3f4f6; color: #6b7280; }
+
+        .section-body {
+            padding: 20px 22px;
+        }
+
+        .section-collapse-toggle {
+            margin-left: 8px;
+            font-size: 0.8em;
+            color: #9ca3af;
+            transition: transform 0.2s;
+        }
+
+        .section-collapse-toggle.collapsed {
+            transform: rotate(-90deg);
+        }
+
+        .section-body.hidden {
+            display: none;
+        }
+
+        .kpi-row {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+
+        .kpi-card {
+            flex: 1;
+            min-width: 140px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 14px 18px;
+            text-align: center;
+        }
+
+        .kpi-card .kpi-value {
+            font-size: 1.8em;
+            font-weight: 700;
+            color: #111827;
+            line-height: 1.1;
+        }
+
+        .kpi-card .kpi-label {
+            font-size: 0.8em;
+            color: #6b7280;
+            margin-top: 4px;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9em;
+        }
+
+        .data-table th {
+            text-align: left;
+            padding: 10px 12px;
+            background: #f9fafb;
+            color: #374151;
+            font-weight: 600;
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+        .data-table td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #f3f4f6;
+            color: #374151;
+        }
+
+        .data-table tr:hover {
+            background: #f9fafb;
+        }
+
+        .data-table .num {
+            text-align: right;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .reason-rotation   { color: #2563eb; }
+        .reason-birth      { color: #166534; }
+        .reason-purchase   { color: #166534; }
+        .reason-sale       { color: #c2410c; }
+        .reason-death      { color: #991b1b; }
+        .reason-separation { color: #7c3aed; }
+        .reason-other      { color: #6b7280; }
+
+        .occ-green  { background: #dcfce7; }
+        .occ-yellow { background: #fef9c3; }
+        .occ-red    { background: #fee2e2; }
+
+        .entry-form {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+            margin-bottom: 16px;
+        }
+
+        .entry-form .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .entry-form .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .entry-form label {
+            font-size: 0.82em;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .entry-form input,
+        .entry-form select,
+        .entry-form textarea {
+            padding: 8px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 0.9em;
+            font-family: inherit;
+            color: #374151;
+            background: white;
+        }
+
+        .entry-form input:focus,
+        .entry-form select:focus,
+        .entry-form textarea:focus {
+            outline: none;
+            border-color: #2E75B6;
+            box-shadow: 0 0 0 3px rgba(46,117,182,0.15);
+        }
+
+        .entry-form textarea {
+            resize: vertical;
+            min-height: 60px;
+        }
+
+        .btn-save {
+            background: #22c55e;
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.95em;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+
+        .btn-save:hover {
+            background: #16a34a;
+        }
+
+        .btn-save:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+        }
+
+        .form-msg {
+            padding: 8px 14px;
+            border-radius: 6px;
+            font-size: 0.85em;
+            margin-top: 8px;
+            display: none;
+        }
+
+        .form-msg.success {
+            display: block;
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .form-msg.error {
+            display: block;
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .veld-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 12px;
+        }
+
+        .veld-card {
+            border-radius: 10px;
+            padding: 14px;
+            text-align: center;
+            border: 1px solid #e2e8f0;
+        }
+
+        .veld-card .camp-name {
+            font-weight: 600;
+            font-size: 0.95em;
+            color: #374151;
+            margin-bottom: 4px;
+        }
+
+        .veld-card .camp-score {
+            font-size: 1.4em;
+            font-weight: 700;
+        }
+
+        .veld-card .camp-date {
+            font-size: 0.75em;
+            color: #6b7280;
+            margin-top: 2px;
+        }
+
+        .veld-good    { background: #dcfce7; }
+        .veld-fair    { background: #fef9c3; }
+        .veld-poor    { background: #fee2e2; }
+
+        .cashflow-row {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+
+        .cashflow-card {
+            flex: 1;
+            min-width: 140px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 14px 18px;
+            text-align: center;
+        }
+
+        .cashflow-card .cf-value {
+            font-size: 1.5em;
+            font-weight: 700;
+            color: #111827;
+        }
+
+        .cashflow-card .cf-label {
+            font-size: 0.8em;
+            color: #6b7280;
+            margin-top: 2px;
+        }
+
+        .cf-positive { color: #166534 !important; }
+        .cf-negative { color: #991b1b !important; }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 18px;
+            height: 18px;
+            border: 2px solid #d1d5db;
+            border-top-color: #2E75B6;
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-placeholder {
+            text-align: center;
+            padding: 30px;
+            color: #9ca3af;
+        }
+
+        /* ============ Woche-specific styles ============ */
+        .week-nav-btn {
+            background: #e5e7eb;
+            color: #374151;
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1.1em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+
+        .week-nav-btn:hover {
+            background: #d1d5db;
+        }
+
+        #week-input {
+            padding: 5px 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 0.9em;
+            font-family: inherit;
+        }
+
+        #week-label {
+            font-weight: 600;
+            color: #374151;
+            min-width: 200px;
+        }
+
+        /* Grid Table */
+        .grid-wrapper {
+            padding: 0;
+            overflow-x: auto;
+        }
+
+        .work-table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+            min-width: 900px;
+        }
+
+        .work-table thead th {
+            background: #f1f5f9;
+            padding: 10px 8px;
+            font-size: 0.85em;
+            font-weight: 600;
+            color: #374151;
+            border: 1px solid #dee2e6;
+            text-align: center;
+        }
+
+        .work-table thead th.col-employee {
+            width: 150px;
+            text-align: left;
+            padding-left: 12px;
+        }
+
+        .work-table thead th.col-weekend {
+            background: #e8ecf0;
+        }
+
+        .work-table thead th.col-hours {
+            width: 70px;
+            background: #eef2ff;
+        }
+
+        .work-table tbody td {
+            border: 1px solid #dee2e6;
+            padding: 0;
+            vertical-align: top;
+        }
+
+        .work-table tbody td.cell-employee {
+            padding: 10px 12px;
+            font-weight: 600;
+            font-size: 0.9em;
+            color: #374151;
+            background: #fafafa;
+            vertical-align: middle;
+        }
+
+        .work-table tbody td.cell-employee .role-badge {
+            display: block;
+            font-size: 0.75em;
+            font-weight: 400;
+            color: #6b7280;
+            margin-top: 2px;
+        }
+
+        .work-table tbody tr.row-manager td.cell-employee {
+            background: #dbeafe;
+        }
+
+        .work-table tbody tr.row-manager td.cell-weekend {
+            background: #c7d7ea;
+        }
+
+        .work-table tbody td.cell-weekend {
+            background: #f3f4f6;
+        }
+
+        .work-table tbody td.cell-hours {
+            background: #f5f7ff;
+            padding: 0;
+        }
+
+        .work-table tbody td.cell-hours input {
+            width: 100%;
+            height: 100%;
+            min-height: 70px;
+            border: none;
+            background: transparent;
+            text-align: center;
+            font-size: 0.9em;
+            font-family: inherit;
+            padding: 4px;
+        }
+
+        .work-table tbody td.cell-hours input:focus {
+            outline: 2px solid #2E75B6;
+            outline-offset: -2px;
+            background: #fff;
+        }
+
+        .cell-textarea {
+            width: 100%;
+            min-height: 70px;
+            border: none;
+            resize: vertical;
+            padding: 6px 8px;
+            font-size: 0.85em;
+            font-family: inherit;
+            color: #374151;
+            background: transparent;
+            line-height: 1.4;
+        }
+
+        .cell-textarea::placeholder {
+            color: #c0c4cc;
+        }
+
+        .cell-textarea:focus {
+            outline: 2px solid #2E75B6;
+            outline-offset: -2px;
+            background: #fff;
+        }
+
+        .cell-textarea.saved {
+            animation: savedFlash 0.6s ease;
+        }
+
+        @keyframes savedFlash {
+            0% { background: #d1fae5; }
+            100% { background: transparent; }
+        }
+
+        td.cell-empty .cell-textarea {
+            background: #fafafa;
+        }
+
+        .work-table tfoot td {
+            border: 1px solid #dee2e6;
+            padding: 8px;
+            font-size: 0.85em;
+            font-weight: 600;
+            color: #374151;
+            background: #f1f5f9;
+            text-align: center;
+        }
+
+        .work-table tfoot td.cell-employee {
+            text-align: left;
+            padding-left: 12px;
+            background: #f1f5f9;
+        }
+
+        /* Employee Management Section */
+        .employee-section {
+            padding: 24px 0 0;
+        }
+
+        .section-toggle {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            padding: 10px 0;
+            color: #6b7280;
+            font-size: 0.85em;
+            border: none;
+            background: none;
+            font-family: inherit;
+        }
+
+        .section-toggle:hover {
+            color: #374151;
+        }
+
+        .section-toggle .toggle-arrow {
+            transition: transform 0.2s;
+            font-size: 0.8em;
+        }
+
+        .section-toggle.open .toggle-arrow {
+            transform: rotate(90deg);
+        }
+
+        .employee-panel {
+            display: none;
+            padding: 16px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+        }
+
+        .employee-panel.open {
+            display: block;
+        }
+
+        .employee-panel table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 12px;
+        }
+
+        .employee-panel table th,
+        .employee-panel table td {
+            padding: 8px 12px;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb;
+            font-size: 0.85em;
+        }
+
+        .employee-panel table th {
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .employee-panel input,
+        .employee-panel select {
+            padding: 5px 8px;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            font-size: 0.85em;
+            font-family: inherit;
+        }
+
+        .btn-small {
+            padding: 4px 12px;
+            border: none;
+            border-radius: 4px;
+            font-size: 0.8em;
+            cursor: pointer;
+            font-family: inherit;
+            transition: background 0.2s;
+        }
+
+        .btn-add {
+            background: #22c55e;
+            color: white;
+        }
+
+        .btn-add:hover {
+            background: #16a34a;
+        }
+
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+
+        .btn-muted {
+            background: #e5e7eb;
+            color: #374151;
+        }
+
+        .btn-muted:hover {
+            background: #d1d5db;
+        }
+
+        .loading-overlay {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6b7280;
+        }
+
+        /* Status messages */
+        .status-msg {
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            display: none;
+        }
+
+        .status-msg.saving {
+            display: inline;
+            color: #2E75B6;
+        }
+
+        .status-msg.saved {
+            display: inline;
+            color: #22c55e;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 14px;
+            color: #9ca3af;
+            font-size: 0.8em;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            body { padding: 10px; }
+
+            .header {
+                flex-direction: column;
+                gap: 12px;
+                padding: 16px 20px;
+            }
+            .header-logo { width: 70px; }
+            .header h1 { font-size: 1.5em; }
+
+            .content { padding: 16px; }
+
+            .entry-form {
+                grid-template-columns: 1fr;
+            }
+
+            .kpi-row,
+            .cashflow-row {
+                flex-direction: column;
+            }
+
+            .veld-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .toolbar {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .report-tabs { flex-wrap: wrap; }
+            .report-tabs button { flex: none; }
+        }
+
+        /* Print stylesheet (Woche) */
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+
+            .container {
+                box-shadow: none;
+                border-radius: 0;
+            }
+
+            .nav,
+            .report-tabs,
+            .toolbar,
+            .employee-section,
+            .footer {
+                display: none !important;
+            }
+
+            .header {
+                background: #1a1a2e !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+                padding: 12px 20px;
+            }
+
+            .grid-wrapper {
+                padding: 0;
+            }
+
+            .work-table {
+                min-width: unset;
+                font-size: 0.8em;
+            }
+
+            .work-table thead th {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
+            .cell-textarea {
+                border: none;
+                min-height: auto;
+                padding: 4px 6px;
+                resize: none;
+            }
+
+            .work-table tbody tr.row-manager td.cell-employee {
+                background: #dbeafe !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
+            .work-table thead th.col-weekend,
+            .work-table tbody td.cell-weekend {
+                background: #f3f4f6 !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
+            .work-table tfoot td {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- Header -->
+    <div class="header">
+        <img src="../logo.png" alt="Farm Logo" class="header-logo">
+        <div class="header-content">
+            <h1>Berichte</h1>
+            <p>Farm Controlling</p>
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <div id="main-nav"></div>
+
+    <!-- Content area with sub-tabs -->
+    <div class="content">
+
+        <!-- Sub-tab nav -->
+        <div class="report-tabs">
+            <button class="active" data-report="monat" onclick="showReport('monat')">Monatsbericht</button>
+            <button data-report="woche" onclick="showReport('woche')">Arbeitsbericht (Wochenbericht)</button>
+        </div>
+
+        <!-- ============ MONATSBERICHT PANEL ============ -->
+        <div id="report-monat" class="report-panel active">
+
+            <!-- Toolbar -->
+            <div class="toolbar">
+                <span id="last-update-monat">Wird geladen...</span>
+                <div style="display:flex;align-items:center;gap:10px;">
+                    <label for="month-picker" style="font-weight:600;">Monat:</label>
+                    <input type="month" id="month-picker">
+                    <button onclick="Monat.loadAll()">Aktualisieren</button>
+                </div>
+            </div>
+
+            <!-- 1. Herdenbewegung -->
+            <div class="section" id="sec-movements">
+                <div class="section-header" onclick="Monat.toggleSection('movements')">
+                    <span class="section-icon">&#x1F404;</span>
+                    <span class="section-title">Herdenbewegung</span>
+                    <span class="section-badge badge-gray" id="badge-movements">--</span>
+                    <span class="section-collapse-toggle" id="toggle-movements">&#x25BC;</span>
+                </div>
+                <div class="section-body" id="body-movements">
+
+                    <!-- Entry form (collapsible) -->
+                    <details id="movement-form-details" style="margin-bottom:18px;">
+                        <summary style="cursor:pointer;font-weight:600;color:#2E75B6;font-size:0.95em;margin-bottom:10px;">
+                            &#x2795; Neue Bewegung erfassen
+                        </summary>
+                        <div class="entry-form" id="movement-form">
+                            <div class="form-group">
+                                <label for="mv-date">Datum</label>
+                                <input type="date" id="mv-date">
+                            </div>
+                            <div class="form-group">
+                                <label for="mv-from">Von Kamp</label>
+                                <select id="mv-from">
+                                    <option value="">-- Zugang / Geburt --</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="mv-to">Nach Kamp</label>
+                                <select id="mv-to">
+                                    <option value="">-- Abgang / Verkauf / Tod --</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="mv-count">Anzahl</label>
+                                <input type="number" id="mv-count" min="1" value="1">
+                            </div>
+                            <div class="form-group">
+                                <label for="mv-category">Tierkategorie</label>
+                                <select id="mv-category">
+                                    <option value="cows">Kühe</option>
+                                    <option value="bulls">Bullen</option>
+                                    <option value="heifers">Färsen</option>
+                                    <option value="calves">Kälber</option>
+                                    <option value="oxen">Ochsen</option>
+                                    <option value="mixed">Gemischt</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="mv-reason">Grund</label>
+                                <select id="mv-reason">
+                                    <option value="rotation">Rotation</option>
+                                    <option value="birth">Geburt</option>
+                                    <option value="purchase">Zukauf</option>
+                                    <option value="sale">Verkauf</option>
+                                    <option value="death">Tod</option>
+                                    <option value="separation">Separation</option>
+                                    <option value="other">Sonstiges</option>
+                                </select>
+                            </div>
+                            <div class="form-group full-width">
+                                <label for="mv-notes">Notizen</label>
+                                <textarea id="mv-notes" rows="2" placeholder="Optional..."></textarea>
+                            </div>
+                            <div class="form-group full-width" style="flex-direction:row;gap:12px;align-items:center;">
+                                <button class="btn-save" id="btn-save-movement" onclick="Monat.saveMovement()">Speichern</button>
+                                <div class="form-msg" id="mv-msg"></div>
+                            </div>
+                        </div>
+                    </details>
+
+                    <!-- Movements table -->
+                    <div id="movements-table-wrap">
+                        <div class="loading-placeholder"><span class="loading-spinner"></span> Lade Bewegungen...</div>
+                    </div>
+
+                    <!-- Camp occupancy -->
+                    <h3 style="font-size:1em;font-weight:600;color:#374151;margin:20px 0 10px;">&#x1F3D5;&#xFE0F; Kamp-Belegung (aktuell)</h3>
+                    <div id="occupancy-table-wrap">
+                        <div class="loading-placeholder"><span class="loading-spinner"></span> Lade Belegung...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. Herdenstruktur -->
+            <div class="section" id="sec-herd">
+                <div class="section-header" onclick="Monat.toggleSection('herd')">
+                    <span class="section-icon">&#x1F4CA;</span>
+                    <span class="section-title">Herdenstruktur</span>
+                    <span class="section-collapse-toggle" id="toggle-herd">&#x25BC;</span>
+                </div>
+                <div class="section-body" id="body-herd">
+                    <div class="kpi-row" id="herd-kpis">
+                        <div class="loading-placeholder"><span class="loading-spinner"></span> Lade Herdenstruktur...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. Cashflow des Monats -->
+            <div class="section" id="sec-cashflow">
+                <div class="section-header" onclick="Monat.toggleSection('cashflow')">
+                    <span class="section-icon">&#x1F4B0;</span>
+                    <span class="section-title">Cashflow des Monats</span>
+                    <span class="section-badge badge-gray" id="badge-cashflow">--</span>
+                    <span class="section-collapse-toggle" id="toggle-cashflow">&#x25BC;</span>
+                </div>
+                <div class="section-body" id="body-cashflow">
+                    <div id="cashflow-summary">
+                        <div class="loading-placeholder"><span class="loading-spinner"></span> Lade Cashflow...</div>
+                    </div>
+                    <h3 style="font-size:1em;font-weight:600;color:#374151;margin:16px 0 10px;">Top 5 Positionen</h3>
+                    <div id="cashflow-top5">
+                        <div class="loading-placeholder"><span class="loading-spinner"></span></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. Weidezustand -->
+            <div class="section" id="sec-veld">
+                <div class="section-header" onclick="Monat.toggleSection('veld')">
+                    <span class="section-icon">&#x1F331;</span>
+                    <span class="section-title">Weidezustand</span>
+                    <span class="section-collapse-toggle" id="toggle-veld">&#x25BC;</span>
+                </div>
+                <div class="section-body" id="body-veld">
+                    <div id="veld-content">
+                        <div class="loading-placeholder"><span class="loading-spinner"></span> Lade Weidezustand...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 5. Wetter-Zusammenfassung -->
+            <div class="section" id="sec-weather">
+                <div class="section-header" onclick="Monat.toggleSection('weather')">
+                    <span class="section-icon">&#x1F327;&#xFE0F;</span>
+                    <span class="section-title">Wetter-Zusammenfassung</span>
+                    <span class="section-collapse-toggle" id="toggle-weather">&#x25BC;</span>
+                </div>
+                <div class="section-body" id="body-weather">
+                    <div id="weather-kpis">
+                        <div class="loading-placeholder"><span class="loading-spinner"></span> Lade Wetterdaten...</div>
+                    </div>
+                </div>
+            </div>
+
+        </div><!-- /report-monat -->
+
+        <!-- ============ WOCHENBERICHT PANEL ============ -->
+        <div id="report-woche" class="report-panel">
+
+            <!-- Toolbar -->
+            <div class="toolbar">
+                <div class="toolbar-left">
+                    <button class="week-nav-btn" id="btn-prev-week" title="Vorherige Woche">&#x25C0;</button>
+                    <input type="week" id="week-input">
+                    <button class="week-nav-btn" id="btn-next-week" title="Nächste Woche">&#x25B6;</button>
+                    <span id="week-label"></span>
+                </div>
+                <div class="toolbar-right">
+                    <span class="status-msg" id="save-status"></span>
+                    <button onclick="window.print()">Drucken</button>
+                </div>
+            </div>
+
+            <!-- Work Report Grid -->
+            <div class="grid-wrapper">
+                <div id="grid-loading" class="loading-overlay">
+                    <span class="loading-spinner"></span><br><br>Daten werden geladen...
+                </div>
+                <table class="work-table" id="work-table" style="display:none;">
+                    <thead>
+                        <tr>
+                            <th class="col-employee">Mitarbeiter</th>
+                            <th>Mo</th>
+                            <th>Di</th>
+                            <th>Mi</th>
+                            <th>Do</th>
+                            <th>Fr</th>
+                            <th class="col-weekend">Sa</th>
+                            <th class="col-weekend">So</th>
+                            <th class="col-hours">Std.</th>
+                        </tr>
+                    </thead>
+                    <tbody id="work-tbody"></tbody>
+                    <tfoot>
+                        <tr>
+                            <td class="cell-employee">Gesamt</td>
+                            <td id="sum-1">-</td>
+                            <td id="sum-2">-</td>
+                            <td id="sum-3">-</td>
+                            <td id="sum-4">-</td>
+                            <td id="sum-5">-</td>
+                            <td id="sum-6">-</td>
+                            <td id="sum-7">-</td>
+                            <td id="sum-total">-</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+
+            <!-- Employee Management -->
+            <div class="employee-section">
+                <button class="section-toggle" id="toggle-employees">
+                    <span class="toggle-arrow">&#x25B6;</span> Mitarbeiter verwalten
+                </button>
+                <div class="employee-panel" id="employee-panel">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Rolle</th>
+                                <th>Reihenfolge</th>
+                                <th>Aktiv</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody id="emp-list"></tbody>
+                    </table>
+                    <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                        <input type="text" id="new-emp-name" placeholder="Name">
+                        <select id="new-emp-role">
+                            <option value="Farmverwalter">Farmverwalter</option>
+                            <option value="Farmarbeiter" selected>Farmarbeiter</option>
+                            <option value="Viehhirt">Viehhirt</option>
+                            <option value="Fahrer">Fahrer</option>
+                            <option value="Sonstiges">Sonstiges</option>
+                        </select>
+                        <button class="btn-small btn-add" onclick="Woche.addEmployee()">Mitarbeiter hinzufügen</button>
+                    </div>
+                </div>
+            </div>
+
+        </div><!-- /report-woche -->
+
+    </div><!-- /content -->
+
+    <div class="footer">
+        Farm Controlling &copy; 2026
+    </div>
+</div>
+
+<script type="module">
+import { renderNav } from './shared/nav.js';
+renderNav('berichte');
+</script>
+
+<script>
+// ── Supabase Client (shared) ─────────────────────────────────────
+const SUPABASE_URL = 'https://vhwlcnfxslkftswksqrw.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_2a5cKq6CF2Qfe1D1DqLrTw_0kHRD4Cd';
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// ── Auth Guard (shared) ──────────────────────────────────────────
+async function checkAuth() {
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) {
+        window.location.href = 'login.html?redirect=' + encodeURIComponent(window.location.pathname);
+        return null;
+    }
+    return session.user;
+}
+
+// ══════════════════════════════════════════════════════════════════
+// MONATSBERICHT Namespace
+// ══════════════════════════════════════════════════════════════════
+const Monat = {
+    // State
+    currentUser: null,
+    campNames: [],
+    loaded: false,
+
+    // Constants
+    CATEGORY_LABELS: {
+        cows: 'Kühe',
+        bulls: 'Bullen',
+        heifers: 'Färsen',
+        calves: 'Kälber',
+        oxen: 'Ochsen',
+        mixed: 'Gemischt'
+    },
+    REASON_LABELS: {
+        rotation: 'Rotation',
+        birth: 'Geburt',
+        purchase: 'Zukauf',
+        sale: 'Verkauf',
+        death: 'Tod',
+        separation: 'Separation',
+        other: 'Sonstiges'
+    },
+
+    // ── Helpers ──
+    getSelectedMonth() {
+        const picker = document.getElementById('month-picker');
+        return picker.value;
+    },
+
+    getMonthRange() {
+        const ym = this.getSelectedMonth();
+        if (!ym) return { start: null, end: null };
+        const start = ym + '-01';
+        const parts = ym.split('-').map(Number);
+        const y = parts[0];
+        const m = parts[1];
+        const nextMonth = new Date(y, m, 1);
+        const end = nextMonth.toISOString().split('T')[0];
+        return { start, end };
+    },
+
+    fmt(n) {
+        if (n == null) return '--';
+        return n.toLocaleString('de-DE');
+    },
+
+    fmtNAD(n) {
+        if (n == null) return '--';
+        return 'N$ ' + n.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    },
+
+    fmtDate(d) {
+        if (!d) return '--';
+        const dt = new Date(d);
+        return dt.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    },
+
+    // ── Section Toggle ──
+    toggleSection(name) {
+        const body = document.getElementById('body-' + name);
+        const toggle = document.getElementById('toggle-' + name);
+        if (body.classList.contains('hidden')) {
+            body.classList.remove('hidden');
+            toggle.classList.remove('collapsed');
+        } else {
+            body.classList.add('hidden');
+            toggle.classList.add('collapsed');
+        }
+    },
+
+    // ── Load Kamps ──
+    async loadCamps() {
+        const { data, error } = await sb
+            .from('farm_camps')
+            .select('name')
+            .eq('active', true)
+            .order('name');
+
+        if (error || !data) return;
+        this.campNames = data.map(c => c.name);
+
+        const fromSel = document.getElementById('mv-from');
+        const toSel = document.getElementById('mv-to');
+
+        // Clear any existing options (except defaults) before re-adding
+        // (Safe to call multiple times — but only call once in init)
+        this.campNames.forEach(name => {
+            const opt1 = document.createElement('option');
+            opt1.value = name;
+            opt1.textContent = name;
+            fromSel.appendChild(opt1);
+
+            const opt2 = document.createElement('option');
+            opt2.value = name;
+            opt2.textContent = name;
+            toSel.appendChild(opt2);
+        });
+    },
+
+    // ── Save Movement ──
+    async saveMovement() {
+        const btn = document.getElementById('btn-save-movement');
+        const msg = document.getElementById('mv-msg');
+        msg.className = 'form-msg';
+        msg.style.display = 'none';
+
+        const dateVal = document.getElementById('mv-date').value;
+        const fromVal = document.getElementById('mv-from').value || null;
+        const toVal = document.getElementById('mv-to').value || null;
+        const countVal = parseInt(document.getElementById('mv-count').value, 10);
+        const catVal = document.getElementById('mv-category').value;
+        const reasonVal = document.getElementById('mv-reason').value;
+        const notesVal = document.getElementById('mv-notes').value.trim() || null;
+
+        if (!dateVal || !countVal || countVal < 1) {
+            msg.textContent = 'Bitte Datum und Anzahl angeben.';
+            msg.className = 'form-msg error';
+            return;
+        }
+
+        if (!fromVal && !toVal) {
+            msg.textContent = 'Bitte mindestens Von- oder Nach-Camp angeben.';
+            msg.className = 'form-msg error';
+            return;
+        }
+
+        btn.disabled = true;
+        btn.textContent = 'Speichern...';
+
+        const { error } = await sb.from('herd_movements').insert({
+            movement_date: dateVal,
+            from_camp: fromVal,
+            to_camp: toVal,
+            head_count: countVal,
+            animal_category: catVal,
+            reason: reasonVal,
+            notes: notesVal,
+            recorded_by: (this.currentUser && this.currentUser.id) || null
+        });
+
+        btn.disabled = false;
+        btn.textContent = 'Speichern';
+
+        if (error) {
+            msg.textContent = 'Fehler: ' + error.message;
+            msg.className = 'form-msg error';
+        } else {
+            msg.textContent = 'Bewegung gespeichert.';
+            msg.className = 'form-msg success';
+            document.getElementById('mv-notes').value = '';
+            document.getElementById('mv-count').value = '1';
+            await Promise.allSettled([this.loadMovements(), this.loadOccupancy()]);
+            setTimeout(() => { msg.style.display = 'none'; }, 3000);
+        }
+    },
+
+    // ── 1a. Load Movements ──
+    async loadMovements() {
+        const wrap = document.getElementById('movements-table-wrap');
+        const badge = document.getElementById('badge-movements');
+        const { start, end } = this.getMonthRange();
+
+        if (!start) {
+            wrap.innerHTML = '<p style="color:#9ca3af;">Kein Monat ausgewählt.</p>';
+            return;
+        }
+
+        wrap.innerHTML = '<div class="loading-placeholder"><span class="loading-spinner"></span> Lade Bewegungen...</div>';
+
+        const { data, error } = await sb
+            .from('herd_movements')
+            .select('*')
+            .gte('movement_date', start)
+            .lt('movement_date', end)
+            .order('movement_date', { ascending: false });
+
+        if (error || !data) {
+            wrap.innerHTML = '<p style="color:#991b1b;">Fehler beim Laden: ' + ((error && error.message) || '') + '</p>';
+            badge.textContent = 'Fehler';
+            badge.className = 'section-badge badge-red';
+            return;
+        }
+
+        badge.textContent = data.length + ' Bewegungen';
+        badge.className = 'section-badge badge-gray';
+
+        if (data.length === 0) {
+            wrap.innerHTML = '<p style="color:#9ca3af;">Keine Bewegungen in diesem Monat.</p>';
+            return;
+        }
+
+        let html = '<table class="data-table"><thead><tr>';
+        html += '<th>Datum</th><th>Von</th><th>Nach</th><th class="num">Anzahl</th><th>Kategorie</th><th>Grund</th><th>Notizen</th>';
+        html += '</tr></thead><tbody>';
+
+        const self = this;
+        data.forEach(row => {
+            const reasonClass = 'reason-' + (row.reason || 'other');
+            html += '<tr>';
+            html += '<td>' + self.fmtDate(row.movement_date) + '</td>';
+            html += '<td>' + (row.from_camp || '<em style="color:#9ca3af;">Zugang</em>') + '</td>';
+            html += '<td>' + (row.to_camp || '<em style="color:#9ca3af;">Abgang</em>') + '</td>';
+            html += '<td class="num">' + (row.head_count || 0) + '</td>';
+            html += '<td>' + (self.CATEGORY_LABELS[row.animal_category] || row.animal_category) + '</td>';
+            html += '<td class="' + reasonClass + '">' + (self.REASON_LABELS[row.reason] || row.reason) + '</td>';
+            html += '<td>' + (row.notes || '') + '</td>';
+            html += '</tr>';
+        });
+
+        html += '</tbody></table>';
+        wrap.innerHTML = html;
+    },
+
+    // ── 1b. Load Kamp Occupancy ──
+    async loadOccupancy() {
+        const wrap = document.getElementById('occupancy-table-wrap');
+
+        wrap.innerHTML = '<div class="loading-placeholder"><span class="loading-spinner"></span> Lade Belegung...</div>';
+
+        const { data, error } = await sb
+            .from('camp_occupancy')
+            .select('*')
+            .order('camp');
+
+        if (error || !data) {
+            wrap.innerHTML = '<p style="color:#991b1b;">Fehler: ' + ((error && error.message) || '') + '</p>';
+            return;
+        }
+
+        if (data.length === 0) {
+            wrap.innerHTML = '<p style="color:#9ca3af;">Keine Belegungsdaten vorhanden.</p>';
+            return;
+        }
+
+        let html = '<table class="data-table"><thead><tr>';
+        html += '<th>Kamp</th><th class="num">Aktuelle Tiere</th><th>Letzter Wechsel</th><th class="num">Tage seit Wechsel</th>';
+        html += '</tr></thead><tbody>';
+
+        const self = this;
+        data.forEach(row => {
+            const days = row.days_since_last_movement || 0;
+            let rowClass = '';
+            if (days > 90) rowClass = 'occ-red';
+            else if (days > 60) rowClass = 'occ-yellow';
+            else rowClass = 'occ-green';
+
+            html += '<tr class="' + rowClass + '">';
+            html += '<td><strong>' + (row.camp || '--') + '</strong></td>';
+            html += '<td class="num">' + self.fmt(row.current_head) + '</td>';
+            html += '<td>' + self.fmtDate(row.last_movement) + '</td>';
+            html += '<td class="num">' + days + ' Tage</td>';
+            html += '</tr>';
+        });
+
+        html += '</tbody></table>';
+        wrap.innerHTML = html;
+    },
+
+    // ── 2. Herdenstruktur ──
+    async loadHerd() {
+        const wrap = document.getElementById('herd-kpis');
+
+        const { data, error } = await sb
+            .from('herd_snapshots')
+            .select('snapshot_date, cows, bulls, heifers, calves, oxen, total_lsu')
+            .order('snapshot_date', { ascending: false })
+            .limit(1);
+
+        if (error || !data || data.length === 0) {
+            wrap.innerHTML = '<p style="color:#9ca3af;">Keine Herdendaten vorhanden.</p>';
+            return;
+        }
+
+        const s = data[0];
+        const total = (s.cows || 0) + (s.bulls || 0) + (s.heifers || 0) + (s.calves || 0) + (s.oxen || 0);
+
+        const items = [
+            { label: 'Kühe', value: s.cows || 0 },
+            { label: 'Bullen', value: s.bulls || 0 },
+            { label: 'Färsen', value: s.heifers || 0 },
+            { label: 'Kälber', value: s.calves || 0 },
+            { label: 'Ochsen', value: s.oxen || 0 },
+            { label: 'Gesamt', value: total },
+            { label: 'LSU', value: s.total_lsu != null ? Math.round(s.total_lsu * 10) / 10 : '--' }
+        ];
+
+        const self = this;
+        let html = '<div class="kpi-row">';
+        items.forEach(item => {
+            html += '<div class="kpi-card">';
+            html += '<div class="kpi-value">' + self.fmt(item.value) + '</div>';
+            html += '<div class="kpi-label">' + item.label + '</div>';
+            html += '</div>';
+        });
+        html += '</div>';
+        html += '<p style="font-size:0.8em;color:#9ca3af;">Stand: ' + this.fmtDate(s.snapshot_date) + '</p>';
+
+        wrap.innerHTML = html;
+    },
+
+    // ── 3. Cashflow ──
+    async loadCashflow() {
+        const summaryWrap = document.getElementById('cashflow-summary');
+        const top5Wrap = document.getElementById('cashflow-top5');
+        const badge = document.getElementById('badge-cashflow');
+        const { start, end } = this.getMonthRange();
+
+        if (!start) {
+            summaryWrap.innerHTML = '<p style="color:#9ca3af;">Kein Monat ausgewählt.</p>';
+            top5Wrap.innerHTML = '';
+            return;
+        }
+
+        summaryWrap.innerHTML = '<div class="loading-placeholder"><span class="loading-spinner"></span> Lade Cashflow...</div>';
+        top5Wrap.innerHTML = '';
+
+        const { data, error } = await sb
+            .from('bank_transactions')
+            .select('amount_nad, description, transaction_date, category')
+            .gte('transaction_date', start)
+            .lt('transaction_date', end)
+            .order('amount_nad', { ascending: true });
+
+        if (error || !data) {
+            summaryWrap.innerHTML = '<p style="color:#991b1b;">Fehler: ' + ((error && error.message) || '') + '</p>';
+            return;
+        }
+
+        if (data.length === 0) {
+            summaryWrap.innerHTML = '<p style="color:#9ca3af;">Keine Transaktionen in diesem Monat.</p>';
+            top5Wrap.innerHTML = '';
+            badge.textContent = '--';
+            badge.className = 'section-badge badge-gray';
+            return;
+        }
+
+        let income = 0;
+        let expense = 0;
+
+        data.forEach(t => {
+            const amt = t.amount_nad || 0;
+            if (amt >= 0) income += amt;
+            else expense += amt;
+        });
+
+        const net = income + expense;
+        const netClass = net >= 0 ? 'cf-positive' : 'cf-negative';
+
+        badge.textContent = this.fmtNAD(net);
+        badge.className = net >= 0 ? 'section-badge badge-green' : 'section-badge badge-red';
+
+        summaryWrap.innerHTML = '<div class="cashflow-row">' +
+            '<div class="cashflow-card"><div class="cf-value cf-positive">' + this.fmtNAD(income) + '</div><div class="cf-label">Einnahmen</div></div>' +
+            '<div class="cashflow-card"><div class="cf-value cf-negative">' + this.fmtNAD(expense) + '</div><div class="cf-label">Ausgaben</div></div>' +
+            '<div class="cashflow-card"><div class="cf-value ' + netClass + '">' + this.fmtNAD(net) + '</div><div class="cf-label">Netto</div></div>' +
+        '</div>';
+
+        const sorted = [...data].sort((a, b) => Math.abs(b.amount_nad || 0) - Math.abs(a.amount_nad || 0));
+        const top5 = sorted.slice(0, 5);
+
+        let html = '<table class="data-table"><thead><tr>';
+        html += '<th>Datum</th><th>Beschreibung</th><th>Kategorie</th><th class="num">Betrag</th>';
+        html += '</tr></thead><tbody>';
+
+        const self = this;
+        top5.forEach(t => {
+            const amtClass = (t.amount_nad || 0) >= 0 ? 'cf-positive' : 'cf-negative';
+            html += '<tr>';
+            html += '<td>' + self.fmtDate(t.transaction_date) + '</td>';
+            html += '<td>' + (t.description || '--') + '</td>';
+            html += '<td>' + (t.category || '--') + '</td>';
+            html += '<td class="num ' + amtClass + '">' + self.fmtNAD(t.amount_nad) + '</td>';
+            html += '</tr>';
+        });
+
+        html += '</tbody></table>';
+        top5Wrap.innerHTML = html;
+    },
+
+    // ── 4. Weidezustand ──
+    async loadVeld() {
+        const wrap = document.getElementById('veld-content');
+
+        wrap.innerHTML = '<div class="loading-placeholder"><span class="loading-spinner"></span> Lade Weidezustand...</div>';
+
+        const { data, error } = await sb
+            .from('veld_observations')
+            .select('camp_name, condition_score, observation_date')
+            .order('observation_date', { ascending: false });
+
+        if (error || !data) {
+            wrap.innerHTML = '<p style="color:#991b1b;">Fehler: ' + ((error && error.message) || '') + '</p>';
+            return;
+        }
+
+        if (data.length === 0) {
+            wrap.innerHTML = '<p style="color:#9ca3af;">Keine Weidebewertungen vorhanden.</p>';
+            return;
+        }
+
+        const campMap = {};
+        data.forEach(obs => {
+            if (!campMap[obs.camp_name]) {
+                campMap[obs.camp_name] = obs;
+            }
+        });
+
+        const camps = Object.values(campMap).sort((a, b) => (a.camp_name || '').localeCompare(b.camp_name || ''));
+
+        const self = this;
+        let html = '<div class="veld-grid">';
+        camps.forEach(obs => {
+            const score = obs.condition_score || 0;
+            let colorClass = 'veld-good';
+            let label = 'Gut';
+            if (score <= 2) {
+                colorClass = 'veld-poor';
+                label = 'Schlecht';
+            } else if (score <= 3) {
+                colorClass = 'veld-fair';
+                label = 'Maessig';
+            }
+
+            html += '<div class="veld-card ' + colorClass + '">';
+            html += '<div class="camp-name">' + (obs.camp_name || '--') + '</div>';
+            html += '<div class="camp-score">' + score + '/5</div>';
+            html += '<div class="camp-date">' + label + ' &middot; ' + self.fmtDate(obs.observation_date) + '</div>';
+            html += '</div>';
+        });
+        html += '</div>';
+
+        wrap.innerHTML = html;
+    },
+
+    // ── 5. Wetter ──
+    async loadWeather() {
+        const wrap = document.getElementById('weather-kpis');
+        const { start, end } = this.getMonthRange();
+
+        if (!start) {
+            wrap.innerHTML = '<p style="color:#9ca3af;">Kein Monat ausgewählt.</p>';
+            return;
+        }
+
+        wrap.innerHTML = '<div class="loading-placeholder"><span class="loading-spinner"></span> Lade Wetterdaten...</div>';
+
+        const { data, error } = await sb
+            .from('weather_observations')
+            .select('observation_date, rainfall_mm, temperature_max_c, temperature_min_c')
+            .gte('observation_date', start)
+            .lt('observation_date', end)
+            .order('observation_date');
+
+        if (error || !data) {
+            wrap.innerHTML = '<p style="color:#991b1b;">Fehler: ' + ((error && error.message) || '') + '</p>';
+            return;
+        }
+
+        if (data.length === 0) {
+            wrap.innerHTML = '<p style="color:#9ca3af;">Keine Wetterdaten für diesen Monat.</p>';
+            return;
+        }
+
+        let totalRain = 0;
+        let sumMax = 0;
+        let sumMin = 0;
+        let countMax = 0;
+        let countMin = 0;
+        let rainyDays = 0;
+
+        data.forEach(obs => {
+            if (obs.rainfall_mm != null) {
+                totalRain += obs.rainfall_mm;
+                if (obs.rainfall_mm >= 1) rainyDays++;
+            }
+            if (obs.temperature_max_c != null) {
+                sumMax += obs.temperature_max_c;
+                countMax++;
+            }
+            if (obs.temperature_min_c != null) {
+                sumMin += obs.temperature_min_c;
+                countMin++;
+            }
+        });
+
+        const avgMax = countMax > 0 ? Math.round(sumMax / countMax * 10) / 10 : null;
+        const avgMin = countMin > 0 ? Math.round(sumMin / countMin * 10) / 10 : null;
+
+        const items = [
+            { label: 'Gesamtniederschlag', value: Math.round(totalRain * 10) / 10 + ' mm' },
+            { label: 'Regentage', value: rainyDays },
+            { label: 'Durchschn. Max-Temp.', value: avgMax != null ? avgMax + ' \u00B0C' : '--' },
+            { label: 'Durchschn. Min-Temp.', value: avgMin != null ? avgMin + ' \u00B0C' : '--' },
+            { label: 'Messtage', value: data.length }
+        ];
+
+        let html = '<div class="kpi-row">';
+        items.forEach(item => {
+            html += '<div class="kpi-card">';
+            html += '<div class="kpi-value">' + item.value + '</div>';
+            html += '<div class="kpi-label">' + item.label + '</div>';
+            html += '</div>';
+        });
+        html += '</div>';
+
+        wrap.innerHTML = html;
+    },
+
+    // ── Load All ──
+    async loadAll() {
+        document.getElementById('last-update-monat').textContent = 'Aktualisiere...';
+
+        await Promise.allSettled([
+            this.loadMovements(),
+            this.loadOccupancy(),
+            this.loadHerd(),
+            this.loadCashflow(),
+            this.loadVeld(),
+            this.loadWeather()
+        ]);
+
+        const now = new Date();
+        const ts = now.toLocaleString('de-DE', {
+            day: '2-digit', month: '2-digit', year: 'numeric',
+            hour: '2-digit', minute: '2-digit'
+        });
+        document.getElementById('last-update-monat').textContent = 'Letztes Update: ' + ts;
+    },
+
+    // ── Lazy init: runs only when monat tab first becomes active ──
+    async init() {
+        if (this.loaded) return;
+        this.loaded = true;
+
+        const user = await checkAuth();
+        if (!user) return;
+        this.currentUser = user;
+
+        // Set month picker to current month
+        const now = new Date();
+        const y = now.getFullYear();
+        const m = String(now.getMonth() + 1).padStart(2, '0');
+        const picker = document.getElementById('month-picker');
+        picker.value = y + '-' + m;
+
+        // Reload on month change
+        const self = this;
+        picker.addEventListener('change', () => self.loadAll());
+
+        // Set default date in form
+        document.getElementById('mv-date').value = now.toISOString().split('T')[0];
+
+        await this.loadCamps();
+        await this.loadAll();
+    }
+};
+
+// ══════════════════════════════════════════════════════════════════
+// WOCHENBERICHT Namespace
+// ══════════════════════════════════════════════════════════════════
+const Woche = {
+    // State
+    employees: [],
+    entries: {},   // key: "employeeName|dayOfWeek" -> { activity, hours }
+    currentMonday: null,
+    debounceTimers: {},
+    loaded: false,
+
+    DAY_NAMES: ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'],
+
+    // ── Week Helpers ──
+    getMondayOfWeek(date) {
+        const d = new Date(date);
+        const day = d.getDay();
+        const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+        d.setDate(diff);
+        d.setHours(0, 0, 0, 0);
+        return d;
+    },
+
+    formatDate(d) {
+        return d.toISOString().split('T')[0];
+    },
+
+    formatDateDE(d) {
+        return d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' });
+    },
+
+    getISOWeek(d) {
+        const date = new Date(d);
+        date.setHours(0, 0, 0, 0);
+        date.setDate(date.getDate() + 3 - (date.getDay() + 6) % 7);
+        const week1 = new Date(date.getFullYear(), 0, 4);
+        return 1 + Math.round(((date - week1) / 86400000 - 3 + (week1.getDay() + 6) % 7) / 7);
+    },
+
+    updateWeekDisplay() {
+        const weekNum = this.getISOWeek(this.currentMonday);
+        const year = this.currentMonday.getFullYear();
+        const sunday = new Date(this.currentMonday);
+        sunday.setDate(sunday.getDate() + 6);
+
+        const weekStr = year + '-W' + String(weekNum).padStart(2, '0');
+        document.getElementById('week-input').value = weekStr;
+
+        document.getElementById('week-label').textContent =
+            'KW ' + weekNum + ' \u2014 ' + this.formatDateDE(this.currentMonday) + ' \u2013 ' + this.formatDateDE(sunday) + '.' + year;
+    },
+
+    navigateWeek(offset) {
+        this.currentMonday.setDate(this.currentMonday.getDate() + (offset * 7));
+        this.updateWeekDisplay();
+        this.loadEntries();
+    },
+
+    // ── Data Loading ──
+    async loadEmployees() {
+        const { data, error } = await sb
+            .from('farm_employees')
+            .select('*')
+            .eq('active', true)
+            .order('sort_order', { ascending: true });
+
+        if (error) {
+            console.error('Error loading employees:', error);
+            this.employees = [];
+            return;
+        }
+
+        this.employees = data || [];
+    },
+
+    async loadEntries() {
+        if (!this.currentMonday) return;
+
+        const mondayStr = this.formatDate(this.currentMonday);
+        const { data, error } = await sb
+            .from('work_entries')
+            .select('*')
+            .eq('week_start', mondayStr);
+
+        if (error) {
+            console.error('Error loading entries:', error);
+        }
+
+        this.entries = {};
+        if (data) {
+            data.forEach(row => {
+                const key = row.employee_name + '|' + row.day_of_week;
+                this.entries[key] = {
+                    activity: row.activity || '',
+                    hours: row.hours || null,
+                };
+            });
+        }
+
+        this.renderGrid();
+    },
+
+    // ── Rendering ──
+    renderGrid() {
+        const tbody = document.getElementById('work-tbody');
+        tbody.innerHTML = '';
+
+        const self = this;
+        this.employees.forEach((emp, idx) => {
+            const isManager = emp.role === 'Farmverwalter' || idx === 0;
+            const tr = document.createElement('tr');
+            if (isManager) tr.classList.add('row-manager');
+
+            // Employee name cell
+            const tdName = document.createElement('td');
+            tdName.classList.add('cell-employee');
+            tdName.innerHTML = emp.name + '<span class="role-badge">' + (emp.role || '') + '</span>';
+            tr.appendChild(tdName);
+
+            // Day cells (1-7)
+            for (let day = 1; day <= 7; day++) {
+                const td = document.createElement('td');
+                const isWeekend = day >= 6;
+                if (isWeekend) td.classList.add('cell-weekend');
+
+                const key = emp.name + '|' + day;
+                const entry = self.entries[key];
+                const text = entry ? entry.activity : '';
+
+                if (!text) td.classList.add('cell-empty');
+
+                const textarea = document.createElement('textarea');
+                textarea.classList.add('cell-textarea');
+                textarea.placeholder = '...';
+                textarea.value = text;
+                textarea.dataset.employee = emp.name;
+                textarea.dataset.day = day;
+
+                textarea.addEventListener('input', function() {
+                    self.debounceSave(this);
+                });
+
+                textarea.addEventListener('focus', function() {
+                    this.parentElement.classList.remove('cell-empty');
+                });
+
+                textarea.addEventListener('blur', function() {
+                    if (!this.value.trim()) {
+                        this.parentElement.classList.add('cell-empty');
+                    }
+                });
+
+                td.appendChild(textarea);
+                tr.appendChild(td);
+            }
+
+            // Weekly hours cell
+            const tdHours = document.createElement('td');
+            tdHours.classList.add('cell-hours');
+
+            const hoursInput = document.createElement('input');
+            hoursInput.type = 'number';
+            hoursInput.min = '0';
+            hoursInput.step = '0.5';
+            hoursInput.placeholder = '-';
+            hoursInput.dataset.employee = emp.name;
+            hoursInput.dataset.field = 'hours';
+
+            // Sum hours from all days for this employee
+            let totalHours = 0;
+            for (let day = 1; day <= 7; day++) {
+                const key = emp.name + '|' + day;
+                const entry = self.entries[key];
+                if (entry && entry.hours) totalHours += entry.hours;
+            }
+            if (totalHours > 0) hoursInput.value = totalHours;
+
+            hoursInput.addEventListener('input', function() {
+                self.updateSummaryRow();
+            });
+
+            hoursInput.addEventListener('change', function() {
+                self.saveHours(this);
+            });
+
+            tdHours.appendChild(hoursInput);
+            tr.appendChild(tdHours);
+
+            tbody.appendChild(tr);
+        });
+
+        document.getElementById('grid-loading').style.display = 'none';
+        document.getElementById('work-table').style.display = '';
+
+        this.updateSummaryRow();
+    },
+
+    updateSummaryRow() {
+        // Count activities per day
+        for (let day = 1; day <= 7; day++) {
+            let count = 0;
+            const self = this;
+            this.employees.forEach(emp => {
+                const key = emp.name + '|' + day;
+                const entry = self.entries[key];
+                if (entry && entry.activity && entry.activity.trim()) count++;
+            });
+            const el = document.getElementById('sum-' + day);
+            if (el) el.textContent = count > 0 ? count + ' Eintr.' : '-';
+        }
+
+        // Sum total hours
+        const hoursInputs = document.querySelectorAll('#report-woche input[data-field="hours"]');
+        let total = 0;
+        hoursInputs.forEach(inp => {
+            const v = parseFloat(inp.value);
+            if (!isNaN(v)) total += v;
+        });
+        const sumEl = document.getElementById('sum-total');
+        if (sumEl) sumEl.textContent = total > 0 ? total + ' Std.' : '-';
+    },
+
+    // ── Save Logic ──
+    showSaveStatus(text, cls) {
+        const el = document.getElementById('save-status');
+        el.className = 'status-msg ' + cls;
+        el.textContent = text;
+        if (cls === 'saved') {
+            setTimeout(() => { el.className = 'status-msg'; }, 2000);
+        }
+    },
+
+    debounceSave(textarea) {
+        const key = textarea.dataset.employee + '|' + textarea.dataset.day;
+
+        if (this.debounceTimers[key]) clearTimeout(this.debounceTimers[key]);
+
+        const self = this;
+        this.debounceTimers[key] = setTimeout(() => {
+            self.saveEntry(textarea);
+        }, 300);
+    },
+
+    async saveEntry(textarea) {
+        const employeeName = textarea.dataset.employee;
+        const dayNum = parseInt(textarea.dataset.day);
+        const cellText = textarea.value.trim();
+        const mondayStr = this.formatDate(this.currentMonday);
+
+        this.showSaveStatus('Speichert...', 'saving');
+
+        const { error } = await sb.from('work_entries').upsert({
+            week_start: mondayStr,
+            employee_name: employeeName,
+            day_of_week: dayNum,
+            activity: cellText,
+        }, { onConflict: 'farm_id,week_start,employee_name,day_of_week' });
+
+        if (error) {
+            console.error('Save error:', error);
+            this.showSaveStatus('Fehler beim Speichern', 'saving');
+            return;
+        }
+
+        const key = employeeName + '|' + dayNum;
+        if (!this.entries[key]) this.entries[key] = {};
+        this.entries[key].activity = cellText;
+
+        textarea.classList.add('saved');
+        setTimeout(() => textarea.classList.remove('saved'), 600);
+
+        this.showSaveStatus('Gespeichert', 'saved');
+        this.updateSummaryRow();
+    },
+
+    async saveHours(input) {
+        const employeeName = input.dataset.employee;
+        const hours = parseFloat(input.value) || 0;
+        const mondayStr = this.formatDate(this.currentMonday);
+
+        const { error } = await sb.from('work_entries').upsert({
+            week_start: mondayStr,
+            employee_name: employeeName,
+            day_of_week: 1,
+            hours: hours,
+        }, { onConflict: 'farm_id,week_start,employee_name,day_of_week' });
+
+        if (error) {
+            console.error('Hours save error:', error);
+        }
+    },
+
+    // ── Employee Management ──
+    renderEmployeeList() {
+        const tbody = document.getElementById('emp-list');
+        tbody.innerHTML = '';
+
+        this.employees.forEach(emp => {
+            const tr = document.createElement('tr');
+            tr.innerHTML =
+                '<td>' + emp.name + '</td>' +
+                '<td>' + (emp.role || '-') + '</td>' +
+                '<td>' + (emp.sort_order || '-') + '</td>' +
+                '<td>' + (emp.active ? 'Ja' : 'Nein') + '</td>' +
+                '<td><button class="btn-small btn-danger" onclick="Woche.deactivateEmployee(\'' +
+                    emp.name.replace(/'/g, "\\'") + '\', ' + emp.id + ')">Deaktivieren</button></td>';
+            tbody.appendChild(tr);
+        });
+    },
+
+    async addEmployee() {
+        const nameInput = document.getElementById('new-emp-name');
+        const roleSelect = document.getElementById('new-emp-role');
+        const name = nameInput.value.trim();
+        const role = roleSelect.value;
+
+        if (!name) return;
+
+        const maxSort = this.employees.reduce((m, e) => Math.max(m, e.sort_order || 0), 0);
+
+        const { error } = await sb.from('farm_employees').insert({
+            name: name,
+            role: role,
+            sort_order: maxSort + 10,
+            active: true,
+        });
+
+        if (error) {
+            console.error('Error adding employee:', error);
+            alert('Fehler: ' + error.message);
+            return;
+        }
+
+        nameInput.value = '';
+        await this.loadEmployees();
+        this.renderEmployeeList();
+        await this.loadEntries();
+    },
+
+    async deactivateEmployee(name, id) {
+        if (!confirm('Mitarbeiter "' + name + '" deaktivieren?')) return;
+
+        const { error } = await sb.from('farm_employees').update({ active: false }).eq('id', id);
+
+        if (error) {
+            console.error('Error deactivating employee:', error);
+            alert('Fehler: ' + error.message);
+            return;
+        }
+
+        await this.loadEmployees();
+        this.renderEmployeeList();
+        await this.loadEntries();
+    },
+
+    // ── Lazy init: runs only when woche tab first becomes active ──
+    async init() {
+        if (this.loaded) return;
+        this.loaded = true;
+
+        const user = await checkAuth();
+        if (!user) return;
+
+        // Set current week
+        this.currentMonday = this.getMondayOfWeek(new Date());
+        this.updateWeekDisplay();
+
+        const self = this;
+
+        // Toggle employee panel
+        document.getElementById('toggle-employees').addEventListener('click', function() {
+            this.classList.toggle('open');
+            const panel = document.getElementById('employee-panel');
+            panel.classList.toggle('open');
+            if (panel.classList.contains('open')) {
+                self.renderEmployeeList();
+            }
+        });
+
+        // Week navigation
+        document.getElementById('btn-prev-week').addEventListener('click', () => self.navigateWeek(-1));
+        document.getElementById('btn-next-week').addEventListener('click', () => self.navigateWeek(1));
+        document.getElementById('week-input').addEventListener('change', function() {
+            const parts = this.value.split('-W');
+            if (parts.length === 2) {
+                const year = parseInt(parts[0]);
+                const week = parseInt(parts[1]);
+                const jan4 = new Date(year, 0, 4);
+                const dayOfWeek = jan4.getDay() || 7;
+                const monday = new Date(year, 0, 4 + (week - 1) * 7 - dayOfWeek + 1);
+                self.currentMonday = monday;
+                self.updateWeekDisplay();
+                self.loadEntries();
+            }
+        });
+
+        await this.loadEmployees();
+        await this.loadEntries();
+    }
+};
+
+// Expose to global scope for inline onclick handlers
+window.Monat = Monat;
+window.Woche = Woche;
+
+// ══════════════════════════════════════════════════════════════════
+// Sub-tab switching with URL hash persistence
+// ══════════════════════════════════════════════════════════════════
+function showReport(which) {
+    if (which !== 'monat' && which !== 'woche') which = 'monat';
+
+    // Update tab buttons
+    document.querySelectorAll('.report-tabs button').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.report === which);
+    });
+
+    // Update panels
+    document.querySelectorAll('.report-panel').forEach(panel => {
+        panel.classList.remove('active');
+    });
+    const panel = document.getElementById('report-' + which);
+    if (panel) panel.classList.add('active');
+
+    // Update URL hash without re-firing hashchange listeners for our own change
+    if (location.hash !== '#' + which) {
+        _suppressHashChange = true;
+        location.hash = '#' + which;
+    }
+
+    // Lazy-load data for the activated tab
+    if (which === 'monat') {
+        Monat.init();
+    } else if (which === 'woche') {
+        Woche.init();
+    }
+}
+window.showReport = showReport;
+
+let _suppressHashChange = false;
+window.addEventListener('hashchange', function() {
+    if (_suppressHashChange) {
+        _suppressHashChange = false;
+        return;
+    }
+    const h = (location.hash || '').replace('#', '');
+    showReport(h === 'woche' ? 'woche' : 'monat');
+});
+
+// ── Boot ────────────────────────────────────────────────────────
+(function boot() {
+    const initialHash = (location.hash || '').replace('#', '');
+    const initial = initialHash === 'woche' ? 'woche' : 'monat';
+    // Use showReport to ensure UI + lazy-init run consistently
+    showReport(initial);
+})();
+</script>
+
+</body>
+</html>
