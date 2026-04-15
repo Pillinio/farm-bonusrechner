@@ -587,14 +587,23 @@ async function loadBudgets() {
             : 0;
         const devClass = Math.abs(deviation) <= 10 ? 'color:#22c55e' : Math.abs(deviation) <= 25 ? 'color:#eab308' : 'color:#ef4444';
 
+        const plannedFormatted = (row.planned_nad || 0).toLocaleString('de-DE');
         tbody.innerHTML += `
             <tr data-id="${row.id}">
                 <td>${row.category}</td>
-                <td><input type="number" class="budget-planned" value="${row.planned_nad || 0}" style="width:140px"></td>
+                <td><input type="text" inputmode="decimal" class="budget-planned" value="${plannedFormatted}" oninput="formatBudgetInput(this)" style="width:140px; text-align:right;"></td>
                 <td>${(row.actual_nad || 0).toLocaleString('de-DE')} NAD</td>
                 <td style="${devClass}; font-weight:600">${deviation > 0 ? '+' : ''}${deviation}%</td>
             </tr>`;
     });
+}
+
+function formatBudgetInput(el) {
+    // Remove everything except digits
+    const digits = el.value.replace(/\D/g, '');
+    if (!digits) { el.value = ''; return; }
+    // Format with German thousand separators
+    el.value = parseInt(digits).toLocaleString('de-DE');
 }
 
 function addBudgetRow() {
@@ -602,7 +611,7 @@ function addBudgetRow() {
     tbody.innerHTML += `
         <tr data-id="new">
             <td><input type="text" class="budget-category-new" placeholder="Kategoriename"></td>
-            <td><input type="number" class="budget-planned" value="0" style="width:140px"></td>
+            <td><input type="text" inputmode="decimal" class="budget-planned" value="0" oninput="formatBudgetInput(this)" style="width:140px; text-align:right;"></td>
             <td>0 NAD</td>
             <td>-</td>
         </tr>`;
@@ -615,7 +624,9 @@ async function saveBudgets() {
 
     rows.forEach(row => {
         const id = row.dataset.id;
-        const planned = parseFloat(row.querySelector('.budget-planned').value) || 0;
+        // Parse with thousand separators removed
+        const rawValue = row.querySelector('.budget-planned').value.replace(/\./g, '').replace(/,/g, '.');
+        const planned = parseFloat(rawValue) || 0;
 
         if (id === 'new') {
             const catInput = row.querySelector('.budget-category-new');

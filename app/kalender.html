@@ -1,0 +1,1102 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="../favicon.ico">
+    <title>Kalender - Farm Controlling</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: white;
+            padding: 20px 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 30px;
+        }
+
+        .header-logo {
+            width: 120px;
+            height: auto;
+            max-height: 100px;
+            object-fit: contain;
+        }
+
+        .header-content {
+            flex: 1;
+            max-width: 800px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.2em;
+            margin-bottom: 6px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.85;
+        }
+
+        /* Navigation */
+        .nav {
+            display: flex;
+            gap: 0;
+            background: #f8f9fa;
+            border-bottom: 2px solid #dee2e6;
+            overflow-x: auto;
+        }
+
+        .nav a {
+            padding: 12px 24px;
+            text-decoration: none;
+            color: #6b7280;
+            font-size: 0.9em;
+            font-weight: 500;
+            white-space: nowrap;
+            border-bottom: 3px solid transparent;
+            transition: color 0.2s, border-color 0.2s;
+        }
+
+        .nav a:hover {
+            color: #374151;
+            background: #f0f0f0;
+        }
+
+        .nav a.active {
+            color: #2E75B6;
+            border-bottom-color: #2E75B6;
+            font-weight: 600;
+        }
+
+        /* Toolbar */
+        .toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 24px;
+            background: #f8f9fa;
+            border-bottom: 2px solid #dee2e6;
+            font-size: 0.9em;
+            color: #6b7280;
+        }
+
+        .toolbar button {
+            background: #2E75B6;
+            color: white;
+            border: none;
+            padding: 6px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: background 0.2s;
+        }
+
+        .toolbar button:hover {
+            background: #1F4E78;
+        }
+
+        /* Card */
+        .card {
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+            border: 1px solid #e5e7eb;
+            padding: 20px;
+            margin: 24px;
+        }
+
+        .card h2 {
+            font-size: 1.3em;
+            font-weight: 700;
+            color: #1a1a2e;
+            margin-bottom: 18px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card h3 {
+            font-size: 1em;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 8px;
+        }
+
+        /* Loading spinner */
+        .loading-spinner {
+            display: inline-block;
+            width: 18px;
+            height: 18px;
+            border: 2px solid #d1d5db;
+            border-top-color: #2E75B6;
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Month Navigation */
+        .month-nav {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+            gap: 10px;
+        }
+
+        .month-nav-title {
+            font-size: 1.3em;
+            font-weight: 700;
+            color: #1a1a2e;
+            flex: 1;
+            text-align: center;
+        }
+
+        .month-nav-btn {
+            background: #2E75B6;
+            color: white;
+            border: none;
+            padding: 8px 18px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9em;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+
+        .month-nav-btn:hover {
+            background: #1F4E78;
+        }
+
+        /* Calendar Grid */
+        .cal-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 2px;
+            background: #e5e7eb;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .cal-weekday {
+            background: #f3f4f6;
+            padding: 8px 6px;
+            text-align: center;
+            font-size: 0.85em;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .cal-cell {
+            background: #fff;
+            min-height: 92px;
+            padding: 6px 6px 4px;
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .cal-cell.other-month {
+            background: #fafafa;
+            color: #cbd5e1;
+        }
+
+        .cal-cell.weekend {
+            background: #f8f9fa;
+        }
+
+        .cal-cell.today {
+            outline: 2px solid #2E75B6;
+            outline-offset: -2px;
+            background: #eff6ff;
+        }
+
+        .cal-cell.holiday {
+            background: #f1f5f9;
+        }
+
+        .cal-day-num {
+            font-size: 0.85em;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .cal-cell.other-month .cal-day-num {
+            color: #cbd5e1;
+        }
+
+        .cal-holiday-label {
+            font-size: 0.7em;
+            font-style: italic;
+            color: #64748b;
+            line-height: 1.1;
+            margin-bottom: 2px;
+        }
+
+        .cal-badge {
+            font-size: 0.72em;
+            padding: 2px 6px;
+            border-radius: 4px;
+            cursor: pointer;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font-weight: 500;
+            border: 1px solid transparent;
+        }
+
+        .cal-badge.leave-requested {
+            background: #fef9c3;
+            color: #854d0e;
+            border-color: #fde68a;
+        }
+
+        .cal-badge.leave-approved {
+            background: #dcfce7;
+            color: #166534;
+            border-color: #bbf7d0;
+        }
+
+        .cal-badge.leave-rejected {
+            background: #fee2e2;
+            color: #991b1b;
+            border-color: #fecaca;
+            text-decoration: line-through;
+        }
+
+        .cal-badge.shareholder {
+            background: #dbeafe;
+            color: #1e40af;
+            border-color: #bfdbfe;
+        }
+
+        /* Entries Table */
+        .entries-table-wrap {
+            overflow-x: auto;
+        }
+
+        .entries-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9em;
+        }
+
+        .entries-table th {
+            text-align: left;
+            padding: 8px 12px;
+            background: #f3f4f6;
+            color: #374151;
+            font-weight: 600;
+            border-bottom: 2px solid #e5e7eb;
+            white-space: nowrap;
+        }
+
+        .entries-table td {
+            padding: 8px 12px;
+            border-bottom: 1px solid #f3f4f6;
+            color: #374151;
+        }
+
+        .entries-table tr.status-requested { background: #fef9c3; }
+        .entries-table tr.status-approved { background: #dcfce7; }
+        .entries-table tr.status-rejected { background: #fee2e2; }
+        .entries-table tr.status-rejected td {
+            text-decoration: line-through;
+            color: #9ca3af;
+        }
+
+        .entries-table .star-icon {
+            color: #f59e0b;
+            margin-right: 4px;
+        }
+
+        .status-label {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.82em;
+            font-weight: 600;
+        }
+
+        .status-label.requested { background: #fde68a; color: #92400e; }
+        .status-label.approved { background: #bbf7d0; color: #166534; }
+        .status-label.rejected { background: #fecaca; color: #991b1b; }
+
+        .entries-empty {
+            color: #9ca3af;
+            font-size: 0.9em;
+            padding: 12px 0;
+            font-style: italic;
+            text-align: center;
+        }
+
+        .btn-approve,
+        .btn-reject {
+            border: none;
+            padding: 4px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.8em;
+            font-weight: 600;
+            transition: opacity 0.2s;
+            margin-right: 4px;
+        }
+
+        .btn-approve { background: #22c55e; color: white; }
+        .btn-reject  { background: #ef4444; color: white; }
+        .btn-approve:hover,
+        .btn-reject:hover { opacity: 0.85; }
+
+        /* Form */
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .form-group label {
+            font-size: 0.85em;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            padding: 8px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 0.9em;
+            font-family: inherit;
+        }
+
+        .form-group textarea {
+            min-height: 60px;
+            resize: vertical;
+        }
+
+        .form-actions {
+            margin-top: 14px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-submit {
+            background: #2E75B6;
+            color: white;
+            border: none;
+            padding: 8px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9em;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+
+        .btn-submit:hover { background: #1F4E78; }
+        .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .form-message {
+            margin-top: 10px;
+            font-size: 0.88em;
+            padding: 6px 12px;
+            border-radius: 6px;
+            display: none;
+        }
+
+        .form-message.success {
+            display: block;
+            background: #dcfce7;
+            color: #166534;
+            border: 1px solid #bbf7d0;
+        }
+
+        .form-message.error {
+            display: block;
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 14px;
+            color: #9ca3af;
+            font-size: 0.8em;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            body { padding: 10px; }
+
+            .header {
+                flex-direction: column;
+                gap: 12px;
+                padding: 16px 20px;
+            }
+            .header-logo { width: 70px; }
+            .header h1 { font-size: 1.5em; }
+
+            .card {
+                margin: 14px;
+                padding: 14px;
+            }
+
+            .cal-cell {
+                min-height: 58px;
+                padding: 3px 3px 2px;
+            }
+
+            .cal-day-num { font-size: 0.75em; }
+            .cal-holiday-label { font-size: 0.6em; }
+            .cal-badge { font-size: 0.62em; padding: 1px 3px; }
+
+            .cal-weekday { padding: 6px 2px; font-size: 0.72em; }
+
+            .form-grid { grid-template-columns: 1fr; }
+
+            .month-nav-title { font-size: 1em; }
+            .month-nav-btn { padding: 6px 10px; font-size: 0.8em; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- Header -->
+    <div class="header">
+        <img src="../logo.png" alt="Farm Logo" class="header-logo">
+        <div class="header-content">
+            <h1>Kalender</h1>
+            <p>Farm Controlling</p>
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <div id="main-nav"></div>
+
+    <!-- Toolbar -->
+    <div class="toolbar">
+        <span id="last-update">Wird geladen...</span>
+        <button onclick="loadAll()">Aktualisieren</button>
+    </div>
+
+    <!-- Month View -->
+    <div class="card">
+        <div class="month-nav">
+            <button class="month-nav-btn" id="prev-month-btn">&larr; Vormonat</button>
+            <div class="month-nav-title" id="month-title">—</div>
+            <button class="month-nav-btn" id="next-month-btn">Naechster Monat &rarr;</button>
+        </div>
+
+        <div class="cal-grid" id="cal-grid">
+            <div class="cal-weekday">Mo</div>
+            <div class="cal-weekday">Di</div>
+            <div class="cal-weekday">Mi</div>
+            <div class="cal-weekday">Do</div>
+            <div class="cal-weekday">Fr</div>
+            <div class="cal-weekday">Sa</div>
+            <div class="cal-weekday">So</div>
+        </div>
+    </div>
+
+    <!-- Entries Table -->
+    <div class="card">
+        <h2><span>&#x1F4CB;</span> Eintraege im Monat</h2>
+        <div class="entries-table-wrap">
+            <table class="entries-table" id="entries-table">
+                <thead>
+                    <tr>
+                        <th>Datum(e)</th>
+                        <th>Person</th>
+                        <th>Typ</th>
+                        <th>Status</th>
+                        <th>Aktion</th>
+                    </tr>
+                </thead>
+                <tbody id="entries-tbody">
+                    <tr><td colspan="5" class="entries-empty">Wird geladen...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- New Entry Form -->
+    <div class="card">
+        <h2><span>&#x2795;</span> Neuer Eintrag</h2>
+        <div class="form-grid">
+            <div class="form-group">
+                <label for="cal-person">Person</label>
+                <select id="cal-person">
+                    <option value="Werner Jacobi">Werner Jacobi</option>
+                    <option value="Wanda Jacobi">Wanda Jacobi</option>
+                    <option value="_custom">Andere Person...</option>
+                </select>
+                <input type="text" id="cal-person-custom" placeholder="Name eingeben" style="display:none; margin-top:4px;">
+            </div>
+            <div class="form-group">
+                <label for="cal-type">Typ</label>
+                <select id="cal-type">
+                    <option value="leave">Urlaub</option>
+                    <option value="shareholder_visit">Gesellschafter-Besuch</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="cal-start">Von</label>
+                <input type="date" id="cal-start">
+            </div>
+            <div class="form-group">
+                <label for="cal-end">Bis</label>
+                <input type="date" id="cal-end">
+            </div>
+            <div class="form-group full-width">
+                <label for="cal-reason">Grund / Notizen</label>
+                <textarea id="cal-reason" placeholder="Optional"></textarea>
+            </div>
+        </div>
+        <div class="form-actions">
+            <button class="btn-submit" id="cal-submit-btn" onclick="submitCalendarEntry()">Speichern</button>
+        </div>
+        <div class="form-message" id="cal-form-message"></div>
+    </div>
+
+    <div class="footer">
+        Farm Controlling &copy; 2026
+    </div>
+</div>
+
+<script type="module">
+import { renderNav } from './shared/nav.js';
+renderNav('kalender');
+</script>
+
+<script>
+// ── Supabase Client ──────────────────────────────────────────────
+const sb = window.supabase.createClient('https://vhwlcnfxslkftswksqrw.supabase.co', 'sb_publishable_2a5cKq6CF2Qfe1D1DqLrTw_0kHRD4Cd');
+
+// ── Auth Guard ───────────────────────────────────────────────────
+async function checkAuth() {
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) {
+        window.location.href = 'login.html?redirect=' + encodeURIComponent(window.location.pathname);
+        return null;
+    }
+    return session.user;
+}
+
+// ── Namibian Public Holidays ────────────────────────────────────
+const HOLIDAYS_2025 = {
+    '2025-01-01': 'Neujahr',
+    '2025-03-21': 'Unabhaengigkeitstag',
+    '2025-04-18': 'Karfreitag',
+    '2025-04-21': 'Ostermontag',
+    '2025-05-01': 'Tag der Arbeit',
+    '2025-05-04': 'Cassinga Day',
+    '2025-05-25': 'Afrika-Tag',
+    '2025-05-29': 'Christi Himmelfahrt',
+    '2025-08-26': 'Heldentag',
+    '2025-12-10': 'Menschenrechtstag',
+    '2025-12-25': 'Weihnachten',
+    '2025-12-26': 'Familientag',
+};
+const HOLIDAYS_2026 = {
+    '2026-01-01': 'Neujahr',
+    '2026-03-21': 'Unabhaengigkeitstag',
+    '2026-04-03': 'Karfreitag',
+    '2026-04-06': 'Ostermontag',
+    '2026-05-01': 'Tag der Arbeit',
+    '2026-05-04': 'Cassinga Day',
+    '2026-05-14': 'Christi Himmelfahrt',
+    '2026-05-25': 'Afrika-Tag',
+    '2026-08-26': 'Heldentag',
+    '2026-12-10': 'Menschenrechtstag',
+    '2026-12-25': 'Weihnachten',
+    '2026-12-26': 'Familientag',
+};
+const HOLIDAYS_2027 = {
+    '2027-01-01': 'Neujahr',
+    '2027-03-21': 'Unabhaengigkeitstag',
+    '2027-03-26': 'Karfreitag',
+    '2027-03-29': 'Ostermontag',
+    '2027-05-01': 'Tag der Arbeit',
+    '2027-05-04': 'Cassinga Day',
+    '2027-05-06': 'Christi Himmelfahrt',
+    '2027-05-25': 'Afrika-Tag',
+    '2027-08-26': 'Heldentag',
+    '2027-12-10': 'Menschenrechtstag',
+    '2027-12-25': 'Weihnachten',
+    '2027-12-26': 'Familientag',
+};
+
+const ALL_HOLIDAYS = { ...HOLIDAYS_2025, ...HOLIDAYS_2026, ...HOLIDAYS_2027 };
+
+// ── Labels & Constants ──────────────────────────────────────────
+const CAL_TYPE_LABELS = {
+    leave: 'Urlaub',
+    shareholder_visit: 'Gesellschafter-Besuch'
+};
+
+const CAL_PERSON_ROLES = {
+    'Werner Jacobi': 'farmverwalter',
+    'Wanda Jacobi': 'farmverwalter'
+};
+
+const MONTH_NAMES = [
+    'Januar', 'Februar', 'Maerz', 'April', 'Mai', 'Juni',
+    'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'
+];
+
+// ── State ───────────────────────────────────────────────────────
+let _currentYear;
+let _currentMonth; // 0-11
+let _userId = null;
+let _userRole = null;
+let _monthEntries = [];
+
+// ── Helpers ─────────────────────────────────────────────────────
+function ymd(y, m, d) {
+    const mm = String(m + 1).padStart(2, '0');
+    const dd = String(d).padStart(2, '0');
+    return y + '-' + mm + '-' + dd;
+}
+
+function calendarDateFmt(dateStr) {
+    if (!dateStr) return '—';
+    const d = new Date(dateStr + 'T00:00:00');
+    return d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
+}
+
+function shortName(fullName) {
+    if (!fullName) return '';
+    return fullName.split(' ')[0];
+}
+
+function todayStr() {
+    const t = new Date();
+    return ymd(t.getFullYear(), t.getMonth(), t.getDate());
+}
+
+// ── Month Navigation ────────────────────────────────────────────
+function setMonth(year, month) {
+    // Wrap month
+    while (month < 0) { month += 12; year--; }
+    while (month > 11) { month -= 12; year++; }
+    _currentYear = year;
+    _currentMonth = month;
+    document.getElementById('month-title').textContent = MONTH_NAMES[month] + ' ' + year;
+    loadMonthData();
+}
+
+document.getElementById('prev-month-btn').addEventListener('click', () => {
+    setMonth(_currentYear, _currentMonth - 1);
+});
+document.getElementById('next-month-btn').addEventListener('click', () => {
+    setMonth(_currentYear, _currentMonth + 1);
+});
+
+// ── Load Data For Current Month ─────────────────────────────────
+async function loadMonthData() {
+    try {
+        // Range: include prev-month tail & next-month head so overlapping entries show up
+        const firstOfMonth = ymd(_currentYear, _currentMonth, 1);
+        const daysInMonth = new Date(_currentYear, _currentMonth + 1, 0).getDate();
+        const lastOfMonth = ymd(_currentYear, _currentMonth, daysInMonth);
+
+        // widen slightly for visual grid fill
+        const gridStart = new Date(_currentYear, _currentMonth, 1);
+        gridStart.setDate(gridStart.getDate() - 7);
+        const gridEnd = new Date(_currentYear, _currentMonth, daysInMonth);
+        gridEnd.setDate(gridEnd.getDate() + 7);
+
+        const gridStartStr = gridStart.toISOString().split('T')[0];
+        const gridEndStr = gridEnd.toISOString().split('T')[0];
+
+        // Fetch entries overlapping the widened grid window
+        const { data, error } = await sb.from('farm_calendar')
+            .select('*')
+            .lte('start_date', gridEndStr)
+            .gte('end_date', gridStartStr)
+            .order('start_date', { ascending: true });
+
+        if (error) throw error;
+
+        _monthEntries = data || [];
+
+        renderGrid();
+        renderEntriesTable(firstOfMonth, lastOfMonth);
+
+        const now = new Date();
+        document.getElementById('last-update').textContent =
+            'Letzte Aktualisierung: ' + now.toLocaleString('de-DE', {
+                day: '2-digit', month: '2-digit', year: 'numeric',
+                hour: '2-digit', minute: '2-digit'
+            });
+    } catch (err) {
+        console.error('loadMonthData error:', err);
+        document.getElementById('last-update').textContent = 'Fehler beim Laden';
+    }
+}
+
+// ── Render Month Grid ───────────────────────────────────────────
+function renderGrid() {
+    const grid = document.getElementById('cal-grid');
+
+    // Remove any existing cells (keep weekday headers — first 7 children)
+    while (grid.children.length > 7) {
+        grid.removeChild(grid.lastChild);
+    }
+
+    const today = todayStr();
+
+    // Compute start of grid: Monday of the week containing the 1st
+    const firstDay = new Date(_currentYear, _currentMonth, 1);
+    // getDay: 0=Sun, 1=Mon ... 6=Sat. We want Monday-start (0=Mon).
+    let dow = firstDay.getDay() - 1;
+    if (dow < 0) dow = 6; // Sunday
+    const gridStart = new Date(firstDay);
+    gridStart.setDate(gridStart.getDate() - dow);
+
+    // Always render 6 rows * 7 cols = 42 cells
+    for (let i = 0; i < 42; i++) {
+        const cellDate = new Date(gridStart);
+        cellDate.setDate(cellDate.getDate() + i);
+
+        const y = cellDate.getFullYear();
+        const m = cellDate.getMonth();
+        const d = cellDate.getDate();
+        const dateStr = ymd(y, m, d);
+
+        const cell = document.createElement('div');
+        cell.className = 'cal-cell';
+
+        const isThisMonth = (m === _currentMonth);
+        if (!isThisMonth) cell.classList.add('other-month');
+
+        const jsDow = cellDate.getDay(); // 0=Sun, 6=Sat
+        if (jsDow === 0 || jsDow === 6) cell.classList.add('weekend');
+
+        if (dateStr === today) cell.classList.add('today');
+
+        const holidayName = ALL_HOLIDAYS[dateStr];
+        if (holidayName) cell.classList.add('holiday');
+
+        // Day number
+        const numEl = document.createElement('div');
+        numEl.className = 'cal-day-num';
+        numEl.textContent = d;
+        cell.appendChild(numEl);
+
+        // Holiday label
+        if (holidayName) {
+            const h = document.createElement('div');
+            h.className = 'cal-holiday-label';
+            h.textContent = holidayName;
+            cell.appendChild(h);
+        }
+
+        // Entries for this date
+        const dayEntries = _monthEntries.filter(e => e.start_date <= dateStr && e.end_date >= dateStr);
+        for (const e of dayEntries) {
+            const badge = document.createElement('div');
+            badge.className = 'cal-badge';
+            if (e.entry_type === 'shareholder_visit') {
+                badge.classList.add('shareholder');
+            } else if (e.entry_type === 'leave') {
+                if (e.status === 'approved') badge.classList.add('leave-approved');
+                else if (e.status === 'rejected') badge.classList.add('leave-rejected');
+                else badge.classList.add('leave-requested');
+            }
+            badge.textContent = shortName(e.person_name);
+            badge.title = e.person_name + ' — ' + (CAL_TYPE_LABELS[e.entry_type] || e.entry_type)
+                + ' (' + calendarDateFmt(e.start_date) + ' – ' + calendarDateFmt(e.end_date) + ')'
+                + (e.reason ? '\n' + e.reason : '');
+            badge.addEventListener('click', (ev) => {
+                ev.stopPropagation();
+                showEntryDetails(e);
+            });
+            cell.appendChild(badge);
+        }
+
+        grid.appendChild(cell);
+    }
+}
+
+function showEntryDetails(e) {
+    const typeLabel = CAL_TYPE_LABELS[e.entry_type] || e.entry_type;
+    const statusLabel = e.status === 'approved' ? 'Genehmigt'
+        : e.status === 'rejected' ? 'Abgelehnt'
+        : 'Angefragt';
+    const details =
+        'Person: ' + e.person_name + '\n' +
+        'Typ: ' + typeLabel + '\n' +
+        'Zeitraum: ' + calendarDateFmt(e.start_date) + ' – ' + calendarDateFmt(e.end_date) + '\n' +
+        'Status: ' + statusLabel +
+        (e.reason ? '\n\nNotiz: ' + e.reason : '');
+    alert(details);
+}
+
+// ── Render Entries Table (month scope) ──────────────────────────
+function renderEntriesTable(monthStart, monthEnd) {
+    const tbody = document.getElementById('entries-tbody');
+
+    // Filter entries that overlap with the current month
+    const entries = _monthEntries
+        .filter(e => e.start_date <= monthEnd && e.end_date >= monthStart)
+        .slice()
+        .sort((a, b) => a.start_date.localeCompare(b.start_date));
+
+    if (!entries.length) {
+        tbody.innerHTML = '<tr><td colspan="5" class="entries-empty">Keine Eintraege in diesem Monat.</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = '';
+
+    for (const e of entries) {
+        const tr = document.createElement('tr');
+
+        if (e.status === 'requested') tr.className = 'status-requested';
+        else if (e.status === 'approved') tr.className = 'status-approved';
+        else if (e.status === 'rejected') tr.className = 'status-rejected';
+
+        const typeLabel = CAL_TYPE_LABELS[e.entry_type] || e.entry_type;
+        const starIcon = e.entry_type === 'shareholder_visit' ? '<span class="star-icon">&#x2B50;</span>' : '';
+
+        let statusLabel = '';
+        if (e.status === 'requested') statusLabel = '<span class="status-label requested">Angefragt</span>';
+        else if (e.status === 'approved') statusLabel = '<span class="status-label approved">Genehmigt</span>';
+        else if (e.status === 'rejected') statusLabel = '<span class="status-label rejected">Abgelehnt</span>';
+
+        let actionHtml = '';
+        if (_userRole === 'owner' && e.status === 'requested') {
+            actionHtml =
+                '<button class="btn-approve" onclick="approveCalendarEntry(\'' + e.id + '\')">Bestaetigen</button>' +
+                '<button class="btn-reject" onclick="rejectCalendarEntry(\'' + e.id + '\')">Ablehnen</button>';
+        } else {
+            actionHtml = '—';
+        }
+
+        tr.innerHTML =
+            '<td>' + calendarDateFmt(e.start_date) + ' – ' + calendarDateFmt(e.end_date) + '</td>' +
+            '<td>' + starIcon + e.person_name + '</td>' +
+            '<td>' + typeLabel + '</td>' +
+            '<td>' + statusLabel + '</td>' +
+            '<td>' + actionHtml + '</td>';
+
+        tbody.appendChild(tr);
+    }
+}
+
+// ── Approve / Reject ────────────────────────────────────────────
+async function approveCalendarEntry(entryId) {
+    try {
+        const { error } = await sb.from('farm_calendar')
+            .update({
+                status: 'approved',
+                decided_by: _userId,
+                decided_at: new Date().toISOString()
+            })
+            .eq('id', entryId);
+        if (error) throw error;
+
+        sb.functions.invoke('notify-calendar', { body: { action: 'approved', entryId } })
+            .catch(e => console.warn('Notification failed:', e));
+
+        await loadMonthData();
+    } catch (err) {
+        console.error('Approve error:', err);
+        alert('Fehler beim Bestaetigen: ' + (err.message || err));
+    }
+}
+
+async function rejectCalendarEntry(entryId) {
+    try {
+        const { error } = await sb.from('farm_calendar')
+            .update({
+                status: 'rejected',
+                decided_by: _userId,
+                decided_at: new Date().toISOString()
+            })
+            .eq('id', entryId);
+        if (error) throw error;
+
+        sb.functions.invoke('notify-calendar', { body: { action: 'rejected', entryId } })
+            .catch(e => console.warn('Notification failed:', e));
+
+        await loadMonthData();
+    } catch (err) {
+        console.error('Reject error:', err);
+        alert('Fehler beim Ablehnen: ' + (err.message || err));
+    }
+}
+
+// ── New Entry Form ──────────────────────────────────────────────
+document.getElementById('cal-person').addEventListener('change', function() {
+    const custom = document.getElementById('cal-person-custom');
+    custom.style.display = this.value === '_custom' ? 'block' : 'none';
+    if (this.value !== '_custom') custom.value = '';
+});
+
+async function submitCalendarEntry() {
+    const btn = document.getElementById('cal-submit-btn');
+    const msgEl = document.getElementById('cal-form-message');
+    msgEl.className = 'form-message';
+    msgEl.style.display = 'none';
+
+    const personSelect = document.getElementById('cal-person');
+    const personCustom = document.getElementById('cal-person-custom');
+    const entryType = document.getElementById('cal-type').value;
+    const startDate = document.getElementById('cal-start').value;
+    const endDate = document.getElementById('cal-end').value;
+    const reason = document.getElementById('cal-reason').value.trim();
+
+    const personName = personSelect.value === '_custom' ? personCustom.value.trim() : personSelect.value;
+
+    if (!personName) {
+        msgEl.className = 'form-message error';
+        msgEl.textContent = 'Bitte Person angeben.';
+        return;
+    }
+    if (!startDate || !endDate) {
+        msgEl.className = 'form-message error';
+        msgEl.textContent = 'Bitte Von- und Bis-Datum angeben.';
+        return;
+    }
+    if (endDate < startDate) {
+        msgEl.className = 'form-message error';
+        msgEl.textContent = 'Bis-Datum muss nach Von-Datum liegen.';
+        return;
+    }
+
+    // Determine person_role
+    let personRole = CAL_PERSON_ROLES[personName] || 'other';
+    if (entryType === 'shareholder_visit') personRole = 'gesellschafter';
+
+    // Determine status
+    let status = 'requested';
+    if (entryType === 'shareholder_visit') {
+        status = 'approved';
+    } else if (_userRole === 'owner') {
+        status = 'approved';
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Wird gespeichert...';
+
+    try {
+        const insertData = {
+            entry_type: entryType,
+            person_name: personName,
+            person_role: personRole,
+            start_date: startDate,
+            end_date: endDate,
+            reason: reason || null,
+            notes: null,
+            status: status,
+            requested_by: _userId,
+            decided_by: status === 'approved' ? _userId : null,
+            decided_at: status === 'approved' ? new Date().toISOString() : null
+        };
+
+        const { data: inserted, error } = await sb.from('farm_calendar').insert(insertData).select('id').single();
+        if (error) throw error;
+
+        const notifyAction = status === 'approved' ? 'approved' : 'created';
+        sb.functions.invoke('notify-calendar', { body: { action: notifyAction, entryId: inserted.id } })
+            .catch(e => console.warn('Notification failed:', e));
+
+        msgEl.className = 'form-message success';
+        msgEl.textContent = status === 'approved'
+            ? 'Eintrag gespeichert und genehmigt.'
+            : 'Anfrage wurde erstellt und wartet auf Genehmigung.';
+
+        // Reset form
+        document.getElementById('cal-start').value = '';
+        document.getElementById('cal-end').value = '';
+        document.getElementById('cal-reason').value = '';
+        document.getElementById('cal-person').value = 'Werner Jacobi';
+        document.getElementById('cal-person-custom').style.display = 'none';
+        document.getElementById('cal-person-custom').value = '';
+        document.getElementById('cal-type').value = 'leave';
+
+        // Navigate to the month of the new entry so user sees it
+        const d = new Date(startDate + 'T00:00:00');
+        setMonth(d.getFullYear(), d.getMonth());
+
+        setTimeout(() => { msgEl.style.display = 'none'; msgEl.className = 'form-message'; }, 4000);
+    } catch (err) {
+        console.error('Submit error:', err);
+        msgEl.className = 'form-message error';
+        msgEl.textContent = 'Fehler: ' + (err.message || err);
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'Speichern';
+    }
+}
+
+// ── Load All / Init ─────────────────────────────────────────────
+async function loadAll() {
+    document.getElementById('last-update').textContent = 'Aktualisiere...';
+    await loadMonthData();
+}
+
+(async function init() {
+    const user = await checkAuth();
+    if (!user) return;
+    _userId = user.id;
+
+    // Get role
+    const { data: profile } = await sb.from('profiles').select('role').eq('id', user.id).single();
+    _userRole = profile?.role || null;
+
+    const now = new Date();
+    setMonth(now.getFullYear(), now.getMonth());
+})();
+</script>
+
+</body>
+</html>

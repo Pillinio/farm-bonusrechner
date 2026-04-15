@@ -712,34 +712,6 @@
             </div>
         </a>
 
-        <!-- Q7 Open Tickets -->
-        <a class="card" id="card-o2" href="operativ.html">
-            <div class="card-status-bar status-gray"></div>
-            <div class="card-body">
-                <div class="card-top">
-                    <span class="card-icon">&#x2699;&#xFE0F;</span>
-                    <span class="card-title">Betriebssicherheit</span>
-                    <span class="card-status-dot status-gray"></span>
-                </div>
-                <div class="card-value" data-kpi="o2"><span class="loading-spinner"></span></div>
-                <div class="card-subtitle">Offene Tickets &gt; 30 Tage</div>
-            </div>
-        </a>
-
-        <!-- Q8 Export Certification -->
-        <a class="card" id="card-c1" href="operativ.html">
-            <div class="card-status-bar status-gray"></div>
-            <div class="card-body">
-                <div class="card-top">
-                    <span class="card-icon">&#x1F4CB;</span>
-                    <span class="card-title">EU-Exportzertifizierung</span>
-                    <span class="card-status-dot status-gray"></span>
-                </div>
-                <div class="card-value" data-kpi="c1"><span class="loading-spinner"></span></div>
-                <div class="card-subtitle">Tage bis Ablauf</div>
-            </div>
-        </a>
-
         <!-- K3 Consecutive Dry Days -->
         <a class="card" id="card-k3" href="weide.html">
             <div class="card-status-bar status-gray"></div>
@@ -751,20 +723,6 @@
                 </div>
                 <div class="card-value" data-kpi="k3"><span class="loading-spinner"></span></div>
                 <div class="card-subtitle">Tage ohne Regen in Folge</div>
-            </div>
-        </a>
-
-        <!-- K4 Heat Stress Risk -->
-        <a class="card" id="card-k4" href="weide.html">
-            <div class="card-status-bar status-gray"></div>
-            <div class="card-body">
-                <div class="card-top">
-                    <span class="card-icon">&#x1F321;&#xFE0F;</span>
-                    <span class="card-title">Hitzestress</span>
-                    <span class="card-status-dot status-gray"></span>
-                </div>
-                <div class="card-value" data-kpi="k4"><span class="loading-spinner"></span></div>
-                <div class="card-subtitle">Tage &gt; 35 &deg;C (14-Tage-Prognose)</div>
             </div>
         </a>
     </div>
@@ -832,8 +790,6 @@
                     <label for="cal-type">Typ</label>
                     <select id="cal-type">
                         <option value="leave">Urlaub</option>
-                        <option value="business_trip">Dienstreise</option>
-                        <option value="sick">Krank</option>
                         <option value="shareholder_visit">Gesellschafter-Besuch</option>
                     </select>
                 </div>
@@ -1115,67 +1071,6 @@ async function loadK2() {
     } catch { noData('k2'); }
 }
 
-// O2 — Open incidents > 30 days
-async function loadO2() {
-    try {
-        const thirtyDaysAgo = new Date();
-        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-        const cutoff = thirtyDaysAgo.toISOString().split('T')[0];
-
-        const { data, count } = await sb
-            .from('incidents')
-            .select('id', { count: 'exact', head: true })
-            .is('resolution', null)
-            .lte('incident_date', cutoff);
-
-        if (count === null || count === undefined) return noData('o2');
-
-        const status = count === 0 ? 'green' : count <= 3 ? 'yellow' : 'red';
-
-        setCard('o2', {
-            value: count,
-            subtitle: 'Offene Tickets > 30 Tage',
-            status
-        });
-    } catch { noData('o2'); }
-}
-
-// C1 — Days until nearest cert expiry (from compliance_certificates)
-async function loadC1() {
-    try {
-        const { data } = await sb
-            .from('compliance_certificates')
-            .select('cert_type, cert_number, expiry_date, status')
-            .not('expiry_date', 'is', null)
-            .order('expiry_date', { ascending: true })
-            .limit(1);
-
-        if (!data?.length) return noData('c1');
-
-        const cert = data[0];
-        const expiry = new Date(cert.expiry_date);
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        const days = Math.ceil((expiry - today) / (1000 * 60 * 60 * 24));
-
-        const status = days > 90 ? 'green' : days > 60 ? 'yellow' : 'red';
-
-        const typeLabels = {
-            fmd: 'MKS',
-            brucellosis: 'Brucellose',
-            eu_approval: 'EU-Zulassung',
-            transport: 'Transport'
-        };
-        const label = typeLabels[cert.cert_type] || cert.cert_type;
-
-        setCard('c1', {
-            value: (days <= 0 ? 'Abgelaufen' : days + ' Tage'),
-            subtitle: label + ' (' + (cert.cert_number || '—') + ')',
-            status
-        });
-    } catch { noData('c1'); }
-}
-
 // K3 — Consecutive dry days
 async function loadK3() {
     try {
@@ -1209,45 +1104,12 @@ async function loadK3() {
     } catch { noData('k3'); }
 }
 
-// K4 — Heat stress days (next 14 days forecast)
-async function loadK4() {
-    try {
-        const today = new Date().toISOString().split('T')[0];
-        const in14 = new Date();
-        in14.setDate(in14.getDate() + 14);
-
-        const { data } = await sb
-            .from('weather_observations')
-            .select('observation_date, temperature_max_c')
-            .eq('source', 'open-meteo-forecast')
-            .gte('observation_date', today)
-            .lte('observation_date', in14.toISOString().split('T')[0]);
-
-        if (!data?.length) return noData('k4');
-
-        const hotDays = data.filter(d => d.temperature_max_c > 35).length;
-
-        let status;
-        if (hotDays === 0) status = 'green';
-        else if (hotDays <= 3) status = 'yellow';
-        else status = 'red';
-
-        setCard('k4', {
-            value: hotDays + (hotDays === 1 ? ' Tag' : ' Tage'),
-            subtitle: 'Tage > 35 \u00B0C (14-Tage-Prognose)',
-            status
-        });
-    } catch { noData('k4'); }
-}
-
 // ── Calendar ────────────────────────────────────────────────────
 let _calendarUserRole = null;
 let _calendarUserId = null;
 
 const CAL_TYPE_LABELS = {
     leave: 'Urlaub',
-    business_trip: 'Dienstreise',
-    sick: 'Krank',
     shareholder_visit: 'Gesellschafter-Besuch'
 };
 
@@ -1628,8 +1490,8 @@ async function loadAll() {
 
     await Promise.allSettled([
         loadF1(), loadF2(), loadH4(), loadW1(),
-        loadF4(), loadK2(), loadO2(), loadC1(),
-        loadK3(), loadK4(), loadCalendar()
+        loadF4(), loadK2(),
+        loadK3(), loadCalendar()
     ]);
 
     const now = new Date();

@@ -5,6 +5,7 @@ export const SUPABASE_ANON_KEY = 'sb_publishable_2a5cKq6CF2Qfe1D1DqLrTw_0kHRD4Cd
 // App URLs — relative paths from /app/*.html
 export const PAGES = {
   cockpit:   'cockpit.html',
+  kalender:  'kalender.html',
   finanzen:  'finanzen.html',
   herde:     'herde.html',
   weide:     'weide.html',

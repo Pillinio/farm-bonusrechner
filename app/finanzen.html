@@ -126,6 +126,22 @@
             padding: 24px;
         }
 
+        /* Category Headings (Oberkategorien) */
+        .category-heading {
+            font-size: 1.4em;
+            font-weight: 700;
+            color: #fff;
+            padding: 14px 22px;
+            margin: 28px 0 16px 0;
+            border-radius: 12px;
+            box-shadow: 0 3px 12px rgba(0,0,0,0.15);
+            letter-spacing: 0.5px;
+        }
+        .category-heading:first-child { margin-top: 0; }
+        .category-liq    { background: linear-gradient(135deg, #1e40af, #3b82f6); }
+        .category-income { background: linear-gradient(135deg, #15803d, #22c55e); }
+        .category-cost   { background: linear-gradient(135deg, #b91c1c, #ef4444); }
+
         /* Section */
         .section {
             background: #fff;
@@ -402,6 +418,9 @@
 
     <div class="content">
 
+        <!-- ═══════════ LIQUIDITÄT ═══════════ -->
+        <h2 class="category-heading category-liq">&#x1F4B0; Liquidität</h2>
+
         <!-- F1: Cash Runway -->
         <div class="section" id="sec-f1">
             <div class="section-header">
@@ -414,7 +433,19 @@
             </div>
         </div>
 
-        <!-- F-CF: Cashflow -->
+        <!-- F1b: Account Balances -->
+        <div class="section" id="sec-f1b">
+            <div class="section-header">
+                <span class="section-icon">&#x1F3E6;</span>
+                <span class="section-title">Kontostände</span>
+                <span class="section-badge badge-gray" id="badge-f1b">...</span>
+            </div>
+            <div class="section-body" id="body-f1b">
+                <div class="loading-block"><span class="loading-spinner"></span></div>
+            </div>
+        </div>
+
+        <!-- Cashflow: Monatlich (Netto-Tabelle) -->
         <div class="section" id="sec-cf">
             <div class="section-header">
                 <span class="section-icon">&#x1F4B8;</span>
@@ -426,62 +457,17 @@
             </div>
         </div>
 
-        <!-- F2: Budget vs Actual -->
-        <div class="section" id="sec-f2">
-            <div class="section-header">
-                <span class="section-icon">&#x1F4CA;</span>
-                <span class="section-title">F2 &mdash; Budget vs. Ist</span>
-                <span class="section-badge badge-gray" id="badge-f2">...</span>
-            </div>
-            <div class="section-body" id="body-f2">
-                <div class="loading-block"><span class="loading-spinner"></span></div>
-            </div>
-        </div>
+        <!-- ═══════════ EINNAHMEN ═══════════ -->
+        <h2 class="category-heading category-income">&#x1F4B5; Einnahmen</h2>
 
         <!-- F3: Revenue YTD -->
         <div class="section" id="sec-f3">
             <div class="section-header">
                 <span class="section-icon">&#x1F4B5;</span>
-                <span class="section-title">F3 &mdash; Umsatz YTD</span>
+                <span class="section-title">F3 &mdash; Umsatz YTD (nach Kategorie)</span>
                 <span class="section-badge badge-gray" id="badge-f3">...</span>
             </div>
             <div class="section-body" id="body-f3">
-                <div class="loading-block"><span class="loading-spinner"></span></div>
-            </div>
-        </div>
-
-        <!-- F4: Cost per kg -->
-        <div class="section" id="sec-f4">
-            <div class="section-header">
-                <span class="section-icon">&#x1F4C8;</span>
-                <span class="section-title">F4 &mdash; Kosten pro kg verkauft</span>
-                <span class="section-badge badge-gray" id="badge-f4">...</span>
-            </div>
-            <div class="section-body" id="body-f4">
-                <div class="loading-block"><span class="loading-spinner"></span></div>
-            </div>
-        </div>
-
-        <!-- F5: EBIT Margin -->
-        <div class="section" id="sec-f5">
-            <div class="section-header">
-                <span class="section-icon">&#x1F4B9;</span>
-                <span class="section-title">F5 &mdash; EBIT-Marge</span>
-                <span class="section-badge badge-gray" id="badge-f5">...</span>
-            </div>
-            <div class="section-body" id="body-f5">
-                <div class="loading-block"><span class="loading-spinner"></span></div>
-            </div>
-        </div>
-
-        <!-- F6: Monthly Actual vs Plan -->
-        <div class="section" id="sec-f6">
-            <div class="section-header">
-                <span class="section-icon">&#x1F4C5;</span>
-                <span class="section-title">F6 &mdash; Monatsvergleich Ist vs. Plan</span>
-                <span class="section-badge badge-gray" id="badge-f6">...</span>
-            </div>
-            <div class="section-body" id="body-f6">
                 <div class="loading-block"><span class="loading-spinner"></span></div>
             </div>
         </div>
@@ -498,6 +484,45 @@
             </div>
         </div>
 
+        <!-- ═══════════ KOSTEN ═══════════ -->
+        <h2 class="category-heading category-cost">&#x1F4B3; Kosten</h2>
+
+        <!-- Budget & Ausgaben (F2 + Cashflow-Kategorien zusammengelegt) -->
+        <div class="section" id="sec-f2">
+            <div class="section-header">
+                <span class="section-icon">&#x1F4CA;</span>
+                <span class="section-title">Budget &amp; Ausgaben nach Kategorie</span>
+                <span class="section-badge badge-gray" id="badge-f2">...</span>
+            </div>
+            <div class="section-body" id="body-f2">
+                <div class="loading-block"><span class="loading-spinner"></span></div>
+            </div>
+        </div>
+
+        <!-- F6: Monthly Actual vs Plan -->
+        <div class="section" id="sec-f6">
+            <div class="section-header">
+                <span class="section-icon">&#x1F4C5;</span>
+                <span class="section-title">F6 &mdash; Monatsvergleich Ist vs. Plan</span>
+                <span class="section-badge badge-gray" id="badge-f6">...</span>
+            </div>
+            <div class="section-body" id="body-f6">
+                <div class="loading-block"><span class="loading-spinner"></span></div>
+            </div>
+        </div>
+
+        <!-- F4: Cost per kg -->
+        <div class="section" id="sec-f4">
+            <div class="section-header">
+                <span class="section-icon">&#x1F4C8;</span>
+                <span class="section-title">F4 &mdash; Kosten pro kg verkauft</span>
+                <span class="section-badge badge-gray" id="badge-f4">...</span>
+            </div>
+            <div class="section-body" id="body-f4">
+                <div class="loading-block"><span class="loading-spinner"></span></div>
+            </div>
+        </div>
+
         <!-- F8: Cost per LSU/Month -->
         <div class="section" id="sec-f8">
             <div class="section-header">
@@ -506,6 +531,18 @@
                 <span class="section-badge badge-gray" id="badge-f8">...</span>
             </div>
             <div class="section-body" id="body-f8">
+                <div class="loading-block"><span class="loading-spinner"></span></div>
+            </div>
+        </div>
+
+        <!-- F5: EBIT Margin (Ergebnis) -->
+        <div class="section" id="sec-f5">
+            <div class="section-header">
+                <span class="section-icon">&#x1F4B9;</span>
+                <span class="section-title">F5 &mdash; EBIT-Marge (Ergebnis)</span>
+                <span class="section-badge badge-gray" id="badge-f5">...</span>
+            </div>
+            <div class="section-body" id="body-f5">
                 <div class="loading-block"><span class="loading-spinner"></span></div>
             </div>
         </div>
@@ -578,39 +615,47 @@ function showNoData(id) {
 // ── F1: Cash Runway ──────────────────────────────────────────────
 async function loadF1() {
     try {
+        // Sum latest balance across all accounts (Nedbank + Pointbreak)
         const { data: balRows } = await sb
             .from('account_balances')
             .select('balance_nad, balance_date, account_name')
-            .order('balance_date', { ascending: false })
-            .limit(1);
+            .order('balance_date', { ascending: false });
 
-        const { data: costs } = await sb
-            .from('budgets')
-            .select('actual_nad, category')
-            .eq('fiscal_year', YEAR)
-            .neq('month', 0);
+        if (!balRows?.length) return showNoData('f1', 'Keine Kontostände erfasst');
 
-        if (!balRows?.length || !costs?.length) return showNoData('f1');
+        // Group by account, take latest per account
+        const latestPerAccount = {};
+        balRows.forEach(r => {
+            if (!latestPerAccount[r.account_name] || r.balance_date > latestPerAccount[r.account_name].balance_date) {
+                latestPerAccount[r.account_name] = r;
+            }
+        });
+        const totalBalance = Object.values(latestPerAccount).reduce((s, r) => s + Number(r.balance_nad || 0), 0);
 
-        const balance = balRows[0].balance_nad;
-        const balDate = balRows[0].balance_date;
-        const expenseRows = costs.filter(r => (r.actual_nad || 0) > 0);
-        const totalSpend = expenseRows.reduce((s, r) => s + (r.actual_nad || 0), 0);
+        // Use bank_transactions for average monthly expenses YTD
+        const { data: txns } = await sb
+            .from('bank_transactions')
+            .select('transaction_date, debit_nad')
+            .gte('transaction_date', YEAR + '-01-01')
+            .not('debit_nad', 'is', null);
 
-        // Count distinct months in data
-        const distinctMonths = new Set(costs.map(r => r.category)).size || costs.length;
-        const avgMonthly = totalSpend / Math.max(distinctMonths, 1);
+        let avgMonthly = 0;
+        if (txns?.length) {
+            const monthsSet = new Set(txns.map(t => t.transaction_date.substring(0, 7)));
+            const totalSpend = txns.reduce((s, t) => s + Number(t.debit_nad || 0), 0);
+            avgMonthly = totalSpend / Math.max(monthsSet.size, 1);
+        }
 
         if (avgMonthly <= 0) {
             document.getElementById('body-f1').innerHTML = `
                 <div class="kpi-big"><span class="value">&infin;</span><span class="unit">Monate</span></div>
-                <div class="kpi-detail">Kontostand: N$ ${fmt(balance)} (${balDate})</div>
+                <div class="kpi-detail">Kontostand gesamt: N$ ${fmt(totalBalance)}</div>
                 <div class="kpi-detail">Keine Ausgaben erfasst</div>`;
             setBadge('f1', 'Keine Ausgaben', 'gray');
             return;
         }
 
-        const months = Math.round(balance / avgMonthly * 10) / 10;
+        const months = Math.round(totalBalance / avgMonthly * 10) / 10;
         const status = months >= 6 ? 'green' : months >= 3 ? 'yellow' : 'red';
         const statusText = months >= 6 ? 'Gut' : months >= 3 ? 'Achtung' : 'Kritisch';
 
@@ -619,12 +664,62 @@ async function loadF1() {
                 <span class="value">${months}</span>
                 <span class="unit">Monate Deckung</span>
             </div>
-            <div class="kpi-detail">Kontostand: N$ ${fmt(balance)} (Stand: ${balDate || '—'})</div>
+            <div class="kpi-detail">Kontostand gesamt: N$ ${fmt(totalBalance)}</div>
             <div class="kpi-detail">Durchschnittlicher Monatsaufwand: N$ ${fmt(avgMonthly)}</div>`;
         setBadge('f1', statusText, status);
     } catch (e) {
         console.error('F1:', e);
         showNoData('f1');
+    }
+}
+
+// ── F1b: Kontostände ─────────────────────────────────────────────
+async function loadF1b() {
+    try {
+        const { data } = await sb
+            .from('account_balances')
+            .select('balance_nad, balance_date, account_name')
+            .order('balance_date', { ascending: false });
+
+        if (!data?.length) return showNoData('f1b', 'Keine Kontostände');
+
+        // Latest per account
+        const latest = {};
+        data.forEach(r => {
+            if (!latest[r.account_name] || r.balance_date > latest[r.account_name].balance_date) {
+                latest[r.account_name] = r;
+            }
+        });
+
+        const accounts = Object.values(latest).sort((a, b) => a.account_name.localeCompare(b.account_name));
+        const total = accounts.reduce((s, a) => s + Number(a.balance_nad || 0), 0);
+
+        let html = `<table class="data-table">
+            <thead><tr>
+                <th>Konto</th>
+                <th class="num">Saldo (N$)</th>
+                <th>Stand vom</th>
+            </tr></thead><tbody>`;
+
+        accounts.forEach(a => {
+            html += `<tr>
+                <td><strong>${a.account_name}</strong></td>
+                <td class="num">${fmt(a.balance_nad)}</td>
+                <td>${a.balance_date ? new Date(a.balance_date).toLocaleDateString('de-DE') : '—'}</td>
+            </tr>`;
+        });
+
+        html += `<tr style="font-weight:700; border-top:2px solid #374151; background:#f9fafb;">
+            <td>Gesamt</td>
+            <td class="num">${fmt(total)}</td>
+            <td>—</td>
+        </tr></tbody></table>`;
+
+        document.getElementById('body-f1b').innerHTML = html;
+        setBadge('f1b', 'N$ ' + fmt(total), 'green');
+    } catch (e) {
+        console.error('F1b:', e);
+        showNoData('f1b');
     }
 }
 
@@ -725,40 +820,9 @@ async function loadCashflow() {
             <td class="num"><span class="${netTotal >= 0 ? 'dev-green' : 'dev-red'}">${sign}${fmt(netTotal)}</span></td>
         </tr></tbody></table>`;
 
-        // Income breakdown
-        incomeItems.sort((a, b) => b.amount - a.amount);
-        if (incomeItems.length > 0) {
-            html += '<h4 style="margin:16px 0 8px; color:#374151;">Einnahmen-Details</h4>';
-            html += `<table class="data-table"><thead><tr>
-                <th>Datum</th><th>Beschreibung</th><th>Kategorie</th><th class="num">Betrag (N$)</th>
-            </tr></thead><tbody>`;
-            incomeItems.forEach(r => {
-                html += `<tr>
-                    <td>${r.date}</td>
-                    <td>${r.desc || '-'}</td>
-                    <td>${r.cat || '-'}</td>
-                    <td class="num" style="color:#16a34a">${fmt(r.amount)}</td>
-                </tr>`;
-            });
-            html += '</tbody></table>';
-        }
-
-        // Top expense categories
-        const sortedExpenses = Object.entries(expenseByCategory).sort((a, b) => b[1] - a[1]);
-        if (sortedExpenses.length > 0) {
-            html += '<h4 style="margin:16px 0 8px; color:#374151;">Ausgaben nach Kategorie</h4>';
-            html += `<table class="data-table"><thead><tr>
-                <th>Kategorie</th><th class="num">Betrag (N$)</th><th class="num">Anteil</th>
-            </tr></thead><tbody>`;
-            sortedExpenses.slice(0, 15).forEach(([cat, amount]) => {
-                const pct = (amount / totalDebit * 100).toFixed(1);
-                html += `<tr>
-                    <td>${cat}</td>
-                    <td class="num">${fmt(amount)}</td>
-                    <td class="num">${pct} %</td>
-                </tr>`;
-            });
-            html += '</tbody></table>';
+        // Einnahmen-Details + Kosten-nach-Kategorie werden jetzt in den
+        // Oberkategorien "Einnahmen" (F3) und "Kosten" (F2) angezeigt.
+        if (false) {
         }
 
         document.getElementById('body-cf').innerHTML = html;
@@ -828,13 +892,14 @@ async function loadF2() {
             </div>
         </div>`;
 
-        // Table with utilization bars
+        // Table with utilization bars + % Anteil an Gesamtkosten
         html += `<table class="data-table">
             <thead><tr>
                 <th>Kategorie</th>
-                <th class="num">Plan (N$)</th>
+                <th class="num">Budget (N$)</th>
                 <th class="num">Ist (N$)</th>
-                <th style="width:200px">Auslastung</th>
+                <th style="width:180px">Auslastung</th>
+                <th class="num">% an Gesamt</th>
                 <th class="num">Frei (N$)</th>
             </tr></thead><tbody>`;
 
@@ -847,6 +912,7 @@ async function loadF2() {
 
             const remainClass = r.remaining < 0 ? 'dev-red' : '';
             const pctLabel = r.utilPct > 999 ? '>999%' : r.utilPct.toFixed(0) + '%';
+            const shareOfTotal = totalActual > 0 ? (r.actual / totalActual * 100) : 0;
 
             html += `<tr>
                 <td>${r.category}</td>
@@ -857,9 +923,20 @@ async function loadF2() {
                         <div class="budget-bar-fill ${barClass}" style="width:${barWidth}%">${pctLabel}</div>
                     </div>
                 </td>
+                <td class="num">${shareOfTotal.toFixed(1)} %</td>
                 <td class="num"><span class="${remainClass}">${fmt(r.remaining)}</span></td>
             </tr>`;
         });
+
+        // Total row
+        html += `<tr style="font-weight:700; border-top:2px solid #374151; background:#f9fafb;">
+            <td>Gesamt</td>
+            <td class="num">${fmt(totalPlanned)}</td>
+            <td class="num">${fmt(totalActual)}</td>
+            <td class="num">${totalUtil.toFixed(1)} %</td>
+            <td class="num">100,0 %</td>
+            <td class="num">${fmt(totalPlanned - totalActual)}</td>
+        </tr>`;
 
         html += '</tbody></table>';
         document.getElementById('body-f2').innerHTML = html;
@@ -883,22 +960,60 @@ async function loadF3() {
 
         if (!data?.length) return showNoData('f3');
 
-        // Group by month for chart
-        const byMonth = new Array(12).fill(0);
+        // Revenue category mapping (normalize raw categories → display buckets)
+        function bucketFor(cat) {
+            const c = (cat || '').toLowerCase();
+            if (c.includes('meatco') || c.includes('rinder') || c.includes('cattle') || c.includes('livestock') || c.includes('verkauf rinder')) return 'Rinderverkauf';
+            if (c.includes('jagd') || c.includes('hunt') || c.includes('trophy')) return 'Jagd';
+            if (c.includes('pacht') || c.includes('lease') || c.includes('miete')) return 'Pacht';
+            if (c.includes('gras') || c.includes('grazing') || c.includes('gras-verkauf')) return 'Gras-Verkauf';
+            if (c.includes('einnahme') || c.includes('transfer')) return 'Sonstiges';
+            return 'Sonstiges';
+        }
+
+        const CAT_COLORS = {
+            'Rinderverkauf': '#16a34a',
+            'Jagd': '#f59e0b',
+            'Pacht': '#8b5cf6',
+            'Gras-Verkauf': '#06b6d4',
+            'Sonstiges': '#6b7280'
+        };
+        const CAT_ORDER = ['Rinderverkauf', 'Jagd', 'Pacht', 'Gras-Verkauf', 'Sonstiges'];
+
+        // Group by month × category
+        const byMonthCat = {};
+        CAT_ORDER.forEach(c => { byMonthCat[c] = new Array(12).fill(0); });
+
         data.forEach(r => {
             const m = new Date(r.transaction_date).getMonth();
-            byMonth[m] += parseFloat(r.credit_nad || 0);
+            const bucket = bucketFor(r.category);
+            byMonthCat[bucket][m] += parseFloat(r.credit_nad || 0);
         });
 
-        const total = byMonth.reduce((a, b) => a + b, 0);
+        const total = data.reduce((s, r) => s + parseFloat(r.credit_nad || 0), 0);
         setBadge('f3', 'N$ ' + fmtInt(total), 'green');
 
-        // Top income items table
+        // Category summary for display
+        const catTotals = CAT_ORDER.map(c => ({
+            name: c,
+            total: byMonthCat[c].reduce((a, b) => a + b, 0)
+        })).filter(c => c.total > 0).sort((a, b) => b.total - a.total);
+
+        let summaryHtml = '<div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px;">';
+        catTotals.forEach(c => {
+            summaryHtml += `<div style="padding:6px 12px; background:${CAT_COLORS[c.name]}; color:#fff; border-radius:6px; font-size:0.85em; font-weight:600;">
+                ${c.name}: N$ ${fmtInt(c.total)} (${(c.total/total*100).toFixed(0)}%)
+            </div>`;
+        });
+        summaryHtml += '</div>';
+
+        // Top income items table (sorted by amount desc)
+        const sortedData = [...data].sort((a, b) => parseFloat(b.credit_nad) - parseFloat(a.credit_nad));
         let tableHtml = '<table class="data-table" style="margin-top:12px;"><thead><tr>' +
             '<th>Datum</th><th>Beschreibung</th><th>Kategorie</th><th class="num">Betrag (N$)</th>' +
             '</tr></thead><tbody>';
 
-        data.slice(0, 15).forEach(r => {
+        sortedData.slice(0, 15).forEach(r => {
             const dateStr = r.transaction_date || '';
             tableHtml += '<tr>' +
                 '<td>' + dateStr + '</td>' +
@@ -907,14 +1022,15 @@ async function loadF3() {
                 '<td class="num" style="color:#16a34a">' + fmt(parseFloat(r.credit_nad)) + '</td>' +
                 '</tr>';
         });
-        if (data.length > 15) {
+        if (sortedData.length > 15) {
             tableHtml += '<tr><td colspan="4" style="color:#6b7280;font-style:italic;">... und ' +
-                (data.length - 15) + ' weitere Einnahmen</td></tr>';
+                (sortedData.length - 15) + ' weitere Einnahmen</td></tr>';
         }
         tableHtml += '</tbody></table>';
 
         document.getElementById('body-f3').innerHTML =
             '<div class="kpi-detail" style="margin-bottom:12px;">Gesamteinnahmen YTD: N$ ' + fmt(total) + '</div>' +
+            summaryHtml +
             '<div class="chart-container"><canvas id="chart-f3"></canvas></div>' +
             tableHtml;
 
@@ -923,19 +1039,22 @@ async function loadF3() {
             type: 'bar',
             data: {
                 labels: MONTH_NAMES,
-                datasets: [{
-                    label: 'Einnahmen (N$)',
-                    data: byMonth,
-                    backgroundColor: '#22c55e',
-                    borderRadius: 4
-                }]
+                datasets: CAT_ORDER.map(cat => ({
+                    label: cat,
+                    data: byMonthCat[cat],
+                    backgroundColor: CAT_COLORS[cat],
+                    borderRadius: 3,
+                    stack: 'revenue'
+                }))
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
+                plugins: { legend: { position: 'top', labels: { font: { size: 11 } } } },
                 scales: {
+                    x: { stacked: true },
                     y: {
+                        stacked: true,
                         beginAtZero: true,
                         ticks: { callback: v => 'N$ ' + fmtInt(v) }
                     }
@@ -1213,7 +1332,7 @@ async function loadAll() {
     document.getElementById('last-update').textContent = 'Aktualisiere...';
 
     await Promise.allSettled([
-        loadF1(), loadCashflow(), loadF2(), loadF3(), loadF4(),
+        loadF1(), loadF1b(), loadCashflow(), loadF2(), loadF3(), loadF4(),
         loadF5(), loadF6(), loadF7(), loadF8()
     ]);
 

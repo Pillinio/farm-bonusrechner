@@ -7,6 +7,7 @@ import { PAGES } from './config.js';
  */
 const NAV_ITEMS = [
   { key: 'cockpit',  label: 'Cockpit',       href: PAGES.cockpit },
+  { key: 'kalender', label: 'Kalender',       href: PAGES.kalender },
   { key: 'finanzen', label: 'Finanzen',       href: PAGES.finanzen },
   { key: 'herde',    label: 'Herde',          href: PAGES.herde },
   { key: 'weide',    label: 'Weide & Klima',  href: PAGES.weide },
