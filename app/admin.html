@@ -180,6 +180,7 @@
             <button onclick="showSection('market')">Marktpreise</button>
             <button onclick="showSection('bank')">Kontoauszug</button>
             <button onclick="showSection('employees')">Mitarbeiter</button>
+            <button onclick="showSection('initial')">Ersterfassung</button>
             <button onclick="showSection('users')">Benutzer</button>
         </div>
 
@@ -452,7 +453,32 @@
             </table>
         </div>
 
-        <!-- I. User-Verwaltung -->
+        <!-- I. Ersterfassung -->
+        <div id="section-initial" class="section">
+            <div class="section-header">
+                <h2>Ersterfassung &mdash; Initiale Herdenverteilung</h2>
+            </div>
+            <p style="color:#6b7280; font-size:0.9em; margin-bottom:16px;">
+                Erfassen Sie hier wo die Herde und Bullen aktuell stehen. Diese Daten werden als Ausgangspunkt
+                fuer alle zukuenftigen Bewegungen verwendet.
+            </p>
+            <div style="display:grid; grid-template-columns: 2fr 1fr 1fr auto; gap:8px; margin-bottom:16px;">
+                <select id="init-camp"><option value="">-- Camp waehlen --</option></select>
+                <select id="init-category">
+                    <option value="mixed">Herde</option>
+                    <option value="bulls">Bullen</option>
+                </select>
+                <input type="number" id="init-count" placeholder="Anzahl" min="1">
+                <button class="btn btn-success" onclick="addInitialPosition()">Hinzufuegen</button>
+            </div>
+            <div id="init-list" style="margin-bottom:16px; font-size:0.9em;"></div>
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span id="init-progress" style="font-size:0.9em; color:#6b7280;">0 Tiere erfasst</span>
+                <button class="btn btn-primary" onclick="saveInitialPositions()">Alle speichern</button>
+            </div>
+        </div>
+
+        <!-- J. User-Verwaltung -->
         <div id="section-users" class="section">
             <div class="section-header">
                 <h2>Benutzer-Verwaltung</h2>
@@ -1241,6 +1267,85 @@ async function deleteEmployee(btn) {
     loadEmployees();
 }
 
+// ══════════════════════════════════════════════════════════════════
+// I. INITIALE HERDENVERTEILUNG
+// ══════════════════════════════════════════════════════════════════
+let initialPositions = [];
+
+async function loadInitialCampDropdown() {
+    const { data: camps } = await sb
+        .from('farm_camps')
+        .select('name')
+        .eq('active', true)
+        .neq('name', 'Außengrenze Farm')
+        .order('name');
+
+    const select = document.getElementById('init-camp');
+    if (select && camps) {
+        select.innerHTML = '<option value="">-- Camp waehlen --</option>' +
+            camps.map(c => `<option value="${escapeHtml(c.name)}">${escapeHtml(c.name)}</option>`).join('');
+    }
+}
+
+function addInitialPosition() {
+    const camp = document.getElementById('init-camp').value;
+    const category = document.getElementById('init-category').value;
+    const count = parseInt(document.getElementById('init-count').value);
+    if (!camp || !count || count < 1) {
+        return showStatus('Bitte Camp und gueltige Anzahl angeben.', 'error');
+    }
+    initialPositions.push({ camp, category, count });
+    document.getElementById('init-count').value = '';
+    renderInitList();
+}
+
+function renderInitList() {
+    const listEl = document.getElementById('init-list');
+    const progEl = document.getElementById('init-progress');
+    if (!initialPositions.length) {
+        listEl.innerHTML = '<span style="color:#9ca3af;">Noch keine Positionen erfasst.</span>';
+        progEl.textContent = '0 Tiere erfasst';
+        return;
+    }
+    listEl.innerHTML = initialPositions.map((p, i) => {
+        const label = p.category === 'bulls' ? 'Bullen' : 'Herde';
+        return `<div style="padding:4px 0;">
+            &bull; <strong>${escapeHtml(p.camp)}</strong>: ${p.count} ${label}
+            <button onclick="removeInitialPosition(${i})" style="background:none;border:none;color:#dc2626;cursor:pointer;margin-left:8px;font-size:1.2em;">&times;</button>
+        </div>`;
+    }).join('');
+    const total = initialPositions.reduce((s, p) => s + p.count, 0);
+    progEl.innerHTML = `<strong>${total} Tiere erfasst</strong>`;
+}
+
+function removeInitialPosition(idx) {
+    initialPositions.splice(idx, 1);
+    renderInitList();
+}
+
+async function saveInitialPositions() {
+    if (!initialPositions.length) {
+        return showStatus('Keine Positionen zum Speichern.', 'error');
+    }
+    const today = new Date().toISOString().split('T')[0];
+    const rows = initialPositions.map(p => ({
+        movement_date: today,
+        from_camp: null,
+        to_camp: p.camp,
+        head_count: p.count,
+        animal_category: p.category,
+        reason: 'initial',
+        notes: 'Initial-Erfassung',
+    }));
+
+    const { error } = await sb.from('herd_movements').insert(rows);
+    if (error) return showStatus('Fehler: ' + error.message, 'error');
+
+    showStatus(initialPositions.length + ' Positionen gespeichert.');
+    initialPositions = [];
+    renderInitList();
+}
+
 // ── Helpers ──────────────────────────────────────────────────────
 function escapeHtml(str) {
     const div = document.createElement('div');
@@ -1265,6 +1370,8 @@ function escapeHtml(str) {
     await loadUncategorized();
     await loadBankTransactions();
     await loadEmployees();
+    await loadInitialCampDropdown();
+    renderInitList();
     await loadUsers();
 })();
 </script>

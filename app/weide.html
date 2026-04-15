@@ -809,8 +809,46 @@
         <div class="section-title">
             <span class="section-icon">&#x1F3D5;&#xFE0F;</span>
             Camp-Uebersicht
-            <button onclick="toggleInitialForm()" style="margin-left:auto; background:#2E75B6; color:white; border:none; padding:6px 14px; border-radius:6px; cursor:pointer; font-size:0.85em;">Herdenstandorte erfassen</button>
+            <button onclick="toggleQuickMoveForm()" style="margin-left:auto; background:#2E75B6; color:white; border:none; padding:6px 14px; border-radius:6px; cursor:pointer; font-size:0.85em;">+ Bewegung erfassen</button>
         </div>
+
+        <!-- Quick Movement Form -->
+        <div id="quick-move-form" style="display:none; margin-bottom:16px; padding:16px; background:#eff6ff; border:1px solid #bfdbfe; border-radius:8px;">
+            <div style="font-weight:600; margin-bottom:12px; color:#1e40af;">Herdenbewegung erfassen</div>
+            <div style="display:grid; grid-template-columns: 1fr 1fr 1fr 1fr 1fr; gap:8px; margin-bottom:12px;">
+                <input type="date" id="qm-date" style="padding:8px; border:1px solid #d1d5db; border-radius:6px;">
+                <select id="qm-from" style="padding:8px; border:1px solid #d1d5db; border-radius:6px;">
+                    <option value="">Von Camp (leer = neu)</option>
+                </select>
+                <select id="qm-to" style="padding:8px; border:1px solid #d1d5db; border-radius:6px;">
+                    <option value="">Nach Camp (leer = Abgang)</option>
+                </select>
+                <select id="qm-category" style="padding:8px; border:1px solid #d1d5db; border-radius:6px;">
+                    <option value="mixed">Herde</option>
+                    <option value="cows">Kuehe</option>
+                    <option value="bulls">Bullen</option>
+                    <option value="heifers">Faersen</option>
+                    <option value="calves">Kaelber</option>
+                    <option value="oxen">Ochsen</option>
+                </select>
+                <input type="number" id="qm-count" placeholder="Anzahl" min="1" style="padding:8px; border:1px solid #d1d5db; border-radius:6px;">
+            </div>
+            <div style="display:grid; grid-template-columns: 1fr 2fr auto auto; gap:8px;">
+                <select id="qm-reason" style="padding:8px; border:1px solid #d1d5db; border-radius:6px;">
+                    <option value="rotation">Rotation</option>
+                    <option value="birth">Geburt</option>
+                    <option value="purchase">Zukauf</option>
+                    <option value="sale">Verkauf</option>
+                    <option value="death">Todesfall</option>
+                    <option value="separation">Separation</option>
+                    <option value="other">Sonstiges</option>
+                </select>
+                <input type="text" id="qm-notes" placeholder="Notiz (optional)" style="padding:8px; border:1px solid #d1d5db; border-radius:6px;">
+                <button onclick="saveQuickMove()" style="background:#22c55e; color:white; border:none; padding:8px 20px; border-radius:6px; cursor:pointer; font-weight:500;">Speichern</button>
+                <button onclick="toggleQuickMoveForm()" style="background:#6b7280; color:white; border:none; padding:8px 20px; border-radius:6px; cursor:pointer;">Abbrechen</button>
+            </div>
+        </div>
+
         <div id="camp-table-wrap">
             <table class="data-table" id="camp-table">
                 <thead>
@@ -828,32 +866,6 @@
                     <tr><td colspan="7" class="no-data"><span class="loading-spinner"></span> Lade Camps...</td></tr>
                 </tbody>
             </table>
-        </div>
-
-        <!-- Initial-Positions-Formular (wird angezeigt bei Bedarf) -->
-        <div id="initial-form" style="display:none; margin-top:20px; padding:16px; background:#fffbeb; border:1px solid #fde68a; border-radius:8px;">
-            <div style="font-weight:600; margin-bottom:12px; color:#92400e;">
-                Herdenverteilung erfassen &mdash; Initialer Stand
-            </div>
-            <div style="display:grid; grid-template-columns: 2fr 1fr 1fr auto; gap:8px; margin-bottom:12px;">
-                <select id="init-camp" style="padding:8px; border:1px solid #d1d5db; border-radius:6px;">
-                    <option value="">-- Camp waehlen --</option>
-                </select>
-                <select id="init-category" style="padding:8px; border:1px solid #d1d5db; border-radius:6px;">
-                    <option value="mixed">&#x1F404; Herde</option>
-                    <option value="bulls">&#x1F402; Bullen</option>
-                </select>
-                <input type="number" id="init-count" placeholder="Anzahl" min="1" style="padding:8px; border:1px solid #d1d5db; border-radius:6px;">
-                <button onclick="addInitialPosition()" style="background:#22c55e; color:white; border:none; padding:8px 16px; border-radius:6px; cursor:pointer;">Hinzufuegen</button>
-            </div>
-            <div id="init-list" style="font-size:0.9em; margin-bottom:12px;"></div>
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-                <span id="init-progress" style="font-size:0.9em; color:#6b7280;">0 / 463 Tiere erfasst</span>
-                <div>
-                    <button onclick="saveInitialPositions()" style="background:#2E75B6; color:white; border:none; padding:8px 20px; border-radius:6px; cursor:pointer; font-weight:500;">Speichern</button>
-                    <button onclick="toggleInitialForm()" style="background:#6b7280; color:white; border:none; padding:8px 20px; border-radius:6px; cursor:pointer; margin-left:8px;">Schliessen</button>
-                </div>
-            </div>
         </div>
     </div>
 
@@ -1178,19 +1190,6 @@ async function loadCamps() {
         sortCampTable(campSortCol, false);
         renderCampTable();
 
-        // Populate init form camp dropdown
-        const initDropdown = document.getElementById('init-camp');
-        if (initDropdown) {
-            initDropdown.innerHTML = '<option value="">-- Camp waehlen --</option>' +
-                camps.map(c => `<option value="${escHtml(c.name)}">${escHtml(c.name)}</option>`).join('');
-        }
-
-        // Auto-show initial form if no movements exist yet
-        if (!movements || movements.length === 0) {
-            const form = document.getElementById('initial-form');
-            if (form) form.style.display = 'block';
-        }
-
     } catch (err) {
         console.error('loadCamps error:', err);
         tbody.innerHTML = '<tr><td colspan="7" class="no-data">Fehler beim Laden der Camps.</td></tr>';
@@ -1249,78 +1248,63 @@ function sortCampTable(col, toggle = true) {
     renderCampTable();
 }
 
-// ── Initial Positions Form ───────────────────────────────────────
-let initialPositions = [];
+// ── Quick Movement Form ──────────────────────────────────────────
+function toggleQuickMoveForm() {
+    const form = document.getElementById('quick-move-form');
+    const visible = form.style.display === 'block';
+    form.style.display = visible ? 'none' : 'block';
 
-function toggleInitialForm() {
-    const form = document.getElementById('initial-form');
-    form.style.display = form.style.display === 'none' ? 'block' : 'none';
-    if (form.style.display === 'block') renderInitList();
+    if (!visible) {
+        // Populate camp dropdowns
+        const dateInput = document.getElementById('qm-date');
+        if (!dateInput.value) dateInput.value = new Date().toISOString().split('T')[0];
+
+        const campOpts = campTableData.map(c =>
+            `<option value="${escHtml(c.name)}">${escHtml(c.name)}</option>`
+        ).join('');
+        document.getElementById('qm-from').innerHTML =
+            '<option value="">Von Camp (leer = neu)</option>' + campOpts;
+        document.getElementById('qm-to').innerHTML =
+            '<option value="">Nach Camp (leer = Abgang)</option>' + campOpts;
+    }
 }
 
-function addInitialPosition() {
-    const camp = document.getElementById('init-camp').value;
-    const category = document.getElementById('init-category').value;
-    const count = parseInt(document.getElementById('init-count').value);
-    if (!camp || !count || count < 1) {
-        alert('Bitte Camp und gueltige Anzahl angeben.');
+async function saveQuickMove() {
+    const date = document.getElementById('qm-date').value;
+    const from_camp = document.getElementById('qm-from').value || null;
+    const to_camp = document.getElementById('qm-to').value || null;
+    const category = document.getElementById('qm-category').value;
+    const count = parseInt(document.getElementById('qm-count').value);
+    const reason = document.getElementById('qm-reason').value;
+    const notes = document.getElementById('qm-notes').value.trim() || null;
+
+    if (!date || !count || count < 1) {
+        alert('Bitte Datum und gueltige Anzahl angeben.');
         return;
     }
-    initialPositions.push({ camp, category, count });
-    document.getElementById('init-count').value = '';
-    renderInitList();
-}
-
-function renderInitList() {
-    const listEl = document.getElementById('init-list');
-    const progEl = document.getElementById('init-progress');
-    if (!initialPositions.length) {
-        listEl.innerHTML = '<span style="color:#9ca3af;">Noch keine Positionen erfasst.</span>';
-        progEl.textContent = '0 / 463 Tiere erfasst';
+    if (!from_camp && !to_camp) {
+        alert('Mindestens Von- oder Nach-Camp angeben.');
         return;
     }
-    listEl.innerHTML = initialPositions.map((p, i) => {
-        const label = p.category === 'bulls' ? '🐂 Bullen' : '🐄 Herde';
-        return `<div style="padding:4px 0;">
-            &bull; ${escHtml(p.camp)}: ${p.count} ${label}
-            <button onclick="removeInitialPosition(${i})" style="background:none;border:none;color:#dc2626;cursor:pointer;margin-left:8px;">&times;</button>
-        </div>`;
-    }).join('');
-    const total = initialPositions.reduce((s, p) => s + p.count, 0);
-    const target = 463;
-    const color = total === target ? '#16a34a' : total > target ? '#dc2626' : '#ca8a04';
-    progEl.innerHTML = `<span style="color:${color};font-weight:600;">${total} / ${target} Tiere erfasst</span>`;
-}
 
-function removeInitialPosition(idx) {
-    initialPositions.splice(idx, 1);
-    renderInitList();
-}
+    const { error } = await sb.from('herd_movements').insert({
+        movement_date: date,
+        from_camp, to_camp,
+        head_count: count,
+        animal_category: category,
+        reason, notes,
+    });
 
-async function saveInitialPositions() {
-    if (!initialPositions.length) {
-        alert('Keine Positionen zum Speichern.');
-        return;
-    }
-    const today = new Date().toISOString().split('T')[0];
-    const rows = initialPositions.map(p => ({
-        movement_date: today,
-        from_camp: null,
-        to_camp: p.camp,
-        head_count: p.count,
-        animal_category: p.category,
-        reason: 'initial',
-        notes: 'Initial-Erfassung Herdenstandorte',
-    }));
-
-    const { error } = await sb.from('herd_movements').insert(rows);
     if (error) {
-        alert('Fehler beim Speichern: ' + error.message);
+        alert('Fehler: ' + error.message);
         return;
     }
-    alert(initialPositions.length + ' Positionen gespeichert.');
-    initialPositions = [];
-    document.getElementById('initial-form').style.display = 'none';
+
+    // Clear form
+    document.getElementById('qm-count').value = '';
+    document.getElementById('qm-notes').value = '';
+    document.getElementById('quick-move-form').style.display = 'none';
+
     await loadAll();
 }
 
