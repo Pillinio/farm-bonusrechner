@@ -244,6 +244,30 @@
             font-variant-numeric: tabular-nums;
         }
 
+        .data-table th[data-sort] {
+            cursor: pointer;
+            user-select: none;
+            position: relative;
+            padding-right: 22px;
+        }
+        .data-table th[data-sort]::after {
+            content: '\25B4\25BE';
+            position: absolute;
+            right: 6px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 0.7em;
+            opacity: 0.3;
+        }
+        .data-table th[data-sort].sort-asc::after {
+            content: '\25B4';
+            opacity: 1;
+        }
+        .data-table th[data-sort].sort-desc::after {
+            content: '\25BE';
+            opacity: 1;
+        }
+
         .dev-green  { color: #166534; }
         .dev-yellow { color: #854d0e; background: #fef9c3; border-radius: 4px; padding: 2px 6px; }
         .dev-red    { color: #991b1b; background: #fee2e2; border-radius: 4px; padding: 2px 6px; }
@@ -820,7 +844,12 @@ async function loadCashflow() {
     }
 }
 
-// ── F2: Budget vs Actual ─────────────────────────────────────────
+// ── F2 (UI: F5): Budget & Ausgaben — sortable ────────────────────
+let _f5Rows = [];
+let _f5Totals = null;
+let _f5SortCol = 'actual';
+let _f5SortDir = 'desc';
+
 async function loadF2() {
     try {
         const { data } = await sb
@@ -831,8 +860,7 @@ async function loadF2() {
 
         if (!data?.length) return showNoData('f2');
 
-        // Build category rows
-        const rows = data.map(r => {
+        _f5Rows = data.map(r => {
             const planned = r.planned_nad || 0;
             const actual = r.actual_nad || 0;
             const utilPct = planned > 0 ? (actual / planned) * 100 : (actual > 0 ? 999 : 0);
@@ -840,99 +868,119 @@ async function loadF2() {
             return { category: r.category, planned, actual, utilPct, remaining };
         });
 
-        // Sort by utilization descending (most used first)
-        rows.sort((a, b) => b.utilPct - a.utilPct);
-
-        // Summary cards
-        const totalPlanned = rows.reduce((s, r) => s + r.planned, 0);
-        const totalActual = rows.reduce((s, r) => s + r.actual, 0);
+        const totalPlanned = _f5Rows.reduce((s, r) => s + r.planned, 0);
+        const totalActual = _f5Rows.reduce((s, r) => s + r.actual, 0);
         const totalUtil = totalPlanned > 0 ? (totalActual / totalPlanned * 100) : 0;
-        const overBudget = rows.filter(r => r.utilPct > 100).length;
+        const overBudget = _f5Rows.filter(r => r.utilPct > 100).length;
+        _f5Totals = { totalPlanned, totalActual, totalUtil, overBudget };
 
-        const maxUtil = rows.length ? rows[0].utilPct : 0;
         const status = overBudget === 0 ? 'green' : overBudget <= 3 ? 'yellow' : 'red';
         const statusText = overBudget === 0 ? 'Im Rahmen' : overBudget + ' ueberschritten';
         setBadge('f2', statusText, status);
 
-        // Expected utilization based on month of year
-        const monthOfYear = new Date().getMonth() + 1;
-        const expectedPct = Math.round(monthOfYear / 12 * 100);
-
-        let html = '';
-
-        // Summary row
-        html += `<div class="budget-summary-row">
-            <div class="budget-summary-card">
-                <div class="bsc-value">${fmt(totalPlanned)}</div>
-                <div class="bsc-label">Gesamtbudget (N$)</div>
-            </div>
-            <div class="budget-summary-card">
-                <div class="bsc-value">${fmt(totalActual)}</div>
-                <div class="bsc-label">Ausgaben YTD (N$)</div>
-            </div>
-            <div class="budget-summary-card">
-                <div class="bsc-value" style="color:${totalUtil > expectedPct + 10 ? '#dc2626' : totalUtil > expectedPct ? '#ca8a04' : '#166534'}">${totalUtil.toFixed(0)} %</div>
-                <div class="bsc-label">Auslastung gesamt (Soll: ~${expectedPct} %)</div>
-            </div>
-            <div class="budget-summary-card">
-                <div class="bsc-value" style="color:${overBudget > 0 ? '#dc2626' : '#166534'}">${overBudget}</div>
-                <div class="bsc-label">Kategorien ueberschritten</div>
-            </div>
-        </div>`;
-
-        // Table with utilization bars + % Anteil an Gesamtkosten
-        html += `<table class="data-table">
-            <thead><tr>
-                <th>Kategorie</th>
-                <th class="num">Budget (N$)</th>
-                <th class="num">Ist (N$)</th>
-                <th style="width:180px">Auslastung</th>
-                <th class="num">% an Gesamt</th>
-                <th class="num">Frei (N$)</th>
-            </tr></thead><tbody>`;
-
-        rows.forEach(r => {
-            const barWidth = Math.min(r.utilPct, 100);
-            let barClass = 'bar-green';
-            if (r.utilPct > 100) barClass = 'bar-over';
-            else if (r.utilPct > 85) barClass = 'bar-red';
-            else if (r.utilPct > 60) barClass = 'bar-yellow';
-
-            const remainClass = r.remaining < 0 ? 'dev-red' : '';
-            const pctLabel = r.utilPct > 999 ? '>999%' : r.utilPct.toFixed(0) + '%';
-            const shareOfTotal = totalActual > 0 ? (r.actual / totalActual * 100) : 0;
-
-            html += `<tr>
-                <td>${r.category}</td>
-                <td class="num">${fmt(r.planned)}</td>
-                <td class="num">${fmt(r.actual)}</td>
-                <td>
-                    <div class="budget-bar-container">
-                        <div class="budget-bar-fill ${barClass}" style="width:${barWidth}%">${pctLabel}</div>
-                    </div>
-                </td>
-                <td class="num">${shareOfTotal.toFixed(1)} %</td>
-                <td class="num"><span class="${remainClass}">${fmt(r.remaining)}</span></td>
-            </tr>`;
-        });
-
-        // Total row
-        html += `<tr style="font-weight:700; border-top:2px solid #374151; background:#f9fafb;">
-            <td>Gesamt</td>
-            <td class="num">${fmt(totalPlanned)}</td>
-            <td class="num">${fmt(totalActual)}</td>
-            <td class="num">${totalUtil.toFixed(1)} %</td>
-            <td class="num">100,0 %</td>
-            <td class="num">${fmt(totalPlanned - totalActual)}</td>
-        </tr>`;
-
-        html += '</tbody></table>';
-        document.getElementById('body-f2').innerHTML = html;
+        sortF5(_f5SortCol, false);
+        renderF5();
     } catch (e) {
         console.error('F2:', e);
         showNoData('f2');
     }
 }
+
+function sortF5(col, toggle = true) {
+    if (toggle) {
+        if (_f5SortCol === col) _f5SortDir = _f5SortDir === 'asc' ? 'desc' : 'asc';
+        else { _f5SortCol = col; _f5SortDir = (col === 'category') ? 'asc' : 'desc'; }
+    }
+    const cmp = {
+        category: (a, b) => (a.category || '').localeCompare(b.category || '', 'de'),
+        planned:  (a, b) => a.planned - b.planned,
+        actual:   (a, b) => a.actual - b.actual,
+        utilPct:  (a, b) => a.utilPct - b.utilPct,
+        share:    (a, b) => a.actual - b.actual,
+        remaining:(a, b) => a.remaining - b.remaining,
+    }[col] || ((a, b) => 0);
+    const dir = _f5SortDir === 'asc' ? 1 : -1;
+    _f5Rows.sort((a, b) => cmp(a, b) * dir);
+    if (document.getElementById('f5-table')) renderF5();
+}
+
+function renderF5() {
+    if (!_f5Rows.length || !_f5Totals) return;
+    const { totalPlanned, totalActual, totalUtil, overBudget } = _f5Totals;
+    const monthOfYear = new Date().getMonth() + 1;
+    const expectedPct = Math.round(monthOfYear / 12 * 100);
+
+    let html = `<div class="budget-summary-row">
+        <div class="budget-summary-card">
+            <div class="bsc-value">${fmt(totalPlanned)}</div>
+            <div class="bsc-label">Gesamtbudget (N$)</div>
+        </div>
+        <div class="budget-summary-card">
+            <div class="bsc-value">${fmt(totalActual)}</div>
+            <div class="bsc-label">Ausgaben YTD (N$)</div>
+        </div>
+        <div class="budget-summary-card">
+            <div class="bsc-value" style="color:${totalUtil > expectedPct + 10 ? '#dc2626' : totalUtil > expectedPct ? '#ca8a04' : '#166534'}">${totalUtil.toFixed(0)} %</div>
+            <div class="bsc-label">Auslastung gesamt (Soll: ~${expectedPct} %)</div>
+        </div>
+        <div class="budget-summary-card">
+            <div class="bsc-value" style="color:${overBudget > 0 ? '#dc2626' : '#166534'}">${overBudget}</div>
+            <div class="bsc-label">Kategorien ueberschritten</div>
+        </div>
+    </div>`;
+
+    const sortClass = (c) => _f5SortCol === c ? ('sort-' + _f5SortDir) : '';
+
+    html += `<table class="data-table" id="f5-table">
+        <thead><tr>
+            <th data-sort="category" class="${sortClass('category')}" onclick="sortF5('category')">Kategorie</th>
+            <th data-sort="planned" class="num ${sortClass('planned')}" onclick="sortF5('planned')">Budget (N$)</th>
+            <th data-sort="actual" class="num ${sortClass('actual')}" onclick="sortF5('actual')">Ist (N$)</th>
+            <th data-sort="utilPct" class="${sortClass('utilPct')}" onclick="sortF5('utilPct')" style="width:180px">Auslastung</th>
+            <th data-sort="share" class="num ${sortClass('share')}" onclick="sortF5('share')">% an Gesamt</th>
+            <th data-sort="remaining" class="num ${sortClass('remaining')}" onclick="sortF5('remaining')">Frei (N$)</th>
+        </tr></thead><tbody>`;
+
+    _f5Rows.forEach(r => {
+        const barWidth = Math.min(r.utilPct, 100);
+        let barClass = 'bar-green';
+        if (r.utilPct > 100) barClass = 'bar-over';
+        else if (r.utilPct > 85) barClass = 'bar-red';
+        else if (r.utilPct > 60) barClass = 'bar-yellow';
+
+        const remainClass = r.remaining < 0 ? 'dev-red' : '';
+        const pctLabel = r.utilPct > 999 ? '>999%' : r.utilPct.toFixed(0) + '%';
+        const shareOfTotal = totalActual > 0 ? (r.actual / totalActual * 100) : 0;
+
+        html += `<tr>
+            <td>${r.category}</td>
+            <td class="num">${fmt(r.planned)}</td>
+            <td class="num">${fmt(r.actual)}</td>
+            <td>
+                <div class="budget-bar-container">
+                    <div class="budget-bar-fill ${barClass}" style="width:${barWidth}%">${pctLabel}</div>
+                </div>
+            </td>
+            <td class="num">${shareOfTotal.toFixed(1)} %</td>
+            <td class="num"><span class="${remainClass}">${fmt(r.remaining)}</span></td>
+        </tr>`;
+    });
+
+    // Total row (always at bottom)
+    html += `<tr style="font-weight:700; border-top:2px solid #374151; background:#f9fafb;">
+        <td>Gesamt</td>
+        <td class="num">${fmt(totalPlanned)}</td>
+        <td class="num">${fmt(totalActual)}</td>
+        <td class="num">${totalUtil.toFixed(1)} %</td>
+        <td class="num">100,0 %</td>
+        <td class="num">${fmt(totalPlanned - totalActual)}</td>
+    </tr>`;
+
+    html += '</tbody></table>';
+    document.getElementById('body-f2').innerHTML = html;
+}
+
+// (loadF2 alt durch sortierbare Variante oben ersetzt)
 
 // ── F3: Revenue YTD (bar chart) ──────────────────────────────────
 async function loadF3() {
@@ -1177,7 +1225,11 @@ async function loadF5() {
     }
 }
 
-// ── F6: Monthly Actual vs Plan ───────────────────────────────────
+// ── F6: Monthly Actual vs Plan (sortable) ────────────────────────
+let _f6Rows = [];
+let _f6SortCol = 'category';
+let _f6SortDir = 'asc';
+
 async function loadF6() {
     try {
         const { data } = await sb
@@ -1187,7 +1239,7 @@ async function loadF6() {
 
         if (!data?.length) return showNoData('f6');
 
-        // Separate plan (month=0) and actuals (month 1-12)
+        // Build rows: { category, plan, m1, m2, ..., m12, ytdSum }
         const planByCategory = {};
         const actualByCategory = {};
         const categories = new Set();
@@ -1202,30 +1254,66 @@ async function loadF6() {
             }
         });
 
-        const catList = [...categories].sort();
-        setBadge('f6', catList.length + ' Kategorien', 'gray');
-
-        let html = '<div class="monthly-grid"><table class="data-table"><thead><tr><th>Kategorie</th><th class="num">Plan</th>';
-        for (let m = 1; m <= 12; m++) {
-            html += `<th class="num">${MONTH_NAMES[m - 1]}</th>`;
-        }
-        html += '</tr></thead><tbody>';
-
-        catList.forEach(cat => {
-            html += `<tr><td>${cat}</td><td class="num">${fmtInt(planByCategory[cat] || 0)}</td>`;
+        _f6Rows = [...categories].map(cat => {
+            const row = { category: cat, plan: planByCategory[cat] || 0 };
+            let ytd = 0;
             for (let m = 1; m <= 12; m++) {
-                const val = actualByCategory[cat]?.[m];
-                html += `<td class="num">${val != null ? fmtInt(val) : '—'}</td>`;
+                const v = actualByCategory[cat]?.[m] ?? null;
+                row['m' + m] = v;
+                if (v != null) ytd += v;
             }
-            html += '</tr>';
+            row.ytdSum = ytd;
+            return row;
         });
 
-        html += '</tbody></table></div>';
-        document.getElementById('body-f6').innerHTML = html;
+        setBadge('f6', _f6Rows.length + ' Kategorien', 'gray');
+        sortF6(_f6SortCol, false);
+        renderF6();
     } catch (e) {
         console.error('F6:', e);
         showNoData('f6');
     }
+}
+
+function sortF6(col, toggle = true) {
+    if (toggle) {
+        if (_f6SortCol === col) _f6SortDir = _f6SortDir === 'asc' ? 'desc' : 'asc';
+        else { _f6SortCol = col; _f6SortDir = (col === 'category') ? 'asc' : 'desc'; }
+    }
+    const dir = _f6SortDir === 'asc' ? 1 : -1;
+    _f6Rows.sort((a, b) => {
+        if (_f6SortCol === 'category') return (a.category || '').localeCompare(b.category || '', 'de') * dir;
+        const av = a[_f6SortCol] ?? -Infinity;
+        const bv = b[_f6SortCol] ?? -Infinity;
+        return (av - bv) * dir;
+    });
+    if (document.getElementById('f6-table')) renderF6();
+}
+
+function renderF6() {
+    const sortClass = (c) => _f6SortCol === c ? ('sort-' + _f6SortDir) : '';
+
+    let html = '<div class="monthly-grid"><table class="data-table" id="f6-table"><thead><tr>';
+    html += `<th data-sort="category" class="${sortClass('category')}" onclick="sortF6('category')">Kategorie</th>`;
+    html += `<th data-sort="plan" class="num ${sortClass('plan')}" onclick="sortF6('plan')">Plan</th>`;
+    for (let m = 1; m <= 12; m++) {
+        const k = 'm' + m;
+        html += `<th data-sort="${k}" class="num ${sortClass(k)}" onclick="sortF6('${k}')">${MONTH_NAMES[m - 1]}</th>`;
+    }
+    html += `<th data-sort="ytdSum" class="num ${sortClass('ytdSum')}" onclick="sortF6('ytdSum')">YTD</th>`;
+    html += '</tr></thead><tbody>';
+
+    _f6Rows.forEach(r => {
+        html += `<tr><td>${r.category}</td><td class="num">${fmtInt(r.plan)}</td>`;
+        for (let m = 1; m <= 12; m++) {
+            const v = r['m' + m];
+            html += `<td class="num">${v != null ? fmtInt(v) : '—'}</td>`;
+        }
+        html += `<td class="num" style="font-weight:600;">${fmtInt(r.ytdSum)}</td></tr>`;
+    });
+
+    html += '</tbody></table></div>';
+    document.getElementById('body-f6').innerHTML = html;
 }
 
 // ── F7: Hunt & Lease Revenue ─────────────────────────────────────
