@@ -444,12 +444,17 @@
                 <span class="section-badge badge-gray" id="badge-h1"><span class="loading-spinner"></span></span>
             </div>
             <div class="section-body">
+                <div id="h1-year-nav" style="display:flex; align-items:center; justify-content:center; gap:12px; margin-bottom:12px;">
+                    <button id="h1-prev-year" onclick="changeH1Year(-1)" style="background:#f1f5f9; border:1px solid #d1d5db; border-radius:6px; padding:6px 14px; cursor:pointer;">&larr; Vorjahr</button>
+                    <span id="h1-year-label" style="font-size:1.15em; font-weight:700; min-width:80px; text-align:center;">...</span>
+                    <button id="h1-next-year" onclick="changeH1Year(1)" style="background:#f1f5f9; border:1px solid #d1d5db; border-radius:6px; padding:6px 14px; cursor:pointer;">Nachfolge Jahr &rarr;</button>
+                </div>
                 <div class="chart-container">
                     <canvas id="chart-h1"></canvas>
                 </div>
                 <div class="placeholder" id="placeholder-h1" style="display:none;">
                     <span class="placeholder-icon">&#x1F4C9;</span>
-                    <span class="placeholder-text">Keine LSU-Daten vorhanden</span>
+                    <span class="placeholder-text">Keine LSU-Daten fuer dieses Jahr</span>
                 </div>
             </div>
         </div>
@@ -628,7 +633,12 @@ function formatDate(dateStr) {
     return d.toLocaleDateString('de-DE', { month: 'short', year: '2-digit' });
 }
 
-// ── H1: Herd Size in LSU ────────────────────────────────────────
+// ── H1: Herd Size in LSU (yearly monthly view with navigation) ───
+let _h1AllData = [];
+let _h1CurrentYear = new Date().getFullYear();
+let _h1AvailableYears = [];
+const MONTH_NAMES_DE = ['Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'];
+
 async function loadH1() {
     try {
         const { data, error } = await sb
@@ -637,44 +647,100 @@ async function loadH1() {
             .order('snapshot_date', { ascending: true });
 
         if (error) throw error;
-        if (!data || data.length === 0) return showPlaceholder('h1');
+        if (!data || data.length === 0) {
+            setBadge('h1', '—');
+            showPlaceholder('h1');
+            return;
+        }
 
-        hidePlaceholder('h1');
-        destroyChart('h1');
+        _h1AllData = data;
+        _h1AvailableYears = [...new Set(data.map(r => new Date(r.snapshot_date).getFullYear()))].sort();
 
-        const labels = data.map(r => formatDate(r.snapshot_date));
-        const values = data.map(r => r.total_lsu);
-        const latest = values[values.length - 1];
-        setBadge('h1', Math.round(latest) + ' LSU');
+        // Default to most recent year with data
+        _h1CurrentYear = _h1AvailableYears[_h1AvailableYears.length - 1];
 
-        charts['h1'] = new Chart(document.getElementById('chart-h1'), {
-            type: 'line',
-            data: {
-                labels,
-                datasets: [{
-                    label: 'LSU (Gro\u00dfvieheinheiten)',
-                    data: values,
-                    borderColor: '#2E75B6',
-                    backgroundColor: 'rgba(46,117,182,0.08)',
-                    fill: true,
-                    tension: 0.3,
-                    pointRadius: 3,
-                    pointBackgroundColor: '#2E75B6',
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
-                scales: {
-                    y: { beginAtZero: false, title: { display: true, text: 'LSU' } }
-                }
-            }
-        });
+        renderH1Year();
     } catch (e) {
         console.error('H1 error:', e);
         showPlaceholder('h1');
     }
+}
+
+function changeH1Year(delta) {
+    const newYear = _h1CurrentYear + delta;
+    if (newYear < _h1AvailableYears[0] - 5 || newYear > _h1AvailableYears[_h1AvailableYears.length - 1] + 1) return;
+    _h1CurrentYear = newYear;
+    renderH1Year();
+}
+
+function renderH1Year() {
+    const label = document.getElementById('h1-year-label');
+    const prev = document.getElementById('h1-prev-year');
+    const next = document.getElementById('h1-next-year');
+    label.textContent = _h1CurrentYear;
+
+    // Enable/disable nav buttons based on available years
+    const minYear = _h1AvailableYears[0];
+    const maxYear = _h1AvailableYears[_h1AvailableYears.length - 1];
+    prev.disabled = _h1CurrentYear <= minYear;
+    next.disabled = _h1CurrentYear >= maxYear;
+    prev.style.opacity = prev.disabled ? '0.4' : '1';
+    next.style.opacity = next.disabled ? '0.4' : '1';
+
+    // Filter data for current year
+    const yearData = _h1AllData.filter(r => new Date(r.snapshot_date).getFullYear() === _h1CurrentYear);
+
+    if (yearData.length === 0) {
+        setBadge('h1', 'Keine Daten ' + _h1CurrentYear);
+        destroyChart('h1');
+        showPlaceholder('h1');
+        return;
+    }
+
+    hidePlaceholder('h1');
+
+    // Aggregate: latest snapshot per month
+    const byMonth = new Array(12).fill(null);
+    yearData.forEach(r => {
+        const d = new Date(r.snapshot_date);
+        const m = d.getMonth();
+        if (byMonth[m] === null || new Date(r.snapshot_date) > new Date(byMonth[m].snapshot_date)) {
+            byMonth[m] = r;
+        }
+    });
+
+    const values = byMonth.map(r => r ? Math.round(r.total_lsu) : null);
+    const latestValue = values.filter(v => v != null).pop();
+    setBadge('h1', (latestValue || 0) + ' LSU');
+
+    destroyChart('h1');
+    charts['h1'] = new Chart(document.getElementById('chart-h1'), {
+        type: 'bar',
+        data: {
+            labels: MONTH_NAMES_DE,
+            datasets: [{
+                label: 'LSU ' + _h1CurrentYear,
+                data: values,
+                backgroundColor: values.map(v => v == null ? '#e5e7eb' : '#2E75B6'),
+                borderRadius: 4,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: ctx => ctx.raw == null ? 'Keine Daten' : ctx.raw + ' LSU'
+                    }
+                }
+            },
+            scales: {
+                y: { beginAtZero: true, title: { display: true, text: 'LSU' } }
+            }
+        }
+    });
 }
 
 // ── H2: Calving Rate rolling 12M ────────────────────────────────
