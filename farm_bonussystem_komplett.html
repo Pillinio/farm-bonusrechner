@@ -605,6 +605,7 @@
             <button class="tab" onclick="switchTab('bonus')">💰 Bonusberechnung</button>
             <button class="tab" onclick="switchTab('overview')">📊 Bonus Detailansicht</button>
             <button class="tab" onclick="switchTab('info')">ℹ️ Info & Hilfe</button>
+            <button class="tab" onclick="switchTab('prognose')">📈 Prognose</button>
         </div>
 
         <div class="export-controls">
@@ -1247,6 +1248,10 @@
 
             </div>
         </div>
+
+        <div id="prognose" class="tab-content">
+            <iframe id="prognose-frame" src="" style="width:100%; border:none; min-height:800px;" onload="this.style.height = this.contentWindow.document.body.scrollHeight + 40 + 'px';"></iframe>
+        </div>
     </div>
 
     <script type="module">
@@ -1807,6 +1812,14 @@
             // Update overview if switched to it
             if (tabName === 'overview') {
                 updateOverview();
+            }
+
+            // Lazy-load prognose iframe
+            if (tabName === 'prognose') {
+                const frame = document.getElementById('prognose-frame');
+                if (!frame.src || frame.src === '' || frame.src === window.location.href) {
+                    frame.src = 'app/forecast.html?embed=1';
+                }
             }
         }
 

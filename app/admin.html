@@ -179,6 +179,7 @@
             <button onclick="showSection('uncat')">Unkategorisiert</button>
             <button onclick="showSection('market')">Marktpreise</button>
             <button onclick="showSection('bank')">Kontoauszug</button>
+            <button onclick="showSection('employees')">Mitarbeiter</button>
             <button onclick="showSection('users')">Benutzer</button>
         </div>
 
@@ -431,7 +432,27 @@
             </table>
         </div>
 
-        <!-- H. User-Verwaltung -->
+        <!-- H. Mitarbeiter-Verwaltung -->
+        <div id="section-employees" class="section">
+            <div class="section-header">
+                <h2>Mitarbeiter-Verwaltung</h2>
+                <button class="btn btn-primary" onclick="addEmployeeRow()">+ Neuer Mitarbeiter</button>
+            </div>
+            <table id="employees-table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Rolle</th>
+                        <th style="width:80px">Reihenfolge</th>
+                        <th style="width:70px">Aktiv</th>
+                        <th style="width:160px">Aktionen</th>
+                    </tr>
+                </thead>
+                <tbody id="employees-tbody"></tbody>
+            </table>
+        </div>
+
+        <!-- I. User-Verwaltung -->
         <div id="section-users" class="section">
             <div class="section-header">
                 <h2>Benutzer-Verwaltung</h2>
@@ -1124,6 +1145,102 @@ async function assignCategory(txId, category) {
     loadBankTransactions();
 }
 
+// ══════════════════════════════════════════════════════════════════
+// H. MITARBEITER-VERWALTUNG
+// ══════════════════════════════════════════════════════════════════
+async function loadEmployees() {
+    const { data, error } = await sb
+        .from('farm_employees')
+        .select('*')
+        .order('sort_order');
+
+    if (error) return showStatus('Fehler: ' + error.message, 'error');
+
+    const tbody = document.getElementById('employees-tbody');
+    tbody.innerHTML = (data || []).map(emp => {
+        const activeChecked = emp.active ? 'checked' : '';
+        const rowStyle = emp.active ? '' : 'opacity:0.5;';
+        return `<tr data-emp-id="${emp.id}" style="${rowStyle}">
+            <td><input type="text" class="emp-name" value="${escapeHtml(emp.name)}" style="width:100%"></td>
+            <td>
+                <select class="emp-role" style="width:100%">
+                    <option value="Farmverwalter" ${emp.role === 'Farmverwalter' ? 'selected' : ''}>Farmverwalter</option>
+                    <option value="Verwaltung" ${emp.role === 'Verwaltung' ? 'selected' : ''}>Verwaltung</option>
+                    <option value="Farmarbeiter" ${emp.role === 'Farmarbeiter' ? 'selected' : ''}>Farmarbeiter</option>
+                    <option value="Saisonarbeiter" ${emp.role === 'Saisonarbeiter' ? 'selected' : ''}>Saisonarbeiter</option>
+                </select>
+            </td>
+            <td><input type="number" class="emp-sort" value="${emp.sort_order || 0}" style="width:60px"></td>
+            <td class="checkbox-cell"><input type="checkbox" class="emp-active" ${activeChecked}></td>
+            <td>
+                <button class="btn btn-primary btn-sm" onclick="saveEmployee(this)">Speichern</button>
+                <button class="btn btn-danger btn-sm" onclick="deleteEmployee(this)">Loeschen</button>
+            </td>
+        </tr>`;
+    }).join('');
+}
+
+function addEmployeeRow() {
+    const tbody = document.getElementById('employees-tbody');
+    const tr = document.createElement('tr');
+    tr.dataset.empId = 'new';
+    tr.innerHTML = `
+        <td><input type="text" class="emp-name" placeholder="Name" style="width:100%"></td>
+        <td>
+            <select class="emp-role" style="width:100%">
+                <option value="Farmarbeiter" selected>Farmarbeiter</option>
+                <option value="Farmverwalter">Farmverwalter</option>
+                <option value="Verwaltung">Verwaltung</option>
+                <option value="Saisonarbeiter">Saisonarbeiter</option>
+            </select>
+        </td>
+        <td><input type="number" class="emp-sort" value="20" style="width:60px"></td>
+        <td class="checkbox-cell"><input type="checkbox" class="emp-active" checked></td>
+        <td>
+            <button class="btn btn-primary btn-sm" onclick="saveEmployee(this)">Speichern</button>
+            <button class="btn btn-danger btn-sm" onclick="this.closest('tr').remove()">Abbrechen</button>
+        </td>`;
+    tbody.appendChild(tr);
+    tr.querySelector('.emp-name').focus();
+}
+
+async function saveEmployee(btn) {
+    const tr = btn.closest('tr');
+    const id = tr.dataset.empId;
+    const payload = {
+        name: tr.querySelector('.emp-name').value.trim(),
+        role: tr.querySelector('.emp-role').value,
+        sort_order: parseInt(tr.querySelector('.emp-sort').value) || 0,
+        active: tr.querySelector('.emp-active').checked,
+    };
+
+    if (!payload.name) return showStatus('Name ist Pflichtfeld.', 'error');
+
+    let error;
+    if (id === 'new') {
+        ({ error } = await sb.from('farm_employees').insert(payload));
+    } else {
+        ({ error } = await sb.from('farm_employees').update(payload).eq('id', id));
+    }
+
+    if (error) return showStatus('Fehler: ' + error.message, 'error');
+    showStatus('Mitarbeiter gespeichert.');
+    loadEmployees();
+}
+
+async function deleteEmployee(btn) {
+    const tr = btn.closest('tr');
+    const id = tr.dataset.empId;
+    if (id === 'new') { tr.remove(); return; }
+
+    if (!confirm('Mitarbeiter wirklich loeschen? Bestehende Wochenberichte bleiben erhalten.')) return;
+
+    const { error } = await sb.from('farm_employees').delete().eq('id', id);
+    if (error) return showStatus('Fehler: ' + error.message, 'error');
+    showStatus('Mitarbeiter geloescht.');
+    loadEmployees();
+}
+
 // ── Helpers ──────────────────────────────────────────────────────
 function escapeHtml(str) {
     const div = document.createElement('div');
@@ -1147,6 +1264,7 @@ function escapeHtml(str) {
     // Load uncategorized after categories are known
     await loadUncategorized();
     await loadBankTransactions();
+    await loadEmployees();
     await loadUsers();
 })();
 </script>

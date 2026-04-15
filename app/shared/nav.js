@@ -12,9 +12,9 @@ const NAV_ITEMS = [
   { key: 'weide',    label: 'Weide & Klima',  href: PAGES.weide },
   { key: 'markt',    label: 'Markt',          href: PAGES.markt },
   { key: 'operativ', label: 'Operativ',       href: PAGES.operativ },
+  { key: 'wochenbericht', label: 'Wochenbericht', href: PAGES.wochenbericht },
   { key: 'bericht',  label: 'Monatsbericht',  href: PAGES.bericht },
-  { key: 'bonus',    label: 'Bonus',          href: PAGES.bonus },
-  { key: 'forecast', label: 'Prognose',       href: PAGES.forecast },
+  { key: 'bonus',    label: 'Bonus & Prognose', href: PAGES.bonus },
   { key: 'admin',    label: 'Admin',          href: PAGES.admin },
 ];
 

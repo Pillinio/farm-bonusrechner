@@ -1,0 +1,1087 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="../favicon.ico">
+    <title>Wochenbericht - Farm Erichsfelde</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        /* Header — matches farm_bonussystem_komplett.html */
+        .header {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: white;
+            padding: 20px 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 30px;
+        }
+
+        .header-logo {
+            width: 120px;
+            height: auto;
+            max-height: 100px;
+            object-fit: contain;
+        }
+
+        .header-content {
+            flex: 1;
+            max-width: 800px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.2em;
+            margin-bottom: 6px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.85;
+        }
+
+        /* Navigation */
+        .nav {
+            display: flex;
+            gap: 0;
+            background: #f8f9fa;
+            border-bottom: 2px solid #dee2e6;
+            overflow-x: auto;
+        }
+
+        .nav a {
+            padding: 12px 24px;
+            text-decoration: none;
+            color: #6b7280;
+            font-size: 0.9em;
+            font-weight: 500;
+            white-space: nowrap;
+            border-bottom: 3px solid transparent;
+            transition: color 0.2s, border-color 0.2s;
+        }
+
+        .nav a:hover {
+            color: #374151;
+            background: #f0f0f0;
+        }
+
+        .nav a.active {
+            color: #2E75B6;
+            border-bottom-color: #2E75B6;
+            font-weight: 600;
+        }
+
+        /* Toolbar */
+        .toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 24px;
+            background: #f8f9fa;
+            border-bottom: 2px solid #dee2e6;
+            font-size: 0.9em;
+            color: #6b7280;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .toolbar-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .toolbar-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .toolbar button {
+            background: #2E75B6;
+            color: white;
+            border: none;
+            padding: 6px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: background 0.2s;
+        }
+
+        .toolbar button:hover {
+            background: #1F4E78;
+        }
+
+        .week-nav-btn {
+            background: #e5e7eb;
+            color: #374151;
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1.1em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+
+        .week-nav-btn:hover {
+            background: #d1d5db;
+        }
+
+        #week-input {
+            padding: 5px 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 0.9em;
+            font-family: inherit;
+        }
+
+        #week-label {
+            font-weight: 600;
+            color: #374151;
+            min-width: 200px;
+        }
+
+        /* Grid Table */
+        .grid-wrapper {
+            padding: 24px;
+            overflow-x: auto;
+        }
+
+        .work-table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+            min-width: 900px;
+        }
+
+        .work-table thead th {
+            background: #f1f5f9;
+            padding: 10px 8px;
+            font-size: 0.85em;
+            font-weight: 600;
+            color: #374151;
+            border: 1px solid #dee2e6;
+            text-align: center;
+        }
+
+        .work-table thead th.col-employee {
+            width: 150px;
+            text-align: left;
+            padding-left: 12px;
+        }
+
+        .work-table thead th.col-weekend {
+            background: #e8ecf0;
+        }
+
+        .work-table thead th.col-hours {
+            width: 70px;
+            background: #eef2ff;
+        }
+
+        .work-table tbody td {
+            border: 1px solid #dee2e6;
+            padding: 0;
+            vertical-align: top;
+        }
+
+        .work-table tbody td.cell-employee {
+            padding: 10px 12px;
+            font-weight: 600;
+            font-size: 0.9em;
+            color: #374151;
+            background: #fafafa;
+            vertical-align: middle;
+        }
+
+        .work-table tbody td.cell-employee .role-badge {
+            display: block;
+            font-size: 0.75em;
+            font-weight: 400;
+            color: #6b7280;
+            margin-top: 2px;
+        }
+
+        .work-table tbody tr.row-manager td.cell-employee {
+            background: #dbeafe;
+        }
+
+        .work-table tbody tr.row-manager td.cell-weekend {
+            background: #c7d7ea;
+        }
+
+        .work-table tbody td.cell-weekend {
+            background: #f3f4f6;
+        }
+
+        .work-table tbody td.cell-hours {
+            background: #f5f7ff;
+            padding: 0;
+        }
+
+        .work-table tbody td.cell-hours input {
+            width: 100%;
+            height: 100%;
+            min-height: 70px;
+            border: none;
+            background: transparent;
+            text-align: center;
+            font-size: 0.9em;
+            font-family: inherit;
+            padding: 4px;
+        }
+
+        .work-table tbody td.cell-hours input:focus {
+            outline: 2px solid #2E75B6;
+            outline-offset: -2px;
+            background: #fff;
+        }
+
+        .cell-textarea {
+            width: 100%;
+            min-height: 70px;
+            border: none;
+            resize: vertical;
+            padding: 6px 8px;
+            font-size: 0.85em;
+            font-family: inherit;
+            color: #374151;
+            background: transparent;
+            line-height: 1.4;
+        }
+
+        .cell-textarea::placeholder {
+            color: #c0c4cc;
+        }
+
+        .cell-textarea:focus {
+            outline: 2px solid #2E75B6;
+            outline-offset: -2px;
+            background: #fff;
+        }
+
+        .cell-textarea.saved {
+            animation: savedFlash 0.6s ease;
+        }
+
+        @keyframes savedFlash {
+            0% { background: #d1fae5; }
+            100% { background: transparent; }
+        }
+
+        td.cell-empty .cell-textarea {
+            background: #fafafa;
+        }
+
+        /* Summary row */
+        .work-table tfoot td {
+            border: 1px solid #dee2e6;
+            padding: 8px;
+            font-size: 0.85em;
+            font-weight: 600;
+            color: #374151;
+            background: #f1f5f9;
+            text-align: center;
+        }
+
+        .work-table tfoot td.cell-employee {
+            text-align: left;
+            padding-left: 12px;
+            background: #f1f5f9;
+        }
+
+        /* Employee Management Section */
+        .employee-section {
+            padding: 0 24px 24px;
+        }
+
+        .section-toggle {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            padding: 10px 0;
+            color: #6b7280;
+            font-size: 0.85em;
+            border: none;
+            background: none;
+            font-family: inherit;
+        }
+
+        .section-toggle:hover {
+            color: #374151;
+        }
+
+        .section-toggle .toggle-arrow {
+            transition: transform 0.2s;
+            font-size: 0.8em;
+        }
+
+        .section-toggle.open .toggle-arrow {
+            transform: rotate(90deg);
+        }
+
+        .employee-panel {
+            display: none;
+            padding: 16px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+        }
+
+        .employee-panel.open {
+            display: block;
+        }
+
+        .employee-panel table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 12px;
+        }
+
+        .employee-panel table th,
+        .employee-panel table td {
+            padding: 8px 12px;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb;
+            font-size: 0.85em;
+        }
+
+        .employee-panel table th {
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .employee-panel input,
+        .employee-panel select {
+            padding: 5px 8px;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            font-size: 0.85em;
+            font-family: inherit;
+        }
+
+        .btn-small {
+            padding: 4px 12px;
+            border: none;
+            border-radius: 4px;
+            font-size: 0.8em;
+            cursor: pointer;
+            font-family: inherit;
+            transition: background 0.2s;
+        }
+
+        .btn-add {
+            background: #22c55e;
+            color: white;
+        }
+
+        .btn-add:hover {
+            background: #16a34a;
+        }
+
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+
+        .btn-muted {
+            background: #e5e7eb;
+            color: #374151;
+        }
+
+        .btn-muted:hover {
+            background: #d1d5db;
+        }
+
+        /* Loading */
+        .loading-spinner {
+            display: inline-block;
+            width: 18px;
+            height: 18px;
+            border: 2px solid #d1d5db;
+            border-top-color: #2E75B6;
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-overlay {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6b7280;
+        }
+
+        /* Status messages */
+        .status-msg {
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            display: none;
+        }
+
+        .status-msg.saving {
+            display: inline;
+            color: #2E75B6;
+        }
+
+        .status-msg.saved {
+            display: inline;
+            color: #22c55e;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 14px;
+            color: #9ca3af;
+            font-size: 0.8em;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            body { padding: 10px; }
+
+            .header {
+                flex-direction: column;
+                gap: 12px;
+                padding: 16px 20px;
+            }
+            .header-logo { width: 70px; }
+            .header h1 { font-size: 1.5em; }
+
+            .grid-wrapper {
+                padding: 12px;
+            }
+
+            .toolbar {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+
+        /* Print stylesheet */
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+
+            .container {
+                box-shadow: none;
+                border-radius: 0;
+            }
+
+            .nav,
+            .toolbar,
+            .employee-section,
+            .footer {
+                display: none !important;
+            }
+
+            .header {
+                background: #1a1a2e !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+                padding: 12px 20px;
+            }
+
+            .grid-wrapper {
+                padding: 0;
+            }
+
+            .work-table {
+                min-width: unset;
+                font-size: 0.8em;
+            }
+
+            .work-table thead th {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
+            .cell-textarea {
+                border: none;
+                min-height: auto;
+                padding: 4px 6px;
+                resize: none;
+            }
+
+            .work-table tbody tr.row-manager td.cell-employee {
+                background: #dbeafe !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
+            .work-table thead th.col-weekend,
+            .work-table tbody td.cell-weekend {
+                background: #f3f4f6 !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
+            .work-table tfoot td {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- Header -->
+    <div class="header">
+        <img src="../logo.png" alt="Erichsfelde Logo" class="header-logo">
+        <div class="header-content">
+            <h1>Wochenbericht</h1>
+            <p>Erichsfelde &mdash; Pommersche Farmgesellschaft</p>
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <div id="main-nav"></div>
+
+    <!-- Toolbar -->
+    <div class="toolbar">
+        <div class="toolbar-left">
+            <button class="week-nav-btn" id="btn-prev-week" title="Vorherige Woche">&#x25C0;</button>
+            <input type="week" id="week-input">
+            <button class="week-nav-btn" id="btn-next-week" title="Naechste Woche">&#x25B6;</button>
+            <span id="week-label"></span>
+        </div>
+        <div class="toolbar-right">
+            <span class="status-msg" id="save-status"></span>
+            <button onclick="window.print()">Drucken</button>
+        </div>
+    </div>
+
+    <!-- Work Report Grid -->
+    <div class="grid-wrapper">
+        <div id="grid-loading" class="loading-overlay">
+            <span class="loading-spinner"></span><br><br>Daten werden geladen...
+        </div>
+        <table class="work-table" id="work-table" style="display:none;">
+            <thead>
+                <tr>
+                    <th class="col-employee">Mitarbeiter</th>
+                    <th>Mo</th>
+                    <th>Di</th>
+                    <th>Mi</th>
+                    <th>Do</th>
+                    <th>Fr</th>
+                    <th class="col-weekend">Sa</th>
+                    <th class="col-weekend">So</th>
+                    <th class="col-hours">Std.</th>
+                </tr>
+            </thead>
+            <tbody id="work-tbody"></tbody>
+            <tfoot>
+                <tr>
+                    <td class="cell-employee">Gesamt</td>
+                    <td id="sum-1">-</td>
+                    <td id="sum-2">-</td>
+                    <td id="sum-3">-</td>
+                    <td id="sum-4">-</td>
+                    <td id="sum-5">-</td>
+                    <td id="sum-6">-</td>
+                    <td id="sum-7">-</td>
+                    <td id="sum-total">-</td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+
+    <!-- Employee Management -->
+    <div class="employee-section">
+        <button class="section-toggle" id="toggle-employees">
+            <span class="toggle-arrow">&#x25B6;</span> Mitarbeiter verwalten
+        </button>
+        <div class="employee-panel" id="employee-panel">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Rolle</th>
+                        <th>Reihenfolge</th>
+                        <th>Aktiv</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody id="emp-list"></tbody>
+            </table>
+            <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                <input type="text" id="new-emp-name" placeholder="Name">
+                <select id="new-emp-role">
+                    <option value="Farmverwalter">Farmverwalter</option>
+                    <option value="Farmarbeiter" selected>Farmarbeiter</option>
+                    <option value="Viehhirt">Viehhirt</option>
+                    <option value="Fahrer">Fahrer</option>
+                    <option value="Sonstiges">Sonstiges</option>
+                </select>
+                <button class="btn-small btn-add" onclick="addEmployee()">Mitarbeiter hinzufuegen</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        Farm Controlling &mdash; Erichsfelde &copy; 2026
+    </div>
+</div>
+
+<script type="module">
+import { renderNav } from './shared/nav.js';
+renderNav('wochenbericht');
+</script>
+
+<script>
+// ── Supabase Client ──────────────────────────────────────────────
+const SUPABASE_URL = 'https://vhwlcnfxslkftswksqrw.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_2a5cKq6CF2Qfe1D1DqLrTw_0kHRD4Cd';
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// ── Auth Guard ───────────────────────────────────────────────────
+async function checkAuth() {
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) {
+        window.location.href = 'login.html?redirect=' + encodeURIComponent(window.location.pathname);
+        return null;
+    }
+    return session.user;
+}
+
+// ── State ────────────────────────────────────────────────────────
+let employees = [];
+let entries = {};   // key: "employeeName|dayOfWeek" -> { activity, hours }
+let currentMonday = null;
+const DAY_NAMES = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
+const debounceTimers = {};
+
+// ── Week Helpers ─────────────────────────────────────────────────
+function getMondayOfWeek(date) {
+    const d = new Date(date);
+    const day = d.getDay();
+    const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+    d.setDate(diff);
+    d.setHours(0, 0, 0, 0);
+    return d;
+}
+
+function formatDate(d) {
+    return d.toISOString().split('T')[0];
+}
+
+function formatDateDE(d) {
+    return d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' });
+}
+
+function getISOWeek(d) {
+    const date = new Date(d);
+    date.setHours(0, 0, 0, 0);
+    date.setDate(date.getDate() + 3 - (date.getDay() + 6) % 7);
+    const week1 = new Date(date.getFullYear(), 0, 4);
+    return 1 + Math.round(((date - week1) / 86400000 - 3 + (week1.getDay() + 6) % 7) / 7);
+}
+
+function updateWeekDisplay() {
+    const weekNum = getISOWeek(currentMonday);
+    const year = currentMonday.getFullYear();
+    const sunday = new Date(currentMonday);
+    sunday.setDate(sunday.getDate() + 6);
+
+    // Update the week input
+    const weekStr = year + '-W' + String(weekNum).padStart(2, '0');
+    document.getElementById('week-input').value = weekStr;
+
+    // Update the label
+    document.getElementById('week-label').textContent =
+        'KW ' + weekNum + ' \u2014 ' + formatDateDE(currentMonday) + ' \u2013 ' + formatDateDE(sunday) + '.' + year;
+}
+
+function navigateWeek(offset) {
+    currentMonday.setDate(currentMonday.getDate() + (offset * 7));
+    updateWeekDisplay();
+    loadEntries();
+}
+
+// ── Data Loading ─────────────────────────────────────────────────
+async function loadEmployees() {
+    const { data, error } = await sb
+        .from('farm_employees')
+        .select('*')
+        .eq('active', true)
+        .order('sort_order', { ascending: true });
+
+    if (error) {
+        console.error('Error loading employees:', error);
+        employees = [];
+        return;
+    }
+
+    employees = data || [];
+}
+
+async function loadEntries() {
+    if (!currentMonday) return;
+
+    const mondayStr = formatDate(currentMonday);
+    const { data, error } = await sb
+        .from('work_entries')
+        .select('*')
+        .eq('week_start', mondayStr);
+
+    if (error) {
+        console.error('Error loading entries:', error);
+    }
+
+    entries = {};
+    if (data) {
+        data.forEach(row => {
+            const key = row.employee_name + '|' + row.day_of_week;
+            entries[key] = {
+                activity: row.activity || '',
+                hours: row.hours || null,
+            };
+        });
+    }
+
+    renderGrid();
+}
+
+// ── Rendering ────────────────────────────────────────────────────
+function renderGrid() {
+    const tbody = document.getElementById('work-tbody');
+    tbody.innerHTML = '';
+
+    employees.forEach((emp, idx) => {
+        const isManager = emp.role === 'Farmverwalter' || idx === 0;
+        const tr = document.createElement('tr');
+        if (isManager) tr.classList.add('row-manager');
+
+        // Employee name cell
+        const tdName = document.createElement('td');
+        tdName.classList.add('cell-employee');
+        tdName.innerHTML = emp.name + '<span class="role-badge">' + (emp.role || '') + '</span>';
+        tr.appendChild(tdName);
+
+        // Day cells (1-7)
+        for (let day = 1; day <= 7; day++) {
+            const td = document.createElement('td');
+            const isWeekend = day >= 6;
+            if (isWeekend) td.classList.add('cell-weekend');
+
+            const key = emp.name + '|' + day;
+            const entry = entries[key];
+            const text = entry ? entry.activity : '';
+
+            if (!text) td.classList.add('cell-empty');
+
+            const textarea = document.createElement('textarea');
+            textarea.classList.add('cell-textarea');
+            textarea.placeholder = '...';
+            textarea.value = text;
+            textarea.dataset.employee = emp.name;
+            textarea.dataset.day = day;
+
+            textarea.addEventListener('input', function() {
+                debounceSave(this);
+            });
+
+            textarea.addEventListener('focus', function() {
+                this.parentElement.classList.remove('cell-empty');
+            });
+
+            textarea.addEventListener('blur', function() {
+                if (!this.value.trim()) {
+                    this.parentElement.classList.add('cell-empty');
+                }
+            });
+
+            td.appendChild(textarea);
+            tr.appendChild(td);
+        }
+
+        // Weekly hours cell
+        const tdHours = document.createElement('td');
+        tdHours.classList.add('cell-hours');
+
+        const hoursInput = document.createElement('input');
+        hoursInput.type = 'number';
+        hoursInput.min = '0';
+        hoursInput.step = '0.5';
+        hoursInput.placeholder = '-';
+        hoursInput.dataset.employee = emp.name;
+        hoursInput.dataset.field = 'hours';
+
+        // Sum hours from all days for this employee
+        let totalHours = 0;
+        for (let day = 1; day <= 7; day++) {
+            const key = emp.name + '|' + day;
+            const entry = entries[key];
+            if (entry && entry.hours) totalHours += entry.hours;
+        }
+        if (totalHours > 0) hoursInput.value = totalHours;
+
+        hoursInput.addEventListener('input', function() {
+            updateSummaryRow();
+        });
+
+        hoursInput.addEventListener('change', function() {
+            saveHours(this);
+        });
+
+        tdHours.appendChild(hoursInput);
+        tr.appendChild(tdHours);
+
+        tbody.appendChild(tr);
+    });
+
+    document.getElementById('grid-loading').style.display = 'none';
+    document.getElementById('work-table').style.display = '';
+
+    updateSummaryRow();
+}
+
+function updateSummaryRow() {
+    // Count activities per day
+    for (let day = 1; day <= 7; day++) {
+        let count = 0;
+        employees.forEach(emp => {
+            const key = emp.name + '|' + day;
+            const entry = entries[key];
+            if (entry && entry.activity && entry.activity.trim()) count++;
+        });
+        const el = document.getElementById('sum-' + day);
+        if (el) el.textContent = count > 0 ? count + ' Eintr.' : '-';
+    }
+
+    // Sum total hours
+    const hoursInputs = document.querySelectorAll('input[data-field="hours"]');
+    let total = 0;
+    hoursInputs.forEach(inp => {
+        const v = parseFloat(inp.value);
+        if (!isNaN(v)) total += v;
+    });
+    const sumEl = document.getElementById('sum-total');
+    if (sumEl) sumEl.textContent = total > 0 ? total + ' Std.' : '-';
+}
+
+// ── Save Logic ───────────────────────────────────────────────────
+function showSaveStatus(text, cls) {
+    const el = document.getElementById('save-status');
+    el.className = 'status-msg ' + cls;
+    el.textContent = text;
+    if (cls === 'saved') {
+        setTimeout(() => { el.className = 'status-msg'; }, 2000);
+    }
+}
+
+function debounceSave(textarea) {
+    const key = textarea.dataset.employee + '|' + textarea.dataset.day;
+
+    if (debounceTimers[key]) clearTimeout(debounceTimers[key]);
+
+    debounceTimers[key] = setTimeout(() => {
+        saveEntry(textarea);
+    }, 300);
+}
+
+async function saveEntry(textarea) {
+    const employeeName = textarea.dataset.employee;
+    const dayNum = parseInt(textarea.dataset.day);
+    const cellText = textarea.value.trim();
+    const mondayStr = formatDate(currentMonday);
+
+    showSaveStatus('Speichert...', 'saving');
+
+    const { error } = await sb.from('work_entries').upsert({
+        week_start: mondayStr,
+        employee_name: employeeName,
+        day_of_week: dayNum,
+        activity: cellText,
+    }, { onConflict: 'farm_id,week_start,employee_name,day_of_week' });
+
+    if (error) {
+        console.error('Save error:', error);
+        showSaveStatus('Fehler beim Speichern', 'saving');
+        return;
+    }
+
+    // Update local state
+    const key = employeeName + '|' + dayNum;
+    if (!entries[key]) entries[key] = {};
+    entries[key].activity = cellText;
+
+    // Flash green
+    textarea.classList.add('saved');
+    setTimeout(() => textarea.classList.remove('saved'), 600);
+
+    showSaveStatus('Gespeichert', 'saved');
+    updateSummaryRow();
+}
+
+async function saveHours(input) {
+    const employeeName = input.dataset.employee;
+    const hours = parseFloat(input.value) || 0;
+    const mondayStr = formatDate(currentMonday);
+
+    // Save hours on day 1 (Monday) as weekly total
+    const { error } = await sb.from('work_entries').upsert({
+        week_start: mondayStr,
+        employee_name: employeeName,
+        day_of_week: 1,
+        hours: hours,
+    }, { onConflict: 'farm_id,week_start,employee_name,day_of_week' });
+
+    if (error) {
+        console.error('Hours save error:', error);
+    }
+}
+
+// ── Employee Management ──────────────────────────────────────────
+function renderEmployeeList() {
+    const tbody = document.getElementById('emp-list');
+    tbody.innerHTML = '';
+
+    employees.forEach(emp => {
+        const tr = document.createElement('tr');
+        tr.innerHTML =
+            '<td>' + emp.name + '</td>' +
+            '<td>' + (emp.role || '-') + '</td>' +
+            '<td>' + (emp.sort_order || '-') + '</td>' +
+            '<td>' + (emp.active ? 'Ja' : 'Nein') + '</td>' +
+            '<td><button class="btn-small btn-danger" onclick="deactivateEmployee(\'' +
+                emp.name.replace(/'/g, "\\'") + '\', ' + emp.id + ')">Deaktivieren</button></td>';
+        tbody.appendChild(tr);
+    });
+}
+
+async function addEmployee() {
+    const nameInput = document.getElementById('new-emp-name');
+    const roleSelect = document.getElementById('new-emp-role');
+    const name = nameInput.value.trim();
+    const role = roleSelect.value;
+
+    if (!name) return;
+
+    const maxSort = employees.reduce((m, e) => Math.max(m, e.sort_order || 0), 0);
+
+    const { error } = await sb.from('farm_employees').insert({
+        name: name,
+        role: role,
+        sort_order: maxSort + 10,
+        active: true,
+    });
+
+    if (error) {
+        console.error('Error adding employee:', error);
+        alert('Fehler: ' + error.message);
+        return;
+    }
+
+    nameInput.value = '';
+    await loadEmployees();
+    renderEmployeeList();
+    await loadEntries();
+}
+
+async function deactivateEmployee(name, id) {
+    if (!confirm('Mitarbeiter "' + name + '" deaktivieren?')) return;
+
+    const { error } = await sb.from('farm_employees').update({ active: false }).eq('id', id);
+
+    if (error) {
+        console.error('Error deactivating employee:', error);
+        alert('Fehler: ' + error.message);
+        return;
+    }
+
+    await loadEmployees();
+    renderEmployeeList();
+    await loadEntries();
+}
+
+// Make functions available globally
+window.addEmployee = addEmployee;
+window.deactivateEmployee = deactivateEmployee;
+
+// ── Toggle Employee Panel ────────────────────────────────────────
+document.getElementById('toggle-employees').addEventListener('click', function() {
+    this.classList.toggle('open');
+    const panel = document.getElementById('employee-panel');
+    panel.classList.toggle('open');
+    if (panel.classList.contains('open')) {
+        renderEmployeeList();
+    }
+});
+
+// ── Week Navigation ──────────────────────────────────────────────
+document.getElementById('btn-prev-week').addEventListener('click', () => navigateWeek(-1));
+document.getElementById('btn-next-week').addEventListener('click', () => navigateWeek(1));
+document.getElementById('week-input').addEventListener('change', function() {
+    const parts = this.value.split('-W');
+    if (parts.length === 2) {
+        const year = parseInt(parts[0]);
+        const week = parseInt(parts[1]);
+        // Calculate Monday from ISO week
+        const jan4 = new Date(year, 0, 4);
+        const dayOfWeek = jan4.getDay() || 7;
+        const monday = new Date(year, 0, 4 + (week - 1) * 7 - dayOfWeek + 1);
+        currentMonday = monday;
+        updateWeekDisplay();
+        loadEntries();
+    }
+});
+
+// ── Init ─────────────────────────────────────────────────────────
+(async function init() {
+    const user = await checkAuth();
+    if (!user) return;
+
+    // Set current week
+    currentMonday = getMondayOfWeek(new Date());
+    updateWeekDisplay();
+
+    await loadEmployees();
+    await loadEntries();
+})();
+</script>
+
+</body>
+</html>

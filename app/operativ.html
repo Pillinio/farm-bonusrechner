@@ -512,61 +512,57 @@
         </div>
     </div>
 
-    <!-- Asset Status -->
+    <!-- Jahresziele -->
     <div class="section">
         <div class="section-title">
-            <span class="section-icon">&#x1F69C;</span>
-            Asset-Status
+            <span class="section-icon">&#x1F3AF;</span>
+            Jahresziele 2026
+            <button onclick="addGoal()" style="margin-left:auto; background:#2E75B6; color:white; border:none; padding:6px 14px; border-radius:6px; cursor:pointer; font-size:0.85em;">+ Neues Ziel</button>
         </div>
-        <div class="asset-grid" id="asset-grid">
-            <div class="no-data"><span class="loading-spinner"></span> Lade Assets...</div>
+        <div id="goals-list">
+            <div class="no-data"><span class="loading-spinner"></span> Lade Jahresziele...</div>
         </div>
     </div>
 
-    <!-- Compliance (C1-C4) -->
-    <div class="section">
+    <!-- Neues Ziel Formular (hidden) -->
+    <div class="section" id="goal-form-section" style="display:none;">
         <div class="section-title">
-            <span class="section-icon">&#x1F4CB;</span>
-            Compliance (C1&ndash;C4)
+            <span class="section-icon">&#x270F;&#xFE0F;</span>
+            Ziel erfassen
         </div>
-        <div class="kpi-row" id="compliance-cards">
-            <div class="no-data"><span class="loading-spinner"></span> Lade Compliance-Daten...</div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px;">
+            <div>
+                <label style="display:block; font-weight:600; font-size:0.85em; color:#374151; margin-bottom:4px;">Titel</label>
+                <input type="text" id="goal-title" placeholder="z.B. Zaun setzen in Kudu-Kamp" style="width:100%; padding:8px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:0.9em;">
+            </div>
+            <div>
+                <label style="display:block; font-weight:600; font-size:0.85em; color:#374151; margin-bottom:4px;">Kategorie</label>
+                <select id="goal-category" style="width:100%; padding:8px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:0.9em;">
+                    <option value="infrastructure">Infrastruktur (Zaun, Wasser, Gebaeude)</option>
+                    <option value="land">Landmanagement (Entbuschung, Weide)</option>
+                    <option value="herd">Herde (Zucht, Gesundheit)</option>
+                    <option value="financial">Finanzen / Verwaltung</option>
+                    <option value="other">Sonstiges</option>
+                </select>
+            </div>
+            <div>
+                <label style="display:block; font-weight:600; font-size:0.85em; color:#374151; margin-bottom:4px;">Camp (optional)</label>
+                <select id="goal-camp" style="width:100%; padding:8px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:0.9em;">
+                    <option value="">-- Kein Camp --</option>
+                </select>
+            </div>
+            <div>
+                <label style="display:block; font-weight:600; font-size:0.85em; color:#374151; margin-bottom:4px;">Faellig bis</label>
+                <input type="date" id="goal-due" style="width:100%; padding:8px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:0.9em;">
+            </div>
         </div>
-
-        <!-- C4: Transport Documentation Checklist -->
-        <div style="margin-top: 16px;">
-            <div style="font-weight: 600; color: #374151; margin-bottom: 10px; display: flex; align-items: center; gap: 8px;">
-                <span>&#x1F69A;</span> C4 &mdash; Transportdokumentation
-            </div>
-            <div class="task-list" id="transport-checklist">
-                <div class="task-item">
-                    <span class="task-name">
-                        <span class="status-dot status-yellow"></span>
-                        Bewegungsgenehmigung
-                    </span>
-                    <span class="task-frequency">Pro Lieferung erforderlich</span>
-                    <span class="task-coverage" style="color: #eab308;">Checkliste</span>
-                </div>
-                <div class="task-item">
-                    <span class="task-name">
-                        <span class="status-dot status-yellow"></span>
-                        Desinfektionszertifikat
-                    </span>
-                    <span class="task-frequency">Pro Lieferung erforderlich</span>
-                    <span class="task-coverage" style="color: #eab308;">Checkliste</span>
-                </div>
-                <div class="task-item">
-                    <span class="task-name">
-                        <span class="status-dot status-yellow"></span>
-                        Veterin&auml;rzeugnis
-                    </span>
-                    <span class="task-frequency">Pro Lieferung erforderlich</span>
-                    <span class="task-coverage" style="color: #eab308;">Checkliste</span>
-                </div>
-            </div>
-            <div style="font-size: 0.8em; color: #9ca3af; margin-top: 8px;">
-                Einzellieferungsverfolgung wird in einer sp&auml;teren Phase aktiviert.
-            </div>
+        <div style="margin-bottom:12px;">
+            <label style="display:block; font-weight:600; font-size:0.85em; color:#374151; margin-bottom:4px;">Beschreibung / Details</label>
+            <textarea id="goal-description" rows="3" placeholder="Details, Umfang, benoetigte Ressourcen..." style="width:100%; padding:8px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:0.9em; font-family:inherit;"></textarea>
+        </div>
+        <div style="display:flex; gap:8px;">
+            <button onclick="saveGoal()" style="background:#22c55e; color:white; border:none; padding:8px 20px; border-radius:6px; cursor:pointer; font-weight:500;">Speichern</button>
+            <button onclick="cancelGoal()" style="background:#6b7280; color:white; border:none; padding:8px 20px; border-radius:6px; cursor:pointer; font-weight:500;">Abbrechen</button>
         </div>
     </div>
 
@@ -756,188 +752,121 @@ async function loadIncidents() {
     }
 }
 
-// ── Asset Status ─────────────────────────────────────────────────
-async function loadAssets() {
-    const grid = document.getElementById('asset-grid');
-
+// ── Jahresziele ─────────────────────────────────────────────────
+async function loadGoals() {
+    const list = document.getElementById('goals-list');
     try {
-        const { data: assets } = await sb
-            .from('farm_assets')
-            .select('id, name, asset_type')
-            .order('name');
+        const { data, error } = await sb
+            .from('farm_goals')
+            .select('*')
+            .eq('year', new Date().getFullYear())
+            .order('status', { ascending: true })
+            .order('due_date', { ascending: true });
 
-        if (!assets?.length) {
-            grid.innerHTML = '<div class="no-data">Keine Assets erfasst.</div>';
+        if (error && error.code === '42P01') {
+            // Table doesn't exist yet — show empty state
+            list.innerHTML = '<div class="no-data">Jahresziele werden geladen... (Tabelle wird erstellt)</div>';
             return;
         }
 
-        // Get latest status report per asset
-        const { data: reports } = await sb
-            .from('asset_status_reports')
-            .select('asset_id, status, report_date')
-            .order('report_date', { ascending: false });
-
-        const latestStatus = {};
-        if (reports) {
-            reports.forEach(r => {
-                if (!latestStatus[r.asset_id]) {
-                    latestStatus[r.asset_id] = r;
-                }
-            });
+        if (!data?.length) {
+            list.innerHTML = '<div class="no-data">Noch keine Jahresziele erfasst. Klicke oben auf "+ Neues Ziel".</div>';
+            return;
         }
 
-        const statusMeta = {
-            green:   { cls: 'status-green',  label: 'Betriebsbereit' },
-            yellow:  { cls: 'status-yellow', label: 'Eingeschraenkt' },
-            red:     { cls: 'status-red',    label: 'Defekt' },
-            offline: { cls: 'status-gray',   label: 'Offline' }
+        const catIcons = {
+            infrastructure: '&#x1F6A7;',
+            land: '&#x1F333;',
+            herd: '&#x1F404;',
+            financial: '&#x1F4B0;',
+            other: '&#x1F4CC;'
         };
 
-        grid.innerHTML = assets.map(a => {
-            const report = latestStatus[a.id];
-            const st = report?.status || 'offline';
-            const meta = statusMeta[st] || statusMeta.offline;
+        const statusMeta = {
+            open:        { label: 'Offen',       cls: 'status-gray',   bg: '' },
+            in_progress: { label: 'In Arbeit',   cls: 'status-yellow', bg: 'background:#fffbeb;' },
+            done:        { label: 'Erledigt',    cls: 'status-green',  bg: 'background:#f0fdf4;' },
+            cancelled:   { label: 'Abgebrochen', cls: 'status-red',    bg: 'opacity:0.5;' }
+        };
 
-            return `
-                <div class="asset-card">
-                    <div class="asset-name">${escHtml(a.name)}</div>
-                    <div class="asset-type">${escHtml(a.asset_type || '')}</div>
-                    <div class="asset-status-indicator">
-                        <span class="status-dot ${meta.cls}"></span>
-                        ${meta.label}
-                    </div>
+        list.innerHTML = data.map(g => {
+            const st = statusMeta[g.status] || statusMeta.open;
+            const icon = catIcons[g.category] || catIcons.other;
+            const dueStr = g.due_date ? formatDate(g.due_date) : 'Kein Datum';
+            const campStr = g.camp_name ? ' (' + escHtml(g.camp_name) + ')' : '';
+            const overdue = g.due_date && g.status !== 'done' && g.status !== 'cancelled' && new Date(g.due_date) < new Date();
+
+            return `<div class="task-item" style="${st.bg} ${overdue ? 'border-left:3px solid #ef4444;' : ''}">
+                <div style="flex:1;">
+                    <span class="task-name">
+                        <span class="status-dot ${st.cls}"></span>
+                        ${icon} <strong>${escHtml(g.title)}</strong>${campStr}
+                    </span>
+                    ${g.description ? '<div style="font-size:0.82em;color:#6b7280;margin-top:2px;">' + escHtml(g.description) + '</div>' : ''}
                 </div>
-            `;
+                <span class="task-frequency">${dueStr}${overdue ? ' (ueberfaellig!)' : ''}</span>
+                <select onchange="updateGoalStatus('${g.id}', this.value)" style="padding:4px 8px;border:1px solid #d1d5db;border-radius:4px;font-size:0.82em;">
+                    <option value="open" ${g.status === 'open' ? 'selected' : ''}>Offen</option>
+                    <option value="in_progress" ${g.status === 'in_progress' ? 'selected' : ''}>In Arbeit</option>
+                    <option value="done" ${g.status === 'done' ? 'selected' : ''}>Erledigt</option>
+                    <option value="cancelled" ${g.status === 'cancelled' ? 'selected' : ''}>Abgebrochen</option>
+                </select>
+            </div>`;
         }).join('');
-    } catch {
-        grid.innerHTML = '<div class="no-data">Fehler beim Laden der Assets.</div>';
+    } catch (e) {
+        console.error('Goals error:', e);
+        list.innerHTML = '<div class="no-data">Fehler beim Laden der Jahresziele.</div>';
     }
 }
 
-// ── C1-C3: Compliance Certificates ──────────────────────────────
-async function loadCompliance() {
-    const container = document.getElementById('compliance-cards');
-
-    try {
-        const { data: certs } = await sb
-            .from('compliance_certificates')
-            .select('*')
-            .order('expiry_date', { ascending: true });
-
-        if (!certs?.length) {
-            container.innerHTML = '<div class="no-data">Keine Compliance-Zertifikate erfasst.</div>';
-            return;
-        }
-
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-
-        const certConfig = {
-            fmd: {
-                id: 'C1',
-                title: 'MKS-Zonenstatus',
-                icon: '&#x1F6E1;&#xFE0F;',
-                greenDays: 90,
-                yellowDays: 60
-            },
-            brucellosis: {
-                id: 'C2',
-                title: 'Brucellose-Testabdeckung',
-                icon: '&#x1F9EA;',
-                greenDays: 180,
-                yellowDays: 90
-            },
-            eu_approval: {
-                id: 'C3',
-                title: 'EU-Exportzulassung',
-                icon: '&#x1F1EA;&#x1F1FA;',
-                greenDays: 90,
-                yellowDays: 60
-            }
-        };
-
-        const cards = [];
-
-        for (const [certType, config] of Object.entries(certConfig)) {
-            const cert = certs.find(c => c.cert_type === certType);
-
-            if (!cert) {
-                cards.push(`
-                    <div class="kpi-card">
-                        <div class="kpi-label">${config.icon} ${config.id} &mdash; ${config.title}</div>
-                        <div class="kpi-value" style="color: #9ca3af;">&mdash;</div>
-                        <div class="kpi-sub">Kein Zertifikat vorhanden</div>
-                        <div class="kpi-status-bar status-gray"></div>
-                    </div>
-                `);
-                continue;
-            }
-
-            const expiry = cert.expiry_date ? new Date(cert.expiry_date) : null;
-            let daysRemaining = null;
-            let statusColor = 'gray';
-            let statusLabel = 'Unbekannt';
-            let badgeClass = 'status-gray';
-
-            if (expiry) {
-                daysRemaining = Math.ceil((expiry - today) / (1000 * 60 * 60 * 24));
-
-                if (daysRemaining <= 0) {
-                    statusColor = 'red';
-                    statusLabel = 'Abgelaufen';
-                    badgeClass = 'status-red';
-                } else if (daysRemaining < config.yellowDays) {
-                    statusColor = 'red';
-                    statusLabel = 'L\u00e4uft ab';
-                    badgeClass = 'status-red';
-                } else if (daysRemaining < config.greenDays) {
-                    statusColor = 'yellow';
-                    statusLabel = 'L\u00e4uft ab';
-                    badgeClass = 'status-yellow';
-                } else {
-                    statusColor = 'green';
-                    statusLabel = 'G\u00fcltig';
-                    badgeClass = 'status-green';
-                }
-            }
-
-            const valueColor = statusColor === 'green' ? '#22c55e' :
-                               statusColor === 'yellow' ? '#eab308' : '#ef4444';
-
-            const daysText = daysRemaining !== null
-                ? (daysRemaining <= 0 ? 'Abgelaufen' : daysRemaining + ' Tage')
-                : '\u2014';
-
-            const extraInfo = certType === 'brucellosis' && cert.notes
-                ? `<div class="kpi-sub">${escHtml(cert.notes)}</div>`
-                : '';
-
-            const auditInfo = certType === 'eu_approval' && cert.audit_rating
-                ? `<div class="kpi-sub">Audit: ${escHtml(cert.audit_rating)}</div>`
-                : '';
-
-            cards.push(`
-                <div class="kpi-card">
-                    <div class="kpi-label">${config.icon} ${config.id} &mdash; ${config.title}</div>
-                    <div class="kpi-value" style="color: ${valueColor};">${daysText}</div>
-                    <div class="kpi-sub" style="margin-top: 6px;">
-                        <span class="status-dot ${badgeClass}"></span>
-                        <strong>${statusLabel}</strong>
-                    </div>
-                    <div class="kpi-sub">Nr.: ${escHtml(cert.cert_number || '\u2014')}</div>
-                    <div class="kpi-sub">Ausgestellt: ${formatDate(cert.issued_date)} &mdash; Ablauf: ${formatDate(cert.expiry_date)}</div>
-                    <div class="kpi-sub">Beh\u00f6rde: ${escHtml(cert.issuing_authority || '\u2014')}</div>
-                    ${extraInfo}
-                    ${auditInfo}
-                    <div class="kpi-status-bar ${badgeClass}" style="margin-top: 8px;"></div>
-                </div>
-            `);
-        }
-
-        container.innerHTML = cards.join('');
-    } catch {
-        container.innerHTML = '<div class="no-data">Fehler beim Laden der Compliance-Daten.</div>';
+async function loadCampDropdown() {
+    const select = document.getElementById('goal-camp');
+    if (!select) return;
+    const { data } = await sb.from('farm_camps').select('name').eq('active', true).order('name');
+    if (data) {
+        select.innerHTML = '<option value="">-- Kein Camp --</option>' +
+            data.map(c => '<option value="' + escHtml(c.name) + '">' + escHtml(c.name) + '</option>').join('');
     }
+}
+
+function addGoal() {
+    document.getElementById('goal-form-section').style.display = 'block';
+    document.getElementById('goal-title').focus();
+    loadCampDropdown();
+}
+
+function cancelGoal() {
+    document.getElementById('goal-form-section').style.display = 'none';
+    document.getElementById('goal-title').value = '';
+    document.getElementById('goal-description').value = '';
+}
+
+async function saveGoal() {
+    const title = document.getElementById('goal-title').value.trim();
+    if (!title) return;
+
+    const { error } = await sb.from('farm_goals').insert({
+        year: new Date().getFullYear(),
+        title: title,
+        category: document.getElementById('goal-category').value,
+        camp_name: document.getElementById('goal-camp').value || null,
+        due_date: document.getElementById('goal-due').value || null,
+        description: document.getElementById('goal-description').value.trim() || null,
+        status: 'open'
+    });
+
+    if (error) {
+        console.error('Save goal error:', error);
+        return;
+    }
+
+    cancelGoal();
+    loadGoals();
+}
+
+async function updateGoalStatus(id, status) {
+    await sb.from('farm_goals').update({ status }).eq('id', id);
+    loadGoals();
 }
 
 // ── Load All ─────────────────────────────────────────────────────
@@ -948,8 +877,7 @@ async function loadAll() {
         loadTaskCoverage(),
         loadOpenMaintenance(),
         loadIncidents(),
-        loadAssets(),
-        loadCompliance()
+        loadGoals()
     ]);
 
     const now = new Date();
@@ -963,9 +891,8 @@ async function loadAll() {
 // ── Init ─────────────────────────────────────────────────────────
 (async function init() {
     const user = await checkAuth();
-    if (!user) return; // redirect in progress
+    if (!user) return;
     loadAll();
-    // Auto-refresh every 5 minutes
     setInterval(loadAll, 5 * 60 * 1000);
 })();
 </script>

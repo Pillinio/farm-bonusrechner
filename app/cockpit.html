@@ -254,6 +254,355 @@
             font-size: 0.8em;
             border-top: 1px solid #e5e7eb;
         }
+
+        /* ── Calendar Section ─────────────────────────────────────── */
+        .calendar-section {
+            padding: 24px;
+            border-top: 2px solid #e5e7eb;
+        }
+
+        .calendar-section h2 {
+            font-size: 1.3em;
+            font-weight: 700;
+            color: #1a1a2e;
+            margin-bottom: 18px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .calendar-section h2 .section-icon {
+            font-size: 1.1em;
+        }
+
+        /* Presence indicators */
+        .presence-row {
+            display: flex;
+            gap: 24px;
+            flex-wrap: wrap;
+            margin-bottom: 18px;
+        }
+
+        .presence-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: #f8f9fa;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 8px 16px;
+            font-size: 0.92em;
+            font-weight: 500;
+            color: #374151;
+        }
+
+        .presence-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .presence-dot.auf-farm { background-color: #22c55e; }
+        .presence-dot.abwesend { background-color: #ef4444; }
+
+        /* Leave balance */
+        .leave-balance-row {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+            margin-bottom: 18px;
+        }
+
+        .leave-balance-item {
+            background: #f0f7ff;
+            border: 1px solid #bfdbfe;
+            border-radius: 8px;
+            padding: 8px 16px;
+            font-size: 0.88em;
+            color: #1e40af;
+            font-weight: 500;
+        }
+
+        .leave-balance-item .used-count {
+            font-weight: 700;
+        }
+
+        /* Pending approvals box */
+        .pending-approvals-box {
+            background: #fef3c7;
+            border: 2px solid #f59e0b;
+            border-radius: 10px;
+            padding: 16px 20px;
+            margin-bottom: 18px;
+        }
+
+        .pending-approvals-box h3 {
+            font-size: 1em;
+            font-weight: 700;
+            color: #92400e;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .pending-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 0;
+            border-bottom: 1px solid #fde68a;
+            flex-wrap: wrap;
+        }
+
+        .pending-item:last-child {
+            border-bottom: none;
+        }
+
+        .pending-item .pending-info {
+            flex: 1;
+            font-size: 0.9em;
+            color: #374151;
+            min-width: 200px;
+        }
+
+        .pending-item .warning-badge {
+            background: #ef4444;
+            color: white;
+            font-size: 0.75em;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 10px;
+        }
+
+        .pending-item .btn-approve,
+        .pending-item .btn-reject {
+            border: none;
+            padding: 5px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85em;
+            font-weight: 600;
+            transition: opacity 0.2s;
+        }
+
+        .pending-item .btn-approve {
+            background: #22c55e;
+            color: white;
+        }
+
+        .pending-item .btn-reject {
+            background: #ef4444;
+            color: white;
+        }
+
+        .pending-item .btn-approve:hover,
+        .pending-item .btn-reject:hover {
+            opacity: 0.85;
+        }
+
+        /* Upcoming entries table */
+        .calendar-table-wrap {
+            overflow-x: auto;
+            margin-bottom: 18px;
+        }
+
+        .calendar-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9em;
+        }
+
+        .calendar-table th {
+            text-align: left;
+            padding: 8px 12px;
+            background: #f3f4f6;
+            color: #374151;
+            font-weight: 600;
+            border-bottom: 2px solid #e5e7eb;
+            white-space: nowrap;
+        }
+
+        .calendar-table td {
+            padding: 8px 12px;
+            border-bottom: 1px solid #f3f4f6;
+            color: #374151;
+        }
+
+        .calendar-table tr.status-requested {
+            background: #fef9c3;
+        }
+
+        .calendar-table tr.status-approved {
+            background: #dcfce7;
+        }
+
+        .calendar-table tr.status-rejected {
+            background: #fee2e2;
+        }
+
+        .calendar-table tr.status-rejected td {
+            text-decoration: line-through;
+            color: #9ca3af;
+        }
+
+        .calendar-table .star-icon {
+            color: #f59e0b;
+            margin-right: 4px;
+        }
+
+        .status-label {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.82em;
+            font-weight: 600;
+        }
+
+        .status-label.requested { background: #fde68a; color: #92400e; }
+        .status-label.approved { background: #bbf7d0; color: #166534; }
+        .status-label.rejected { background: #fecaca; color: #991b1b; }
+
+        /* Collapsible new entry form */
+        .new-entry-toggle {
+            background: #2E75B6;
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9em;
+            font-weight: 600;
+            transition: background 0.2s;
+            margin-bottom: 12px;
+        }
+
+        .new-entry-toggle:hover {
+            background: #1F4E78;
+        }
+
+        .new-entry-form {
+            display: none;
+            background: #f8f9fa;
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 8px;
+        }
+
+        .new-entry-form.open {
+            display: block;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .form-group label {
+            font-size: 0.85em;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            padding: 8px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 0.9em;
+            font-family: inherit;
+        }
+
+        .form-group textarea {
+            min-height: 60px;
+            resize: vertical;
+        }
+
+        .form-actions {
+            margin-top: 14px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .form-actions .btn-submit {
+            background: #2E75B6;
+            color: white;
+            border: none;
+            padding: 8px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9em;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+
+        .form-actions .btn-submit:hover {
+            background: #1F4E78;
+        }
+
+        .form-actions .btn-submit:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .form-message {
+            margin-top: 10px;
+            font-size: 0.88em;
+            padding: 6px 12px;
+            border-radius: 6px;
+            display: none;
+        }
+
+        .form-message.success {
+            display: block;
+            background: #dcfce7;
+            color: #166534;
+            border: 1px solid #bbf7d0;
+        }
+
+        .form-message.error {
+            display: block;
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .calendar-empty {
+            color: #9ca3af;
+            font-size: 0.9em;
+            padding: 12px 0;
+            font-style: italic;
+        }
+
+        @media (max-width: 768px) {
+            .calendar-section { padding: 16px; }
+
+            .presence-row { gap: 10px; }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .pending-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 6px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -418,6 +767,94 @@
                 <div class="card-subtitle">Tage &gt; 35 &deg;C (14-Tage-Prognose)</div>
             </div>
         </a>
+    </div>
+
+    <!-- Farm-Kalender Section -->
+    <div class="calendar-section" id="calendar-section">
+        <h2><span class="section-icon">&#x1F4C5;</span> Farm-Kalender</h2>
+
+        <!-- Presence indicators -->
+        <div class="presence-row" id="presence-row">
+            <span class="presence-badge">
+                <span class="presence-dot status-gray" id="presence-dot-werner"></span>
+                <span id="presence-label-werner">Werner: ...</span>
+            </span>
+            <span class="presence-badge">
+                <span class="presence-dot status-gray" id="presence-dot-wanda"></span>
+                <span id="presence-label-wanda">Wanda: ...</span>
+            </span>
+        </div>
+
+        <!-- Leave balance -->
+        <div class="leave-balance-row" id="leave-balance-row">
+            <div class="leave-balance-item">Werner: <span class="used-count" id="leave-werner">--</span>/20 Tage verbraucht</div>
+            <div class="leave-balance-item">Wanda: <span class="used-count" id="leave-wanda">--</span>/20 Tage verbraucht</div>
+        </div>
+
+        <!-- Pending approvals (owner only) -->
+        <div class="pending-approvals-box" id="pending-approvals-box" style="display:none;">
+            <h3>&#x26A0;&#xFE0F; Offene Anfragen</h3>
+            <div id="pending-approvals-list"></div>
+        </div>
+
+        <!-- Upcoming 30 days -->
+        <h3 style="font-size:1em; font-weight:600; color:#374151; margin-bottom:8px;">Termine der naechsten 30 Tage</h3>
+        <div class="calendar-table-wrap">
+            <table class="calendar-table" id="upcoming-table">
+                <thead>
+                    <tr>
+                        <th>Datum</th>
+                        <th>Person</th>
+                        <th>Art</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="upcoming-tbody">
+                    <tr><td colspan="4" class="calendar-empty">Wird geladen...</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- New entry form -->
+        <button class="new-entry-toggle" onclick="toggleNewEntryForm()">+ Neuer Eintrag</button>
+        <div class="new-entry-form" id="new-entry-form">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="cal-person">Person</label>
+                    <select id="cal-person">
+                        <option value="Werner Jacobi">Werner Jacobi</option>
+                        <option value="Wanda Jacobi">Wanda Jacobi</option>
+                        <option value="_custom">Andere (Gesellschafter)...</option>
+                    </select>
+                    <input type="text" id="cal-person-custom" placeholder="Name eingeben" style="display:none; margin-top:4px;">
+                </div>
+                <div class="form-group">
+                    <label for="cal-type">Typ</label>
+                    <select id="cal-type">
+                        <option value="leave">Urlaub</option>
+                        <option value="business_trip">Dienstreise</option>
+                        <option value="sick">Krank</option>
+                        <option value="shareholder_visit">Gesellschafter-Besuch</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="cal-start">Von</label>
+                    <input type="date" id="cal-start">
+                </div>
+                <div class="form-group">
+                    <label for="cal-end">Bis</label>
+                    <input type="date" id="cal-end">
+                </div>
+                <div class="form-group full-width">
+                    <label for="cal-reason">Grund / Notizen</label>
+                    <textarea id="cal-reason" placeholder="Optional"></textarea>
+                </div>
+            </div>
+            <div class="form-actions">
+                <button class="btn-submit" id="cal-submit-btn" onclick="submitCalendarEntry()">Anfragen</button>
+            </div>
+            <div class="form-message" id="cal-form-message"></div>
+        </div>
     </div>
 
     <div class="footer">
@@ -803,6 +1240,388 @@ async function loadK4() {
     } catch { noData('k4'); }
 }
 
+// ── Calendar ────────────────────────────────────────────────────
+let _calendarUserRole = null;
+let _calendarUserId = null;
+
+const CAL_TYPE_LABELS = {
+    leave: 'Urlaub',
+    business_trip: 'Dienstreise',
+    sick: 'Krank',
+    shareholder_visit: 'Gesellschafter-Besuch'
+};
+
+const CAL_PERSON_ROLES = {
+    'Werner Jacobi': 'farmverwalter',
+    'Wanda Jacobi': 'verwaltung'
+};
+
+function calendarDateFmt(dateStr) {
+    if (!dateStr) return '—';
+    const d = new Date(dateStr + 'T00:00:00');
+    return d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
+}
+
+function countWorkingDays(startDate, endDate) {
+    let count = 0;
+    const start = new Date(startDate + 'T00:00:00');
+    const end = new Date(endDate + 'T00:00:00');
+    const cur = new Date(start);
+    while (cur <= end) {
+        const dow = cur.getDay();
+        if (dow !== 0 && dow !== 6) count++;
+        cur.setDate(cur.getDate() + 1);
+    }
+    return count;
+}
+
+async function loadCalendar() {
+    try {
+        const { data: { session } } = await sb.auth.getSession();
+        if (!session) return;
+
+        _calendarUserId = session.user.id;
+
+        // Fetch user role
+        const { data: profile } = await sb.from('profiles').select('role').eq('id', session.user.id).single();
+        _calendarUserRole = profile?.role || null;
+
+        const today = new Date().toISOString().split('T')[0];
+        const in30 = new Date();
+        in30.setDate(in30.getDate() + 30);
+        const in30Str = in30.toISOString().split('T')[0];
+
+        const currentYear = new Date().getFullYear();
+        const yearStart = currentYear + '-01-01';
+        const yearEnd = currentYear + '-12-31';
+
+        // Fetch all relevant data in parallel
+        const [presenceRes, upcomingRes, leaveRes, pendingRes] = await Promise.all([
+            // Today's presence: entries overlapping today that are approved
+            sb.from('farm_calendar')
+                .select('*')
+                .lte('start_date', today)
+                .gte('end_date', today)
+                .eq('status', 'approved')
+                .in('person_name', ['Werner Jacobi', 'Wanda Jacobi']),
+            // Upcoming 30 days
+            sb.from('farm_calendar')
+                .select('*')
+                .gte('end_date', today)
+                .lte('start_date', in30Str)
+                .order('start_date', { ascending: true }),
+            // Leave balance for current year (approved leave only)
+            sb.from('farm_calendar')
+                .select('person_name, start_date, end_date')
+                .eq('entry_type', 'leave')
+                .eq('status', 'approved')
+                .gte('start_date', yearStart)
+                .lte('start_date', yearEnd)
+                .in('person_name', ['Werner Jacobi', 'Wanda Jacobi']),
+            // Pending approvals
+            sb.from('farm_calendar')
+                .select('*')
+                .eq('status', 'requested')
+                .order('start_date', { ascending: true })
+        ]);
+
+        // 1) Presence indicators
+        renderPresence(presenceRes.data || []);
+
+        // 2) Leave balance
+        renderLeaveBalance(leaveRes.data || []);
+
+        // 3) Pending approvals (owner only)
+        if (_calendarUserRole === 'owner') {
+            renderPendingApprovals(pendingRes.data || [], today);
+        }
+
+        // 4) Upcoming entries
+        renderUpcoming(upcomingRes.data || []);
+
+    } catch (err) {
+        console.error('Calendar load error:', err);
+    }
+}
+
+function renderPresence(entries) {
+    // Check Werner
+    const wernerAbsent = entries.find(e => e.person_name === 'Werner Jacobi');
+    const dotWerner = document.getElementById('presence-dot-werner');
+    const lblWerner = document.getElementById('presence-label-werner');
+
+    dotWerner.className = 'presence-dot';
+    if (wernerAbsent) {
+        dotWerner.classList.add('abwesend');
+        const reason = CAL_TYPE_LABELS[wernerAbsent.entry_type] || wernerAbsent.entry_type;
+        lblWerner.textContent = 'Werner: ' + reason;
+    } else {
+        dotWerner.classList.add('auf-farm');
+        lblWerner.textContent = 'Werner: Auf Farm';
+    }
+
+    // Check Wanda
+    const wandaAbsent = entries.find(e => e.person_name === 'Wanda Jacobi');
+    const dotWanda = document.getElementById('presence-dot-wanda');
+    const lblWanda = document.getElementById('presence-label-wanda');
+
+    dotWanda.className = 'presence-dot';
+    if (wandaAbsent) {
+        dotWanda.classList.add('abwesend');
+        const reason = CAL_TYPE_LABELS[wandaAbsent.entry_type] || wandaAbsent.entry_type;
+        lblWanda.textContent = 'Wanda: ' + reason;
+    } else {
+        dotWanda.classList.add('auf-farm');
+        lblWanda.textContent = 'Wanda: Auf Farm';
+    }
+}
+
+function renderLeaveBalance(leaveEntries) {
+    let wernerDays = 0;
+    let wandaDays = 0;
+
+    for (const e of leaveEntries) {
+        const days = countWorkingDays(e.start_date, e.end_date);
+        if (e.person_name === 'Werner Jacobi') wernerDays += days;
+        else if (e.person_name === 'Wanda Jacobi') wandaDays += days;
+    }
+
+    document.getElementById('leave-werner').textContent = wernerDays;
+    document.getElementById('leave-wanda').textContent = wandaDays;
+}
+
+function renderPendingApprovals(pending, todayStr) {
+    const box = document.getElementById('pending-approvals-box');
+    const list = document.getElementById('pending-approvals-list');
+
+    if (!pending.length) {
+        box.style.display = 'none';
+        return;
+    }
+
+    box.style.display = 'block';
+    list.innerHTML = '';
+
+    const threeMonthsFromNow = new Date();
+    threeMonthsFromNow.setMonth(threeMonthsFromNow.getMonth() + 3);
+    const threeMonthStr = threeMonthsFromNow.toISOString().split('T')[0];
+
+    for (const entry of pending) {
+        const div = document.createElement('div');
+        div.className = 'pending-item';
+
+        const startSoon = entry.start_date <= threeMonthStr;
+        const warningHtml = startSoon
+            ? '<span class="warning-badge">Bald!</span> '
+            : '';
+
+        const typeLabel = CAL_TYPE_LABELS[entry.entry_type] || entry.entry_type;
+
+        div.innerHTML =
+            '<span class="pending-info">' +
+                warningHtml +
+                '<strong>' + entry.person_name + '</strong> &mdash; ' +
+                typeLabel + ' (' +
+                calendarDateFmt(entry.start_date) + ' – ' + calendarDateFmt(entry.end_date) + ')' +
+                (entry.reason ? ' — ' + entry.reason : '') +
+            '</span>' +
+            '<button class="btn-approve" onclick="approveCalendarEntry(\'' + entry.id + '\')">Bestaetigen</button>' +
+            '<button class="btn-reject" onclick="rejectCalendarEntry(\'' + entry.id + '\')">Ablehnen</button>';
+
+        list.appendChild(div);
+    }
+}
+
+function renderUpcoming(entries) {
+    const tbody = document.getElementById('upcoming-tbody');
+
+    if (!entries.length) {
+        tbody.innerHTML = '<tr><td colspan="4" class="calendar-empty">Keine Eintraege in den naechsten 30 Tagen.</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = '';
+
+    for (const e of entries) {
+        const tr = document.createElement('tr');
+
+        // Row class by status
+        if (e.status === 'requested') tr.className = 'status-requested';
+        else if (e.status === 'approved') tr.className = 'status-approved';
+        else if (e.status === 'rejected') tr.className = 'status-rejected';
+
+        const typeLabel = CAL_TYPE_LABELS[e.entry_type] || e.entry_type;
+        const starIcon = e.entry_type === 'shareholder_visit' ? '<span class="star-icon">&#x2B50;</span>' : '';
+
+        // Status label
+        let statusLabel = '';
+        if (e.status === 'requested') statusLabel = '<span class="status-label requested">Angefragt</span>';
+        else if (e.status === 'approved') statusLabel = '<span class="status-label approved">Genehmigt</span>';
+        else if (e.status === 'rejected') statusLabel = '<span class="status-label rejected">Abgelehnt</span>';
+
+        tr.innerHTML =
+            '<td>' + calendarDateFmt(e.start_date) + ' – ' + calendarDateFmt(e.end_date) + '</td>' +
+            '<td>' + starIcon + e.person_name + '</td>' +
+            '<td>' + typeLabel + '</td>' +
+            '<td>' + statusLabel + '</td>';
+
+        tbody.appendChild(tr);
+    }
+}
+
+async function approveCalendarEntry(entryId) {
+    try {
+        const { error } = await sb.from('farm_calendar')
+            .update({
+                status: 'approved',
+                decided_by: _calendarUserId,
+                decided_at: new Date().toISOString()
+            })
+            .eq('id', entryId);
+
+        if (error) throw error;
+
+        sb.functions.invoke('notify-calendar', { body: { action: 'approved', entryId } })
+            .catch(e => console.warn('Notification failed:', e));
+
+        await loadCalendar();
+    } catch (err) {
+        console.error('Approve error:', err);
+        alert('Fehler beim Bestaetigen: ' + (err.message || err));
+    }
+}
+
+async function rejectCalendarEntry(entryId) {
+    try {
+        const { error } = await sb.from('farm_calendar')
+            .update({
+                status: 'rejected',
+                decided_by: _calendarUserId,
+                decided_at: new Date().toISOString()
+            })
+            .eq('id', entryId);
+
+        if (error) throw error;
+
+        sb.functions.invoke('notify-calendar', { body: { action: 'rejected', entryId } })
+            .catch(e => console.warn('Notification failed:', e));
+
+        await loadCalendar();
+    } catch (err) {
+        console.error('Reject error:', err);
+        alert('Fehler beim Ablehnen: ' + (err.message || err));
+    }
+}
+
+function toggleNewEntryForm() {
+    const form = document.getElementById('new-entry-form');
+    form.classList.toggle('open');
+}
+
+// Handle custom person dropdown
+document.getElementById('cal-person').addEventListener('change', function() {
+    const custom = document.getElementById('cal-person-custom');
+    custom.style.display = this.value === '_custom' ? 'block' : 'none';
+    if (this.value !== '_custom') custom.value = '';
+});
+
+async function submitCalendarEntry() {
+    const btn = document.getElementById('cal-submit-btn');
+    const msgEl = document.getElementById('cal-form-message');
+    msgEl.className = 'form-message';
+    msgEl.style.display = 'none';
+
+    const personSelect = document.getElementById('cal-person');
+    const personCustom = document.getElementById('cal-person-custom');
+    const entryType = document.getElementById('cal-type').value;
+    const startDate = document.getElementById('cal-start').value;
+    const endDate = document.getElementById('cal-end').value;
+    const reason = document.getElementById('cal-reason').value.trim();
+
+    const personName = personSelect.value === '_custom' ? personCustom.value.trim() : personSelect.value;
+
+    // Validation
+    if (!personName) {
+        msgEl.className = 'form-message error';
+        msgEl.textContent = 'Bitte Person angeben.';
+        return;
+    }
+    if (!startDate || !endDate) {
+        msgEl.className = 'form-message error';
+        msgEl.textContent = 'Bitte Von- und Bis-Datum angeben.';
+        return;
+    }
+    if (endDate < startDate) {
+        msgEl.className = 'form-message error';
+        msgEl.textContent = 'Bis-Datum muss nach Von-Datum liegen.';
+        return;
+    }
+
+    // Determine person_role
+    let personRole = CAL_PERSON_ROLES[personName] || 'other';
+    if (entryType === 'shareholder_visit') personRole = 'gesellschafter';
+
+    // Determine status
+    let status = 'requested';
+    if (entryType === 'shareholder_visit') {
+        status = 'approved';
+    } else if (_calendarUserRole === 'owner') {
+        // Owners can directly approve their own requests
+        status = 'approved';
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Wird gespeichert...';
+
+    try {
+        const insertData = {
+            entry_type: entryType,
+            person_name: personName,
+            person_role: personRole,
+            start_date: startDate,
+            end_date: endDate,
+            reason: reason || null,
+            notes: null,
+            status: status,
+            requested_by: _calendarUserId,
+            decided_by: status === 'approved' ? _calendarUserId : null,
+            decided_at: status === 'approved' ? new Date().toISOString() : null
+        };
+
+        const { data: inserted, error } = await sb.from('farm_calendar').insert(insertData).select('id').single();
+        if (error) throw error;
+
+        const notifyAction = status === 'approved' ? 'approved' : 'created';
+        sb.functions.invoke('notify-calendar', { body: { action: notifyAction, entryId: inserted.id } })
+            .catch(e => console.warn('Notification failed:', e));
+
+        msgEl.className = 'form-message success';
+        msgEl.textContent = status === 'approved'
+            ? 'Eintrag gespeichert und genehmigt.'
+            : 'Anfrage wurde erstellt und wartet auf Genehmigung.';
+
+        // Reset form
+        document.getElementById('cal-start').value = '';
+        document.getElementById('cal-end').value = '';
+        document.getElementById('cal-reason').value = '';
+        document.getElementById('cal-person').value = 'Werner Jacobi';
+        document.getElementById('cal-person-custom').style.display = 'none';
+        document.getElementById('cal-person-custom').value = '';
+        document.getElementById('cal-type').value = 'leave';
+
+        await loadCalendar();
+
+        setTimeout(() => { msgEl.style.display = 'none'; msgEl.className = 'form-message'; }, 4000);
+    } catch (err) {
+        console.error('Submit error:', err);
+        msgEl.className = 'form-message error';
+        msgEl.textContent = 'Fehler: ' + (err.message || err);
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'Anfragen';
+    }
+}
+
 // ── Load All ─────────────────────────────────────────────────────
 async function loadAll() {
     document.getElementById('last-update').textContent = 'Aktualisiere...';
@@ -810,7 +1629,7 @@ async function loadAll() {
     await Promise.allSettled([
         loadF1(), loadF2(), loadH4(), loadW1(),
         loadF4(), loadK2(), loadO2(), loadC1(),
-        loadK3(), loadK4()
+        loadK3(), loadK4(), loadCalendar()
     ]);
 
     const now = new Date();

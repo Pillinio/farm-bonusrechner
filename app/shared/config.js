@@ -15,6 +15,7 @@ export const PAGES = {
   admin:     'admin.html',
   forecast:  'forecast.html',
   herdEntry: 'herd-entry.html',
+  wochenbericht: 'wochenbericht.html',
 };
 
 // LSU (Large Stock Unit) conversion factors

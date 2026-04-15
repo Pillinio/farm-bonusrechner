@@ -217,6 +217,19 @@
     </style>
 </head>
 <body>
+<script>
+    // Hide header/nav when embedded in bonus page
+    if (new URLSearchParams(window.location.search).get('embed') === '1') {
+        document.body.style.background = 'white';
+        document.body.style.padding = '0';
+        document.addEventListener('DOMContentLoaded', function() {
+            var h = document.querySelector('.header'); if (h) h.style.display = 'none';
+            var n = document.getElementById('main-nav'); if (n) n.style.display = 'none';
+            var c = document.querySelector('.container'); if (c) { c.style.boxShadow = 'none'; c.style.borderRadius = '0'; }
+            var f = document.querySelector('.footer'); if (f) f.style.display = 'none';
+        });
+    }
+</script>
 
 <div class="container">
     <div class="header">

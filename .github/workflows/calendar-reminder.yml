@@ -1,0 +1,29 @@
+name: Calendar Reminder Check
+
+on:
+  schedule:
+    - cron: '0 8 * * *'  # Daily at 08:00 UTC (10:00 Namibia)
+  workflow_dispatch: {}
+
+jobs:
+  reminder:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check pending calendar requests
+        run: |
+          curl -s -X POST \
+            "${{ secrets.SUPABASE_URL }}/functions/v1/notify-calendar" \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" \
+            -H "Content-Type: application/json" \
+            -d '{"action": "reminder-check"}' \
+            -o /tmp/result.json -w "\nHTTP %{http_code}"
+          cat /tmp/result.json
+      - name: Reconcile calendar events
+        run: |
+          curl -s -X POST \
+            "${{ secrets.SUPABASE_URL }}/functions/v1/notify-calendar" \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" \
+            -H "Content-Type: application/json" \
+            -d '{"action": "reconcile"}' \
+            -o /tmp/result.json -w "\nHTTP %{http_code}"
+          cat /tmp/result.json
