@@ -1190,6 +1190,16 @@
                 <div class="section-body hidden" id="body-meldung">
                     <div class="mm-form-container" id="mm-form-screen">
 
+                        <!-- Subsection: Bisherige Meldungen -->
+                        <h3 class="mm-subsection-title">&#x1F4CB; Bisherige Monatsmeldungen</h3>
+                        <div id="mm-existing-wrap" style="margin-bottom:18px;">
+                            <div class="mm-text-muted">Lade Meldungen...</div>
+                        </div>
+                        <div id="mm-edit-banner" style="display:none; padding:10px 14px; background:#fef3c7; border:1px solid #fbbf24; border-radius:8px; margin-bottom:14px; color:#92400e; font-weight:500;">
+                            <span id="mm-edit-banner-text">Bearbeitung der Meldung vom …</span>
+                            <button type="button" class="mm-btn mm-btn-outline" onclick="Monat.meldung.cancelEdit()" style="margin-left:12px; padding:4px 12px; font-size:0.8em;">Abbrechen</button>
+                        </div>
+
                         <!-- Subsection: Herdenbewegungen -->
                         <h3 class="mm-subsection-title">&#x1F404; Herdenbewegungen (Rotation / Zugang / Abgang)</h3>
 
@@ -1764,12 +1774,13 @@ const Monat = {
         }
 
         let html = '<table class="data-table"><thead><tr>';
-        html += '<th>Datum</th><th>Von</th><th>Nach</th><th class="num">Anzahl</th><th>Kategorie</th><th>Grund</th><th>Notizen</th>';
+        html += '<th>Datum</th><th>Von</th><th>Nach</th><th class="num">Anzahl</th><th>Kategorie</th><th>Grund</th><th>Notizen</th><th>Aktion</th>';
         html += '</tr></thead><tbody>';
 
         const self = this;
         data.forEach(row => {
             const reasonClass = 'reason-' + (row.reason || 'other');
+            const notesEsc = (row.notes || '').replace(/'/g, "&#39;");
             html += '<tr>';
             html += '<td>' + self.fmtDate(row.movement_date) + '</td>';
             html += '<td>' + (row.from_camp || '<em style="color:#9ca3af;">Zugang</em>') + '</td>';
@@ -1777,12 +1788,25 @@ const Monat = {
             html += '<td class="num">' + (row.head_count || 0) + '</td>';
             html += '<td>' + (self.CATEGORY_LABELS[row.animal_category] || row.animal_category) + '</td>';
             html += '<td class="' + reasonClass + '">' + (self.REASON_LABELS[row.reason] || row.reason) + '</td>';
-            html += '<td>' + (row.notes || '') + '</td>';
+            html += '<td>' + notesEsc + '</td>';
+            html += '<td><button class="btn-del-mv" data-id="' + row.id + '" data-count="' + (row.head_count || 0) + '" style="background:#dc2626; color:white; border:none; padding:4px 10px; border-radius:4px; cursor:pointer; font-size:0.8em;">Löschen</button></td>';
             html += '</tr>';
         });
 
         html += '</tbody></table>';
         wrap.innerHTML = html;
+
+        // Attach delete handlers
+        wrap.querySelectorAll('.btn-del-mv').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                const id = btn.getAttribute('data-id');
+                const count = btn.getAttribute('data-count');
+                if (!confirm('Bewegung (' + count + ' Tiere) wirklich löschen?')) return;
+                const { error } = await sb.from('herd_movements').delete().eq('id', id);
+                if (error) { alert('Fehler beim Löschen: ' + error.message); return; }
+                await Promise.allSettled([self.loadMovements(), self.loadOccupancy()]);
+            });
+        });
     },
 
     // ── 1b. Load Kamp Occupancy ──
@@ -1891,6 +1915,7 @@ const Monat = {
         const { data, error } = await sb
             .from('bank_transactions')
             .select('debit_nad, credit_nad, description, transaction_date, category')
+            .eq('active', true)
             .gte('transaction_date', start)
             .lt('transaction_date', end)
             .order('transaction_date', { ascending: true });
@@ -2062,8 +2087,8 @@ const Monat = {
         const items = [
             { label: 'Gesamtniederschlag', value: Math.round(totalRain * 10) / 10 + ' mm' },
             { label: 'Regentage', value: rainyDays },
-            { label: 'Durchschn. Max-Temp.', value: avgMax != null ? avgMax + ' \u00B0C' : '--' },
-            { label: 'Durchschn. Min-Temp.', value: avgMin != null ? avgMin + ' \u00B0C' : '--' },
+            { label: 'Durchschn. Max-Temp.', value: avgMax != null ? avgMax + ' °C' : '--' },
+            { label: 'Durchschn. Min-Temp.', value: avgMin != null ? avgMin + ' °C' : '--' },
             { label: 'Messtage', value: data.length }
         ];
 
@@ -2167,6 +2192,10 @@ Monat.meldung = {
         }
     },
 
+    // Edit mode state
+    editingSnapshotId: null,
+    editingSnapshotDate: null,
+
     // ── Init ──
     async init() {
         if (this.initialized) return;
@@ -2180,12 +2209,199 @@ Monat.meldung = {
         // Load reference data (parallel)
         await Promise.all([this.loadCamps(), this.loadAssets(), this.loadTasks()]);
 
+        // Load existing Monatsmeldungen
+        await this.loadExistingMeldungen();
+
         // Restore draft
         this.restoreDraft();
 
         // Auto-save every 30s
         const self = this;
         this.draftTimer = setInterval(() => self.saveDraft(), 30000);
+    },
+
+    // ── Load existing Monatsmeldungen ──
+    async loadExistingMeldungen() {
+        const wrap = document.getElementById('mm-existing-wrap');
+        if (!wrap) return;
+
+        const { data, error } = await sb
+            .from('herd_snapshots')
+            .select('id, snapshot_date, cows, bulls, heifers, calves, oxen, notes')
+            .order('snapshot_date', { ascending: false })
+            .limit(24);
+
+        if (error) {
+            wrap.innerHTML = '<div class="mm-text-muted" style="color:#ef4444;">Fehler: ' + this.esc(error.message) + '</div>';
+            return;
+        }
+        if (!data || !data.length) {
+            wrap.innerHTML = '<div class="mm-text-muted">Noch keine Meldungen erfasst.</div>';
+            return;
+        }
+
+        const self = this;
+        let html = '<table class="data-table" style="font-size:0.88em;"><thead><tr>'
+            + '<th>Stichtag</th><th class="num">Bestand</th><th>Notiz</th><th style="width:170px;">Aktion</th>'
+            + '</tr></thead><tbody>';
+        for (const r of data) {
+            const total = (r.cows||0)+(r.bulls||0)+(r.heifers||0)+(r.calves||0)+(r.oxen||0);
+            const d = new Date(r.snapshot_date).toLocaleDateString('de-DE');
+            const notePreview = (r.notes || '').substring(0, 60) + ((r.notes || '').length > 60 ? '…' : '');
+            html += `<tr>
+                <td>${d}</td>
+                <td class="num">${total}</td>
+                <td>${self.esc(notePreview)}</td>
+                <td style="white-space:nowrap;">
+                    <button class="mm-btn mm-btn-outline" style="padding:4px 10px; font-size:0.82em;" onclick="Monat.meldung.editMeldung('${r.id}','${r.snapshot_date}')">Bearbeiten</button>
+                    <button class="mm-btn" style="padding:4px 10px; font-size:0.82em; background:#dc2626; color:white; border:none;" onclick="Monat.meldung.deleteMeldung('${r.id}','${r.snapshot_date}')">Löschen</button>
+                </td>
+            </tr>`;
+        }
+        html += '</tbody></table>';
+        wrap.innerHTML = html;
+    },
+
+    // ── Delete whole Monatsmeldung (parent + 4 children by snapshot_date) ──
+    async deleteMeldung(snapshotId, snapshotDate) {
+        const dStr = new Date(snapshotDate).toLocaleDateString('de-DE');
+        if (!confirm('Monatsmeldung vom ' + dStr + ' komplett löschen?\n\nAlle Zusatzdaten (Weide-Bewertungen, Asset-Status, Task-Ausführungen, Vorfälle) für diesen Stichtag werden mit entfernt.')) return;
+
+        // 1) delete children (by snapshot_date) in parallel — non-blocking if no rows
+        const childResults = await Promise.allSettled([
+            sb.from('veld_observations').delete().eq('snapshot_date', snapshotDate),
+            sb.from('asset_status_reports').delete().eq('snapshot_date', snapshotDate),
+            sb.from('task_executions').delete().eq('snapshot_date', snapshotDate),
+            sb.from('incidents').delete().eq('snapshot_date', snapshotDate),
+        ]);
+        for (const r of childResults) {
+            if (r.status === 'rejected' || (r.value && r.value.error)) {
+                const msg = r.value?.error?.message || r.reason;
+                alert('Fehler beim Löschen der Zusatzdaten: ' + msg);
+                return;
+            }
+        }
+
+        // 2) delete parent snapshot
+        const { error } = await sb.from('herd_snapshots').delete().eq('id', snapshotId);
+        if (error) { alert('Fehler: ' + error.message); return; }
+
+        this.showMsg('Meldung gelöscht.', 'success');
+        if (this.editingSnapshotId === snapshotId) this.cancelEdit();
+        await this.loadExistingMeldungen();
+        if (Monat.loadAll) { try { await Monat.loadAll(); } catch(e) {} }
+    },
+
+    // ── Edit Monatsmeldung: prefill form ──
+    async editMeldung(snapshotId, snapshotDate) {
+        // Fetch parent + children in parallel
+        const [snapRes, veldRes, assetRes, taskRes, incRes] = await Promise.all([
+            sb.from('herd_snapshots').select('*').eq('id', snapshotId).single(),
+            sb.from('veld_observations').select('camp_name, condition_score').eq('snapshot_date', snapshotDate),
+            sb.from('asset_status_reports').select('asset_id, status, metric_value').eq('snapshot_date', snapshotDate),
+            sb.from('task_executions').select('task_template_id, covered_count, completed').eq('snapshot_date', snapshotDate),
+            sb.from('incidents').select('incident_type, severity, affected_count, description').eq('snapshot_date', snapshotDate),
+        ]);
+
+        if (snapRes.error) { alert('Fehler beim Laden: ' + snapRes.error.message); return; }
+        const s = snapRes.data;
+
+        this.editingSnapshotId = snapshotId;
+        this.editingSnapshotDate = snapshotDate;
+
+        // Parent fields
+        this.setVal('mm-snapshotDate', snapshotDate);
+        this.setVal('mm-cows', s.cows ?? '');
+        this.setVal('mm-bulls', s.bulls ?? '');
+        this.setVal('mm-heifers', s.heifers ?? '');
+        this.setVal('mm-oxen', s.oxen ?? '');
+        this.setVal('mm-calves', s.calves ?? '');
+        this.setVal('mm-births', s.births ?? 0);
+        this.setVal('mm-sales', s.sales ?? 0);
+        this.setVal('mm-purchases', s.purchases ?? 0);
+        // deaths is combined in DB; we can't split back exactly — put total into deathsAdult, 0 in calves
+        this.setVal('mm-deathsAdult', s.deaths ?? 0);
+        this.setVal('mm-deathsCalves', 0);
+        // notes split: sick notes and open notes were combined — put full string in openNotes
+        this.setVal('mm-sickCount', 0);
+        this.setVal('mm-sickNotes', '');
+        this.setVal('mm-openNotes', s.notes || '');
+
+        // Veld: by camp name
+        const veldByCamp = {};
+        (veldRes.data || []).forEach(v => { veldByCamp[v.camp_name] = v.condition_score; });
+        for (let i = 0; i < this.camps.length; i++) {
+            const el = document.getElementById('mm-camp_score_' + i);
+            if (el) el.value = veldByCamp[this.camps[i].name] != null ? String(veldByCamp[this.camps[i].name]) : '';
+        }
+
+        // Assets: by asset_id
+        const assetById = {};
+        (assetRes.data || []).forEach(a => { assetById[a.asset_id] = a; });
+        for (let i = 0; i < this.assets.length; i++) {
+            const row = assetById[this.assets[i].id];
+            const sel = document.getElementById('mm-asset_status_' + i);
+            const metric = document.getElementById('mm-asset_metric_' + i);
+            if (sel) sel.value = row ? row.status : '';
+            if (metric) metric.value = row && row.metric_value != null ? row.metric_value : '';
+        }
+
+        // Tasks: by task_template_id
+        const taskById = {};
+        (taskRes.data || []).forEach(t => { taskById[t.task_template_id] = t; });
+        for (let i = 0; i < this.tasks.length; i++) {
+            const row = taskById[this.tasks[i].id];
+            const done = document.getElementById('mm-task_done_' + i);
+            const cnt = document.getElementById('mm-task_count_' + i);
+            if (done) done.checked = !!(row && row.completed);
+            if (cnt) cnt.value = row ? (row.covered_count ?? 0) : 0;
+        }
+
+        // Incidents: clear + re-create
+        document.getElementById('mm-incidentList').innerHTML = '';
+        this.incidentCount = 0;
+        const incidents = incRes.data || [];
+        for (const inc of incidents) {
+            this.addIncident();
+            const idx = this.incidentCount - 1;
+            this.setVal('mm-inc_type_' + idx, inc.incident_type || 'Sonstiges');
+            this.setVal('mm-inc_severity_' + idx, inc.severity || 'mittel');
+            this.setVal('mm-inc_count_' + idx, inc.affected_count ?? 0);
+            this.setVal('mm-inc_desc_' + idx, inc.description || '');
+        }
+
+        // Update UI state: expand section, lock date, update banner + button
+        const body = document.getElementById('body-meldung');
+        const toggle = document.getElementById('toggle-meldung');
+        if (body && body.classList.contains('hidden')) {
+            body.classList.remove('hidden');
+            if (toggle) toggle.classList.remove('collapsed');
+        }
+
+        const dateInput = document.getElementById('mm-snapshotDate');
+        if (dateInput) dateInput.readOnly = true;
+
+        const banner = document.getElementById('mm-edit-banner');
+        const bannerText = document.getElementById('mm-edit-banner-text');
+        if (banner) banner.style.display = 'block';
+        if (bannerText) bannerText.textContent = 'Bearbeitung der Meldung vom ' + new Date(snapshotDate).toLocaleDateString('de-DE');
+
+        const btn = document.getElementById('mm-submitBtn');
+        if (btn) btn.textContent = 'Änderungen speichern';
+
+        document.getElementById('sec-meldung')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    },
+
+    cancelEdit() {
+        this.editingSnapshotId = null;
+        this.editingSnapshotDate = null;
+        const dateInput = document.getElementById('mm-snapshotDate');
+        if (dateInput) dateInput.readOnly = false;
+        const banner = document.getElementById('mm-edit-banner');
+        if (banner) banner.style.display = 'none';
+        const btn = document.getElementById('mm-submitBtn');
+        if (btn) btn.textContent = 'Monatsmeldung absenden';
+        this.resetForm();
     },
 
     // ── Load camps ──
@@ -2488,8 +2704,8 @@ Monat.meldung = {
             // Upload photos
             const photoRefs = await this.uploadPhotos(snapshotDate);
 
-            // 1. herd_snapshots
-            const { data: snapshot, error: snapErr } = await sb.from('herd_snapshots').insert({
+            const isEdit = !!this.editingSnapshotId;
+            const parentPayload = {
                 snapshot_date: snapshotDate,
                 cows, bulls, heifers, calves, oxen,
                 births,
@@ -2498,9 +2714,40 @@ Monat.meldung = {
                 purchases: purchasesVal,
                 notes: notes || null,
                 photos_ref: photoRefs.length > 0 ? photoRefs : null
-            }).select().single();
+            };
 
-            if (snapErr) throw new Error('Herde speichern fehlgeschlagen: ' + snapErr.message);
+            // Edit mode: delete all children first (delete-then-insert strategy)
+            if (isEdit) {
+                const delResults = await Promise.allSettled([
+                    sb.from('veld_observations').delete().eq('snapshot_date', snapshotDate),
+                    sb.from('asset_status_reports').delete().eq('snapshot_date', snapshotDate),
+                    sb.from('task_executions').delete().eq('snapshot_date', snapshotDate),
+                    sb.from('incidents').delete().eq('snapshot_date', snapshotDate),
+                ]);
+                for (const r of delResults) {
+                    if (r.status === 'rejected' || (r.value && r.value.error)) {
+                        const m = r.value?.error?.message || r.reason;
+                        throw new Error('Konnte alte Zusatzdaten nicht entfernen: ' + m);
+                    }
+                }
+            }
+
+            // 1. herd_snapshots (insert on new, update on edit)
+            let snapshot;
+            if (isEdit) {
+                const { data, error } = await sb.from('herd_snapshots')
+                    .update(parentPayload)
+                    .eq('id', this.editingSnapshotId)
+                    .select().single();
+                if (error) throw new Error('Herde aktualisieren fehlgeschlagen: ' + error.message);
+                snapshot = data;
+            } else {
+                const { data, error } = await sb.from('herd_snapshots').insert(parentPayload).select().single();
+                if (error) throw new Error('Herde speichern fehlgeschlagen: ' + error.message);
+                snapshot = data;
+            }
+            // Keep snapErr var shape for downstream (if referenced)
+            const snapErr = null;
 
             // 2. veld_observations
             let veldCount = 0;
@@ -2563,11 +2810,22 @@ Monat.meldung = {
             // Success
             this.clearDraft();
             const total = cows + bulls + heifers + oxen + calves;
+            const action = isEdit ? 'aktualisiert' : 'gespeichert';
             this.showMsg(
-                `Monatsmeldung gespeichert: ${total} Tiere, ${veldCount} Veld, ${assetCount} Assets, ${taskCount} Aufgaben, ${incCount} Vorf&auml;lle, ${photoRefs.length} Fotos.`,
+                `Monatsmeldung ${action}: ${total} Tiere, ${veldCount} Veld, ${assetCount} Assets, ${taskCount} Aufgaben, ${incCount} Vorfälle, ${photoRefs.length} Fotos.`,
                 'success'
             );
+
+            const wasEdit = isEdit;
+            this.editingSnapshotId = null;
+            this.editingSnapshotDate = null;
+            const dateInput = document.getElementById('mm-snapshotDate');
+            if (dateInput) dateInput.readOnly = false;
+            const banner = document.getElementById('mm-edit-banner');
+            if (banner) banner.style.display = 'none';
+
             this.resetForm();
+            await this.loadExistingMeldungen();
 
             // Reload the display sections so new data appears
             if (Monat.loadAll) { try { await Monat.loadAll(); } catch(e) {} }
@@ -2577,7 +2835,7 @@ Monat.meldung = {
         } finally {
             this.isSubmitting = false;
             btn.disabled = false;
-            btn.textContent = 'Monatsmeldung absenden';
+            btn.textContent = this.editingSnapshotId ? 'Änderungen speichern' : 'Monatsmeldung absenden';
         }
     }
 };
@@ -2830,8 +3088,28 @@ const Woche = {
         const dayNum = parseInt(textarea.dataset.day);
         const cellText = textarea.value.trim();
         const mondayStr = this.formatDate(this.currentMonday);
+        const key = employeeName + '|' + dayNum;
+        const existing = this.entries[key] || {};
 
         this.showSaveStatus('Speichert...', 'saving');
+
+        // If cell cleared AND no hours on this row → delete the row (true delete, not empty upsert)
+        const hasHours = existing.hours != null && existing.hours > 0;
+        if (!cellText && !hasHours) {
+            const { error } = await sb.from('work_entries').delete()
+                .eq('week_start', mondayStr)
+                .eq('employee_name', employeeName)
+                .eq('day_of_week', dayNum);
+            if (error) {
+                console.error('Delete error:', error);
+                this.showSaveStatus('Fehler beim Löschen', 'saving');
+                return;
+            }
+            delete this.entries[key];
+            this.showSaveStatus('Gelöscht', 'saved');
+            this.updateSummaryRow();
+            return;
+        }
 
         const { error } = await sb.from('work_entries').upsert({
             week_start: mondayStr,
@@ -2846,7 +3124,6 @@ const Woche = {
             return;
         }
 
-        const key = employeeName + '|' + dayNum;
         if (!this.entries[key]) this.entries[key] = {};
         this.entries[key].activity = cellText;
 
@@ -2862,6 +3139,20 @@ const Woche = {
         const hours = parseFloat(input.value) || 0;
         const mondayStr = this.formatDate(this.currentMonday);
 
+        // If hours cleared to 0 AND day_of_week=1 row has no activity → delete it
+        if (hours === 0) {
+            const key = employeeName + '|1';
+            const existing = this.entries[key] || {};
+            if (!existing.activity) {
+                await sb.from('work_entries').delete()
+                    .eq('week_start', mondayStr)
+                    .eq('employee_name', employeeName)
+                    .eq('day_of_week', 1);
+                delete this.entries[key];
+                return;
+            }
+        }
+
         const { error } = await sb.from('work_entries').upsert({
             week_start: mondayStr,
             employee_name: employeeName,
@@ -2871,6 +3162,10 @@ const Woche = {
 
         if (error) {
             console.error('Hours save error:', error);
+        } else {
+            const key = employeeName + '|1';
+            if (!this.entries[key]) this.entries[key] = {};
+            this.entries[key].hours = hours;
         }
     },
 
@@ -2879,17 +3174,56 @@ const Woche = {
         const tbody = document.getElementById('emp-list');
         tbody.innerHTML = '';
 
+        const self = this;
         this.employees.forEach(emp => {
             const tr = document.createElement('tr');
+            tr.dataset.empId = emp.id;
+            const nameEsc = (emp.name || '').replace(/'/g, "\\'");
             tr.innerHTML =
                 '<td>' + emp.name + '</td>' +
                 '<td>' + (emp.role || '-') + '</td>' +
                 '<td>' + (emp.sort_order || '-') + '</td>' +
                 '<td>' + (emp.active ? 'Ja' : 'Nein') + '</td>' +
-                '<td><button class="btn-small btn-danger" onclick="Woche.deactivateEmployee(\'' +
-                    emp.name.replace(/'/g, "\\'") + '\', ' + emp.id + ')">Deaktivieren</button></td>';
+                '<td style="white-space:nowrap;">' +
+                    '<button class="btn-small" onclick="Woche.editEmployee(' + emp.id + ')">Bearbeiten</button> ' +
+                    (emp.active
+                        ? '<button class="btn-small btn-danger" onclick="Woche.deactivateEmployee(\'' + nameEsc + '\', ' + emp.id + ')">Deaktivieren</button>'
+                        : '<button class="btn-small" onclick="Woche.reactivateEmployee(' + emp.id + ')">Reaktivieren</button>') +
+                    ' <button class="btn-small btn-danger" onclick="Woche.deleteEmployee(\'' + nameEsc + '\', ' + emp.id + ')">Löschen</button>' +
+                '</td>';
             tbody.appendChild(tr);
         });
+    },
+
+    _editingEmpId: null,
+
+    editEmployee(id) {
+        const emp = this.employees.find(e => e.id === id);
+        if (!emp) return;
+        this._editingEmpId = id;
+        document.getElementById('new-emp-name').value = emp.name || '';
+        document.getElementById('new-emp-role').value = emp.role || 'Farmarbeiter';
+        const btn = document.querySelector('.employee-panel .btn-add');
+        if (btn) btn.textContent = 'Änderungen speichern';
+        let cancelBtn = document.getElementById('emp-cancel-btn');
+        if (!cancelBtn) {
+            cancelBtn = document.createElement('button');
+            cancelBtn.id = 'emp-cancel-btn';
+            cancelBtn.className = 'btn-small';
+            cancelBtn.textContent = 'Abbrechen';
+            cancelBtn.onclick = () => this.cancelEditEmployee();
+            btn?.parentNode?.appendChild(cancelBtn);
+        }
+        document.getElementById('new-emp-name').focus();
+    },
+
+    cancelEditEmployee() {
+        this._editingEmpId = null;
+        document.getElementById('new-emp-name').value = '';
+        const btn = document.querySelector('.employee-panel .btn-add');
+        if (btn) btn.textContent = 'Mitarbeiter hinzufügen';
+        const cancelBtn = document.getElementById('emp-cancel-btn');
+        if (cancelBtn) cancelBtn.remove();
     },
 
     async addEmployee() {
@@ -2900,29 +3234,35 @@ const Woche = {
 
         if (!name) return;
 
-        const maxSort = this.employees.reduce((m, e) => Math.max(m, e.sort_order || 0), 0);
-
-        const { error } = await sb.from('farm_employees').insert({
-            name: name,
-            role: role,
-            sort_order: maxSort + 10,
-            active: true,
-        });
+        let error;
+        if (this._editingEmpId) {
+            ({ error } = await sb.from('farm_employees')
+                .update({ name: name, role: role })
+                .eq('id', this._editingEmpId));
+        } else {
+            const maxSort = this.employees.reduce((m, e) => Math.max(m, e.sort_order || 0), 0);
+            ({ error } = await sb.from('farm_employees').insert({
+                name: name,
+                role: role,
+                sort_order: maxSort + 10,
+                active: true,
+            }));
+        }
 
         if (error) {
-            console.error('Error adding employee:', error);
+            console.error('Error saving employee:', error);
             alert('Fehler: ' + error.message);
             return;
         }
 
-        nameInput.value = '';
+        this.cancelEditEmployee();
         await this.loadEmployees();
         this.renderEmployeeList();
         await this.loadEntries();
     },
 
     async deactivateEmployee(name, id) {
-        if (!confirm('Mitarbeiter "' + name + '" deaktivieren?')) return;
+        if (!confirm('Mitarbeiter "' + name + '" deaktivieren? (Kann reaktiviert werden.)')) return;
 
         const { error } = await sb.from('farm_employees').update({ active: false }).eq('id', id);
 
@@ -2932,6 +3272,27 @@ const Woche = {
             return;
         }
 
+        await this.loadEmployees();
+        this.renderEmployeeList();
+        await this.loadEntries();
+    },
+
+    async reactivateEmployee(id) {
+        const { error } = await sb.from('farm_employees').update({ active: true }).eq('id', id);
+        if (error) { alert('Fehler: ' + error.message); return; }
+        await this.loadEmployees();
+        this.renderEmployeeList();
+        await this.loadEntries();
+    },
+
+    async deleteEmployee(name, id) {
+        if (!confirm('Mitarbeiter "' + name + '" WIRKLICH komplett löschen? Wochenberichts-Einträge unter diesem Namen bleiben bestehen, aber der Mitarbeiter ist aus der Liste entfernt.')) return;
+        const { error } = await sb.from('farm_employees').delete().eq('id', id);
+        if (error) {
+            alert('Fehler beim Löschen: ' + error.message + '\nTipp: Wenn er in Wochenberichten referenziert ist, stattdessen "Deaktivieren" nutzen.');
+            return;
+        }
+        if (this._editingEmpId === id) this.cancelEditEmployee();
         await this.loadEmployees();
         this.renderEmployeeList();
         await this.loadEntries();

@@ -840,6 +840,7 @@ async function loadF1() {
         const { data: txns } = await sb
             .from('bank_transactions')
             .select('transaction_date, debit_nad')
+            .eq('active', true)
             .gte('transaction_date', YEAR + '-01-01')
             .not('debit_nad', 'is', null);
 

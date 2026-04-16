@@ -732,17 +732,35 @@ async function loadCarcassPrices() {
     const days = parseInt(document.getElementById('days-filter').value, 10);
     const cutoff = new Date(Date.now() - days * 86400000).toISOString().split('T')[0];
 
+    // Query is structured-column-optional: we only SELECT/FILTER on columns
+    // guaranteed to exist pre-migration (commodity, price_date, price_nad,
+    // source). Post-migration the structured fields become available via a
+    // separate optional select — if the migration hasn't run yet the page
+    // still works by falling back to parseBeefCommodity().
     try {
-        // Wir holen sowohl strukturierte Zeilen (weight_basis='carcass') als
-        // auch Legacy-beef_%-Zeilen und mergen sie.
-        const { data } = await sb
+        let rows = [];
+        // Primary: try with structured columns
+        const structured = await sb
             .from('market_prices')
             .select('commodity, price_date, price_nad, provider, grade, weight_basis, source')
             .or('weight_basis.eq.carcass,commodity.like.beef_%')
             .gte('price_date', cutoff)
             .order('price_date', { ascending: true });
 
-        carcassData = (data || [])
+        if (structured.error) {
+            // Fallback: migration not yet applied — query without structured cols
+            const legacy = await sb
+                .from('market_prices')
+                .select('commodity, price_date, price_nad, source')
+                .like('commodity', 'beef_%')
+                .gte('price_date', cutoff)
+                .order('price_date', { ascending: true });
+            rows = legacy.data || [];
+        } else {
+            rows = structured.data || [];
+        }
+
+        carcassData = rows
             .map(r => {
                 if (r.provider && r.grade) return r;
                 const parsed = parseBeefCommodity(r.commodity);
@@ -815,7 +833,7 @@ function renderCarcassPanel() {
     });
     const gradeRows = Object.values(latestByProvider).filter(r => r.grade === grade);
     if (!gradeRows.length) {
-        tbody.innerHTML = '<tr><td colspan="3" class="no-data">Keine Preise fuer Grade ' + escHtml(grade) + '</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="3" class="no-data">Keine Preise für Grade ' + escHtml(grade) + '</td></tr>';
         return;
     }
     gradeRows.sort((a, b) => (PROVIDER_LABELS[a.provider] || a.provider).localeCompare(PROVIDER_LABELS[b.provider] || b.provider));
@@ -833,14 +851,27 @@ async function loadLiveAuctionPrices() {
     const cutoff = new Date(Date.now() - days * 86400000).toISOString().split('T')[0];
 
     try {
-        const { data } = await sb
+        let rows = [];
+        const structured = await sb
             .from('market_prices')
             .select('commodity, price_date, price_nad, unit, weight_basis, provider, source')
             .or('weight_basis.in.(live,per_head),commodity.like.auction_%')
             .gte('price_date', cutoff)
             .order('price_date', { ascending: true });
 
-        liveData = data || [];
+        if (structured.error) {
+            const legacy = await sb
+                .from('market_prices')
+                .select('commodity, price_date, price_nad, unit, source')
+                .like('commodity', 'auction_%')
+                .gte('price_date', cutoff)
+                .order('price_date', { ascending: true });
+            rows = legacy.data || [];
+        } else {
+            rows = structured.data || [];
+        }
+
+        liveData = rows;
         renderLivePanel();
     } catch (err) {
         console.error('loadLiveAuctionPrices:', err);

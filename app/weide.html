@@ -903,6 +903,31 @@
                 </tbody>
             </table>
         </div>
+
+        <!-- Bewegungshistorie (letzte 20) -->
+        <div style="margin-top:24px;">
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
+                <strong style="color:#374151;">Letzte Bewegungen</strong>
+                <button onclick="loadRecentMovements()" style="background:#6b7280; color:white; border:none; padding:4px 12px; border-radius:4px; cursor:pointer; font-size:0.82em;">Aktualisieren</button>
+            </div>
+            <table class="data-table" id="movements-table" style="font-size:0.85em;">
+                <thead>
+                    <tr>
+                        <th>Datum</th>
+                        <th>Von</th>
+                        <th>Nach</th>
+                        <th>Kategorie</th>
+                        <th class="num">Anzahl</th>
+                        <th>Grund</th>
+                        <th>Notiz</th>
+                        <th>Aktion</th>
+                    </tr>
+                </thead>
+                <tbody id="movements-tbody">
+                    <tr><td colspan="8" class="no-data">Lade Bewegungen...</td></tr>
+                </tbody>
+            </table>
+        </div>
     </div>
 
     <!-- Rainfall Chart -->
@@ -1304,6 +1329,73 @@ async function saveQuickMove() {
     document.getElementById('quick-move-form').style.display = 'none';
 
     await loadAll();
+    loadRecentMovements();
+}
+
+// ── Bewegungshistorie ────────────────────────────────────────────
+const MOVEMENT_REASON_LABELS = {
+    rotation: 'Rotation', birth: 'Geburt', purchase: 'Zukauf',
+    sale: 'Verkauf', death: 'Todesfall', separation: 'Separation',
+    other: 'Sonstiges', initial: 'Ersterfassung'
+};
+const MOVEMENT_CATEGORY_LABELS = {
+    mixed: 'Herde', cows: 'Kühe', bulls: 'Bullen',
+    heifers: 'Färsen', calves: 'Kälber', oxen: 'Ochsen'
+};
+
+async function loadRecentMovements() {
+    const tbody = document.getElementById('movements-tbody');
+    if (!tbody) return;
+
+    const { data, error } = await sb
+        .from('herd_movements')
+        .select('id, movement_date, from_camp, to_camp, animal_category, head_count, reason, notes')
+        .neq('reason', 'initial')
+        .order('movement_date', { ascending: false })
+        .order('created_at', { ascending: false })
+        .limit(20);
+
+    if (error) {
+        tbody.innerHTML = '<tr><td colspan="8" class="no-data" style="color:#ef4444;">Fehler: ' + error.message + '</td></tr>';
+        return;
+    }
+
+    if (!data || !data.length) {
+        tbody.innerHTML = '<tr><td colspan="8" class="no-data">Keine Bewegungen erfasst.</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = data.map(m => {
+        const dateStr = new Date(m.movement_date).toLocaleDateString('de-DE');
+        const reasonLabel = MOVEMENT_REASON_LABELS[m.reason] || m.reason;
+        const catLabel = MOVEMENT_CATEGORY_LABELS[m.animal_category] || m.animal_category;
+        const from = m.from_camp || '—';
+        const to = m.to_camp || '—';
+        return `<tr>
+            <td>${dateStr}</td>
+            <td>${escapeHtmlMov(from)}</td>
+            <td>${escapeHtmlMov(to)}</td>
+            <td>${escapeHtmlMov(catLabel)}</td>
+            <td class="num">${m.head_count}</td>
+            <td>${escapeHtmlMov(reasonLabel)}</td>
+            <td>${escapeHtmlMov(m.notes || '')}</td>
+            <td><button onclick="deleteMovement('${m.id}',${m.head_count})" style="background:#dc2626; color:white; border:none; padding:4px 10px; border-radius:4px; cursor:pointer; font-size:0.8em;">Löschen</button></td>
+        </tr>`;
+    }).join('');
+}
+
+function escapeHtmlMov(s) {
+    const d = document.createElement('div');
+    d.textContent = s == null ? '' : String(s);
+    return d.innerHTML;
+}
+
+async function deleteMovement(id, count) {
+    if (!confirm('Bewegung (' + count + ' Tiere) wirklich löschen? Kamp-Belegung wird neu berechnet.')) return;
+    const { error } = await sb.from('herd_movements').delete().eq('id', id);
+    if (error) { alert('Fehler beim Löschen: ' + error.message); return; }
+    await loadAll();
+    loadRecentMovements();
 }
 
 // ── Rainfall Chart ───────────────────────────────────────────────
@@ -2141,7 +2233,7 @@ async function loadK4() {
 
         // Show max temperature
         const maxTemp = Math.max(...data.map(d => d.temperature_max_c || 0));
-        subEl.textContent = 'Open-Meteo Prognose — Nächste 14 Tage, max. ' + Math.round(maxTemp * 10) / 10 + ' \u00B0C';
+        subEl.textContent = 'Open-Meteo Prognose — Nächste 14 Tage, max. ' + Math.round(maxTemp * 10) / 10 + ' °C';
     } catch (err) {
         console.error('K4 error:', err);
         valueEl.textContent = '\u2014';
@@ -2291,7 +2383,8 @@ async function loadAll() {
         loadMap(),
         loadK3(),
         loadK4(),
-        loadW1Detail()
+        loadW1Detail(),
+        loadRecentMovements()
     ]);
 
     const now = new Date();

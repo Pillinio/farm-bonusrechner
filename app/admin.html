@@ -199,6 +199,7 @@
                         <th>Geplant (NAD)</th>
                         <th>Ist (NAD)</th>
                         <th>Abweichung</th>
+                        <th style="width:90px">Aktion</th>
                     </tr>
                 </thead>
                 <tbody id="budget-tbody"></tbody>
@@ -344,27 +345,99 @@
                     <input type="date" id="mp-date">
                 </div>
                 <div class="form-group">
-                    <label>Kategorie</label>
-                    <select id="mp-category">
+                    <label>Anbieter / Quelle</label>
+                    <select id="mp-provider">
                         <option value="">-- Wählen --</option>
-                        <optgroup label="Auktionspreise">
-                            <option value="auction_weaner_bull">Absetzer Bulle</option>
-                            <option value="auction_weaner_heifer">Absetzer Färse</option>
-                            <option value="auction_cow_calf">Kuh + Kalb</option>
-                            <option value="auction_toll_ox">Toll-Ochse</option>
-                            <option value="auction_old_cow">Altkuh</option>
+                        <optgroup label="Schlachtgewicht (NAD/kg cold)">
+                            <option value="meatco_fixed">Meatco Fixed 240+</option>
+                            <option value="meatco">Meatco 180-239</option>
+                            <option value="savanna">Savanna Beef Operations</option>
+                            <option value="beefcor">Beefcor</option>
+                            <option value="rmaa">RMAA</option>
                         </optgroup>
-                        <optgroup label="Meatco-Preise">
-                            <option value="beef_meatco_A2">Meatco A2</option>
-                            <option value="beef_meatco_B2">Meatco B2</option>
-                            <option value="beef_meatco_C2">Meatco C2</option>
+                        <optgroup label="Auktionen">
+                            <option value="labta">LABTA (NAD/kg live bzw. NAD/Tier)</option>
+                            <option value="auction_classic">Klassische Auktion (NAD/Tier)</option>
                         </optgroup>
                         <optgroup label="Sonstige">
-                            <option value="custom">Benutzerdefiniert...</option>
+                            <option value="custom">Benutzerdefiniert&hellip;</option>
                         </optgroup>
                     </select>
                 </div>
             </div>
+
+            <!-- Grade (nur für Schlachtgewicht-Anbieter) -->
+            <div class="form-row" id="mp-grade-row" style="display:none;">
+                <div class="form-group">
+                    <label>Grade</label>
+                    <select id="mp-grade">
+                        <option value="">-- Wählen --</option>
+                        <option value="A0">A0</option><option value="A1">A1</option>
+                        <option value="A2">A2</option><option value="A3">A3</option>
+                        <option value="A4">A4</option><option value="A5">A5</option>
+                        <option value="A6">A6</option>
+                        <option value="AB0">AB0</option><option value="AB1">AB1</option>
+                        <option value="AB2">AB2</option><option value="AB3">AB3</option>
+                        <option value="AB4">AB4</option><option value="AB5">AB5</option>
+                        <option value="AB6">AB6</option>
+                        <option value="B0">B0</option><option value="B1">B1</option>
+                        <option value="B2">B2</option><option value="B3">B3</option>
+                        <option value="B4">B4</option><option value="B5">B5</option>
+                        <option value="B6">B6</option>
+                        <option value="C0">C0</option><option value="C1">C1</option>
+                        <option value="C2">C2</option><option value="C3">C3</option>
+                        <option value="C4">C4</option><option value="C5">C5</option>
+                        <option value="C6">C6</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- LABTA-Kategorie -->
+            <div class="form-row" id="mp-labta-row" style="display:none;">
+                <div class="form-group">
+                    <label>LABTA-Kategorie</label>
+                    <select id="mp-labta-type">
+                        <option value="">-- Wählen --</option>
+                        <optgroup label="NAD/kg live">
+                            <option value="tollies_heifers_mix">Tollies/Heifers Mix</option>
+                            <option value="tollies">Tollies</option>
+                            <option value="tollies_nguni">Tollies Nguni</option>
+                            <option value="heifers">Heifers</option>
+                            <option value="heifers_nguni">Heifers Nguni</option>
+                            <option value="store_oxen">Store Oxen</option>
+                            <option value="store_oxen_nguni">Store Oxen Nguni</option>
+                            <option value="store_heifers">Store Heifers</option>
+                            <option value="store_heifers_nguni">Store Heifers Nguni</option>
+                            <option value="slaughter_oxen">Slaughter Oxen</option>
+                            <option value="slaughter_heifers">Slaughter Heifers</option>
+                            <option value="cows_fat">Cows Fat</option>
+                            <option value="cows_medium">Cows Medium</option>
+                            <option value="cows_lean">Cows Lean</option>
+                            <option value="slaughter_bulls">Slaughter Bulls</option>
+                        </optgroup>
+                        <optgroup label="NAD/Tier">
+                            <option value="cow_with_calf">Kuh + Kalb</option>
+                        </optgroup>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Klassische Auktion (NAD/Tier) -->
+            <div class="form-row" id="mp-auction-classic-row" style="display:none;">
+                <div class="form-group">
+                    <label>Auktions-Kategorie</label>
+                    <select id="mp-auction-classic-type">
+                        <option value="">-- Wählen --</option>
+                        <option value="weaner_bull">Absetzer Bulle</option>
+                        <option value="weaner_heifer">Absetzer Färse</option>
+                        <option value="cow_calf">Kuh + Kalb</option>
+                        <option value="toll_ox">Toll-Ochse</option>
+                        <option value="old_cow">Altkuh</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Custom -->
             <div class="form-row" id="mp-custom-row" style="display:none;">
                 <div class="form-group">
                     <label>Benutzerdefinierter Commodity-Name</label>
@@ -385,7 +458,8 @@
                     <input type="text" id="mp-source" placeholder="z.B. WHKLA Auktion, Meatco, Agri-Depot">
                 </div>
             </div>
-            <button class="btn btn-success" onclick="saveMarketPrice()">Preis speichern</button>
+            <button class="btn btn-success" id="mp-save-btn" onclick="saveMarketPrice()">Preis speichern</button>
+            <button class="btn btn-secondary" id="mp-cancel-btn" onclick="cancelEditMarketPrice()" style="display:none; margin-left:8px;">Abbrechen</button>
 
             <hr style="margin: 24px 0; border: none; border-top: 1px solid #e5e7eb;">
 
@@ -411,8 +485,9 @@
         <div id="section-bank" class="section">
             <div class="section-header">
                 <h2>Kontoauszug-Zuordnung</h2>
-                <div style="display:flex; gap:8px;">
+                <div style="display:flex; gap:8px; flex-wrap:wrap;">
                     <button class="btn btn-secondary btn-sm" onclick="toggleBankFilter()">Nur offene</button>
+                    <button class="btn btn-secondary btn-sm" onclick="toggleBankInactive()">Deaktivierte anzeigen</button>
                     <button class="btn btn-primary btn-sm" onclick="loadBankTransactions()">Aktualisieren</button>
                 </div>
             </div>
@@ -426,7 +501,8 @@
                         <th>Beschreibung</th>
                         <th style="text-align:right">Betrag (NAD)</th>
                         <th style="width:220px">Kategorie</th>
-                        <th style="width:80px">Status</th>
+                        <th style="width:100px">Status</th>
+                        <th style="width:150px">Aktion</th>
                     </tr>
                 </thead>
                 <tbody id="bank-tbody"></tbody>
@@ -476,6 +552,28 @@
                 <span id="init-progress" style="font-size:0.9em; color:#6b7280;">0 Tiere erfasst</span>
                 <button class="btn btn-primary" onclick="saveInitialPositions()">Alle speichern</button>
             </div>
+
+            <hr style="margin: 24px 0; border: none; border-top: 1px solid #e5e7eb;">
+
+            <div class="section-header">
+                <h2>Gespeicherte Initial-Positionen</h2>
+                <button class="btn btn-secondary btn-sm" onclick="loadSavedInitialPositions()">Aktualisieren</button>
+            </div>
+            <p style="color:#6b7280; font-size:0.9em; margin-bottom:12px;">
+                Bereits in der Datenbank gespeicherte Ersterfassungs-Einträge. Einzelne Einträge können hier gelöscht werden.
+            </p>
+            <table id="saved-init-table" style="font-size:0.9em;">
+                <thead>
+                    <tr>
+                        <th>Datum</th>
+                        <th>Kamp</th>
+                        <th>Kategorie</th>
+                        <th style="text-align:right">Tiere</th>
+                        <th>Aktion</th>
+                    </tr>
+                </thead>
+                <tbody id="saved-init-tbody"></tbody>
+            </table>
         </div>
 
         <!-- J. User-Verwaltung -->
@@ -588,14 +686,27 @@ async function loadBudgets() {
         const devClass = Math.abs(deviation) <= 10 ? 'color:#22c55e' : Math.abs(deviation) <= 25 ? 'color:#eab308' : 'color:#ef4444';
 
         const plannedFormatted = (row.planned_nad || 0).toLocaleString('de-DE');
+        const catEsc = (row.category || '').replace(/'/g, "\\'");
         tbody.innerHTML += `
             <tr data-id="${row.id}">
                 <td>${row.category}</td>
                 <td><input type="text" inputmode="decimal" class="budget-planned" value="${plannedFormatted}" oninput="formatBudgetInput(this)" style="width:140px; text-align:right;"></td>
                 <td>${(row.actual_nad || 0).toLocaleString('de-DE')} NAD</td>
                 <td style="${devClass}; font-weight:600">${deviation > 0 ? '+' : ''}${deviation}%</td>
+                <td><button class="btn btn-danger" style="padding:4px 10px; font-size:0.85em;" onclick="deleteBudgetRow('${row.id}','${catEsc}')">Löschen</button></td>
             </tr>`;
     });
+}
+
+async function deleteBudgetRow(id, category) {
+    if (!confirm('Budget-Kategorie "' + category + '" wirklich löschen?')) return;
+    const { error } = await sb.from('budgets').delete().eq('id', id);
+    if (error) {
+        showStatus('Fehler beim Löschen: ' + error.message, 'error');
+        return;
+    }
+    showStatus('Budget-Kategorie gelöscht.');
+    loadBudgets();
 }
 
 function formatBudgetInput(el) {
@@ -614,6 +725,7 @@ function addBudgetRow() {
             <td><input type="text" inputmode="decimal" class="budget-planned" value="0" oninput="formatBudgetInput(this)" style="width:140px; text-align:right;"></td>
             <td>0 NAD</td>
             <td>-</td>
+            <td><button class="btn" style="padding:4px 10px; font-size:0.85em;" onclick="this.closest('tr').remove()">Verwerfen</button></td>
         </tr>`;
 }
 
@@ -975,68 +1087,219 @@ async function inviteUser() {
 // ══════════════════════════════════════════════════════════════════
 // F. MARKTPREISE
 // ══════════════════════════════════════════════════════════════════
+let _editingMarketPriceId = null;
+let _recentPricesCache = [];
 
-// Toggle custom commodity field
-document.getElementById('mp-category')?.addEventListener('change', function() {
-    document.getElementById('mp-custom-row').style.display = this.value === 'custom' ? 'grid' : 'none';
-});
+// Cascading form logic: show/hide sub-rows based on selected provider
+const CARCASS_PROVIDERS = new Set(['meatco', 'meatco_fixed', 'savanna', 'beefcor', 'rmaa']);
+
+function toggleMpRows() {
+    const provider = document.getElementById('mp-provider').value;
+    const show = id => document.getElementById(id).style.display = 'grid';
+    const hide = id => document.getElementById(id).style.display = 'none';
+    ['mp-grade-row', 'mp-labta-row', 'mp-auction-classic-row', 'mp-custom-row'].forEach(hide);
+    if (CARCASS_PROVIDERS.has(provider)) show('mp-grade-row');
+    else if (provider === 'labta') show('mp-labta-row');
+    else if (provider === 'auction_classic') show('mp-auction-classic-row');
+    else if (provider === 'custom') show('mp-custom-row');
+}
+document.getElementById('mp-provider')?.addEventListener('change', toggleMpRows);
+
+// Build commodity + unit + weight_basis from cascading form state
+function buildMarketPricePayload() {
+    const provider = document.getElementById('mp-provider').value;
+    if (!provider) return { error: 'Bitte Anbieter wählen.' };
+
+    if (CARCASS_PROVIDERS.has(provider)) {
+        const grade = document.getElementById('mp-grade').value;
+        if (!grade) return { error: 'Bitte Grade wählen.' };
+        const commodity = provider === 'meatco_fixed'
+            ? `beef_meatco_fixed_${grade}`
+            : `beef_${provider}_${grade}`;
+        return {
+            commodity, unit: 'per_kg',
+            provider, grade, weight_basis: 'carcass'
+        };
+    }
+
+    if (provider === 'labta') {
+        const type = document.getElementById('mp-labta-type').value;
+        if (!type) return { error: 'Bitte LABTA-Kategorie wählen.' };
+        const isPerHead = type === 'cow_with_calf';
+        return {
+            commodity: `auction_labta_${type}`,
+            unit: isPerHead ? 'per_head' : 'per_kg',
+            provider: 'labta',
+            grade: null,
+            weight_basis: isPerHead ? 'per_head' : 'live'
+        };
+    }
+
+    if (provider === 'auction_classic') {
+        const type = document.getElementById('mp-auction-classic-type').value;
+        if (!type) return { error: 'Bitte Auktions-Kategorie wählen.' };
+        return {
+            commodity: `auction_${type}`,
+            unit: 'per_head',
+            provider: 'auction',
+            grade: null,
+            weight_basis: 'per_head'
+        };
+    }
+
+    if (provider === 'custom') {
+        const commodity = document.getElementById('mp-custom-commodity').value.trim();
+        const unit = document.getElementById('mp-custom-unit').value.trim() || 'per_unit';
+        if (!commodity) return { error: 'Bitte Commodity-Name angeben.' };
+        return { commodity, unit, provider: null, grade: null, weight_basis: null };
+    }
+
+    return { error: 'Unbekannter Anbieter.' };
+}
 
 async function saveMarketPrice() {
     const dateVal = document.getElementById('mp-date').value;
-    const category = document.getElementById('mp-category').value;
     const price = parseFloat(document.getElementById('mp-price').value);
     const source = document.getElementById('mp-source').value.trim();
 
-    if (!dateVal || !category || isNaN(price)) {
-        return showStatus('Bitte Datum, Kategorie und Preis angeben.', 'error');
+    if (!dateVal || isNaN(price)) {
+        return showStatus('Bitte Datum und Preis angeben.', 'error');
     }
 
-    let commodity = category;
-    let unit = 'per_kg';
+    const built = buildMarketPricePayload();
+    if (built.error) return showStatus(built.error, 'error');
 
-    if (category === 'custom') {
-        commodity = document.getElementById('mp-custom-commodity').value.trim();
-        unit = document.getElementById('mp-custom-unit').value.trim() || 'per_unit';
-        if (!commodity) return showStatus('Bitte Commodity-Name angeben.', 'error');
-    } else if (category.startsWith('auction_')) {
-        unit = 'per_head';
+    const payload = {
+        price_date: dateVal,
+        commodity: built.commodity,
+        price_nad: price,
+        unit: built.unit,
+        source: source || 'manual',
+        provider: built.provider,
+        grade: built.grade,
+        weight_basis: built.weight_basis,
+    };
+
+    async function attempt(pl) {
+        if (_editingMarketPriceId) {
+            return sb.from('market_prices').update(pl).eq('id', _editingMarketPriceId);
+        }
+        return sb.from('market_prices').upsert(pl, { onConflict: 'price_date,commodity' });
     }
 
-    const { error } = await sb
-        .from('market_prices')
-        .upsert({
-            price_date: dateVal,
-            commodity: commodity,
-            price_nad: price,
-            unit: unit,
-            source: source || 'manual'
-        }, { onConflict: 'price_date,commodity' });
+    let { error } = await attempt(payload);
+    // Fallback: migration not yet applied → retry without structured columns
+    if (error && /provider|grade|weight_basis/i.test(error.message || '')) {
+        const legacy = {
+            price_date: payload.price_date,
+            commodity: payload.commodity,
+            price_nad: payload.price_nad,
+            unit: payload.unit,
+            source: payload.source,
+        };
+        ({ error } = await attempt(legacy));
+        if (!error) {
+            showStatus('Hinweis: Migration 20260415000400 noch nicht aktiv — strukturierte Felder werden erst nach Deploy persistiert.', 'info');
+        }
+    }
 
     if (error) return showStatus('Fehler: ' + error.message, 'error');
 
-    showStatus('Marktpreis gespeichert.');
-    document.getElementById('mp-price').value = '';
+    showStatus(_editingMarketPriceId ? 'Marktpreis aktualisiert.' : 'Marktpreis gespeichert.');
+    cancelEditMarketPrice();
     loadRecentPrices();
+}
+
+function editMarketPrice(id) {
+    const row = _recentPricesCache.find(r => r.id === id);
+    if (!row) return;
+
+    document.getElementById('mp-date').value = row.price_date;
+    document.getElementById('mp-price').value = row.price_nad;
+    document.getElementById('mp-source').value = row.source || '';
+
+    // Reverse-map commodity/provider to the cascading form fields
+    const providerSel = document.getElementById('mp-provider');
+    const c = row.commodity || '';
+    const provider = row.provider;
+
+    if (provider && CARCASS_PROVIDERS.has(provider) && row.grade) {
+        providerSel.value = provider;
+        toggleMpRows();
+        document.getElementById('mp-grade').value = row.grade;
+    } else if (c.startsWith('auction_labta_')) {
+        providerSel.value = 'labta';
+        toggleMpRows();
+        document.getElementById('mp-labta-type').value = c.replace('auction_labta_', '');
+    } else if (c.startsWith('auction_')) {
+        providerSel.value = 'auction_classic';
+        toggleMpRows();
+        document.getElementById('mp-auction-classic-type').value = c.replace('auction_', '');
+    } else if (c.startsWith('beef_meatco_fixed_')) {
+        providerSel.value = 'meatco_fixed';
+        toggleMpRows();
+        document.getElementById('mp-grade').value = c.replace('beef_meatco_fixed_', '');
+    } else if (c.startsWith('beef_')) {
+        const parts = c.split('_');  // beef, <provider>, <grade>
+        if (parts.length >= 3) {
+            providerSel.value = parts[1];
+            toggleMpRows();
+            document.getElementById('mp-grade').value = parts[2];
+        } else {
+            providerSel.value = 'custom';
+            toggleMpRows();
+            document.getElementById('mp-custom-commodity').value = c;
+            document.getElementById('mp-custom-unit').value = row.unit || '';
+        }
+    } else {
+        providerSel.value = 'custom';
+        toggleMpRows();
+        document.getElementById('mp-custom-commodity').value = c;
+        document.getElementById('mp-custom-unit').value = row.unit || '';
+    }
+
+    _editingMarketPriceId = id;
+    document.getElementById('mp-save-btn').textContent = 'Änderungen speichern';
+    document.getElementById('mp-cancel-btn').style.display = 'inline-block';
+    document.getElementById('section-market')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function cancelEditMarketPrice() {
+    _editingMarketPriceId = null;
+    document.getElementById('mp-save-btn').textContent = 'Preis speichern';
+    document.getElementById('mp-cancel-btn').style.display = 'none';
+    document.getElementById('mp-price').value = '';
+    document.getElementById('mp-provider').value = '';
+    document.getElementById('mp-grade').value = '';
+    document.getElementById('mp-labta-type').value = '';
+    document.getElementById('mp-auction-classic-type').value = '';
+    document.getElementById('mp-custom-commodity').value = '';
+    document.getElementById('mp-custom-unit').value = '';
+    toggleMpRows();
 }
 
 async function loadRecentPrices() {
     const { data, error } = await sb
         .from('market_prices')
-        .select('id, price_date, commodity, price_nad, unit, source')
+        .select('id, price_date, commodity, price_nad, unit, source, provider, grade, weight_basis')
         .order('price_date', { ascending: false })
         .limit(20);
 
     if (error) return showStatus('Fehler: ' + error.message, 'error');
 
+    _recentPricesCache = data || [];
     const tbody = document.getElementById('market-recent-tbody');
-    tbody.innerHTML = (data || []).map(r => {
+    tbody.innerHTML = _recentPricesCache.map(r => {
         const dateStr = new Date(r.price_date).toLocaleDateString('de-DE');
         return `<tr>
             <td>${dateStr}</td>
             <td>${escapeHtml(r.commodity)}</td>
             <td>N$ ${r.price_nad.toLocaleString('de-DE', {minimumFractionDigits: 2})}</td>
             <td>${escapeHtml(r.source || '-')}</td>
-            <td><button class="btn btn-danger btn-sm" onclick="deleteMarketPrice('${r.id}')">Löschen</button></td>
+            <td>
+                <button class="btn btn-secondary btn-sm" onclick="editMarketPrice('${r.id}')">Bearbeiten</button>
+                <button class="btn btn-danger btn-sm" onclick="deleteMarketPrice('${r.id}')">Löschen</button>
+            </td>
         </tr>`;
     }).join('');
 }
@@ -1046,6 +1309,7 @@ async function deleteMarketPrice(id) {
     const { error } = await sb.from('market_prices').delete().eq('id', id);
     if (error) return showStatus('Fehler: ' + error.message, 'error');
     showStatus('Preis gelöscht.');
+    if (_editingMarketPriceId === id) cancelEditMarketPrice();
     loadRecentPrices();
 }
 
@@ -1066,20 +1330,29 @@ const BUDGET_CATEGORIES = [
 ];
 
 let bankShowOnlyOpen = true;
+let bankShowInactive = false;
 
 function toggleBankFilter() {
     bankShowOnlyOpen = !bankShowOnlyOpen;
     loadBankTransactions();
 }
 
+function toggleBankInactive() {
+    bankShowInactive = !bankShowInactive;
+    loadBankTransactions();
+}
+
 async function loadBankTransactions() {
     let query = sb.from('bank_transactions')
-        .select('id, transaction_date, description, debit_nad, credit_nad, category, category_confirmed')
+        .select('id, transaction_date, description, debit_nad, credit_nad, category, category_confirmed, active')
         .order('category_confirmed', { ascending: true })
         .order('transaction_date', { ascending: false });
 
     if (bankShowOnlyOpen) {
         query = query.eq('category_confirmed', false);
+    }
+    if (!bankShowInactive) {
+        query = query.eq('active', true);
     }
 
     const { data, error } = await query.limit(200);
@@ -1087,10 +1360,11 @@ async function loadBankTransactions() {
 
     const total = data?.length || 0;
     const open = (data || []).filter(r => !r.category_confirmed).length;
+    const inactive = (data || []).filter(r => r.active === false).length;
     document.getElementById('bank-stats').textContent =
         bankShowOnlyOpen
-            ? open + ' offene Zuordnungen'
-            : total + ' Buchungen angezeigt, ' + open + ' offen';
+            ? open + ' offene Zuordnungen' + (bankShowInactive && inactive ? ', ' + inactive + ' deaktiviert' : '')
+            : total + ' Buchungen angezeigt, ' + open + ' offen' + (bankShowInactive && inactive ? ', ' + inactive + ' deaktiviert' : '');
 
     const catOptions = BUDGET_CATEGORIES.map(c =>
         '<option value="' + escapeHtml(c) + '">' + escapeHtml(c) + '</option>'
@@ -1104,23 +1378,49 @@ async function loadBankTransactions() {
             : '+' + Number(r.credit_nad).toLocaleString('de-DE', {minimumFractionDigits: 2});
         const amountColor = r.debit_nad ? 'color:#dc2626' : 'color:#16a34a';
         const confirmed = r.category_confirmed;
-        const statusBadge = confirmed
-            ? '<span style="color:#22c55e;font-weight:600;">OK</span>'
-            : '<span style="color:#ef4444;font-weight:600;">Offen</span>';
+        const isInactive = r.active === false;
+        const statusBadge = isInactive
+            ? '<span style="color:#6b7280;font-weight:600;">Deaktiviert</span>'
+            : (confirmed
+                ? '<span style="color:#22c55e;font-weight:600;">OK</span>'
+                : '<span style="color:#ef4444;font-weight:600;">Offen</span>');
 
         const selectedCat = r.category || '';
+        const rowStyle = isInactive
+            ? 'opacity:0.45; text-decoration:line-through;'
+            : (confirmed ? '' : 'background:#fef9c3;');
 
-        return '<tr style="' + (confirmed ? '' : 'background:#fef9c3;') + '">'
+        const actionBtn = isInactive
+            ? '<button class="btn btn-secondary btn-sm" onclick="reactivateBankTx(\'' + r.id + '\')">Wiederherstellen</button>'
+            : '<button class="btn btn-danger btn-sm" onclick="deactivateBankTx(\'' + r.id + '\')">Löschen</button>';
+
+        return '<tr style="' + rowStyle + '">'
             + '<td>' + dateStr + '</td>'
             + '<td>' + escapeHtml(r.description) + '</td>'
             + '<td style="text-align:right;' + amountColor + '">' + amount + '</td>'
-            + '<td><select onchange="assignCategory(\'' + r.id + '\', this.value)" style="width:100%;padding:4px 8px;border:1px solid #d1d5db;border-radius:4px;font-size:0.9em;">'
+            + '<td><select ' + (isInactive ? 'disabled' : '') + ' onchange="assignCategory(\'' + r.id + '\', this.value)" style="width:100%;padding:4px 8px;border:1px solid #d1d5db;border-radius:4px;font-size:0.9em;">'
             + '<option value="">-- Zuordnen --</option>'
             + catOptions.replace('value="' + escapeHtml(selectedCat) + '"', 'value="' + escapeHtml(selectedCat) + '" selected')
             + '</select></td>'
             + '<td style="text-align:center;">' + statusBadge + '</td>'
+            + '<td>' + actionBtn + '</td>'
             + '</tr>';
     }).join('');
+}
+
+async function deactivateBankTx(id) {
+    if (!confirm('Transaktion deaktivieren? Sie wird aus allen Finanz-KPIs ausgeblendet, bleibt aber als Audit-Eintrag erhalten.')) return;
+    const { error } = await sb.from('bank_transactions').update({ active: false }).eq('id', id);
+    if (error) return showStatus('Fehler: ' + error.message, 'error');
+    showStatus('Transaktion deaktiviert.');
+    loadBankTransactions();
+}
+
+async function reactivateBankTx(id) {
+    const { error } = await sb.from('bank_transactions').update({ active: true }).eq('id', id);
+    if (error) return showStatus('Fehler: ' + error.message, 'error');
+    showStatus('Transaktion wiederhergestellt.');
+    loadBankTransactions();
 }
 
 async function assignCategory(txId, category) {
@@ -1164,7 +1464,8 @@ async function assignCategory(txId, category) {
             const { data: similar } = await sb.from('bank_transactions')
                 .select('id')
                 .ilike('description', '%' + keyword + '%')
-                .eq('category_confirmed', false);
+                .eq('category_confirmed', false)
+                .eq('active', true);
 
             if (similar?.length > 0) {
                 for (const s of similar) {
@@ -1355,6 +1656,49 @@ async function saveInitialPositions() {
     showStatus(initialPositions.length + ' Positionen gespeichert.');
     initialPositions = [];
     renderInitList();
+    loadSavedInitialPositions();
+}
+
+async function loadSavedInitialPositions() {
+    const tbody = document.getElementById('saved-init-tbody');
+    if (!tbody) return;
+
+    const { data, error } = await sb
+        .from('herd_movements')
+        .select('id, movement_date, to_camp, animal_category, head_count')
+        .eq('reason', 'initial')
+        .order('movement_date', { ascending: false })
+        .order('to_camp', { ascending: true });
+
+    if (error) {
+        tbody.innerHTML = '<tr><td colspan="5" style="color:#ef4444; text-align:center;">Fehler: ' + escapeHtml(error.message) + '</td></tr>';
+        return;
+    }
+
+    if (!data || !data.length) {
+        tbody.innerHTML = '<tr><td colspan="5" style="color:#9ca3af; text-align:center;">Keine Einträge vorhanden.</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = data.map(r => {
+        const dateStr = new Date(r.movement_date).toLocaleDateString('de-DE');
+        const catLabel = r.animal_category === 'bulls' ? 'Bullen' : (r.animal_category === 'mixed' ? 'Herde' : r.animal_category);
+        return `<tr>
+            <td>${dateStr}</td>
+            <td>${escapeHtml(r.to_camp || '')}</td>
+            <td>${escapeHtml(catLabel)}</td>
+            <td style="text-align:right">${r.head_count}</td>
+            <td><button class="btn btn-danger btn-sm" onclick="deleteSavedInitialPosition('${r.id}','${escapeHtml(r.to_camp || '').replace(/'/g, "\\'")}',${r.head_count})">Löschen</button></td>
+        </tr>`;
+    }).join('');
+}
+
+async function deleteSavedInitialPosition(id, camp, count) {
+    if (!confirm('Initial-Position "' + camp + '" (' + count + ' Tiere) wirklich löschen?')) return;
+    const { error } = await sb.from('herd_movements').delete().eq('id', id).eq('reason', 'initial');
+    if (error) return showStatus('Fehler beim Löschen: ' + error.message, 'error');
+    showStatus('Initial-Position gelöscht.');
+    loadSavedInitialPositions();
 }
 
 // ── Helpers ──────────────────────────────────────────────────────
@@ -1383,6 +1727,7 @@ function escapeHtml(str) {
     await loadEmployees();
     await loadInitialCampDropdown();
     renderInitList();
+    await loadSavedInitialPositions();
     await loadUsers();
 })();
 </script>

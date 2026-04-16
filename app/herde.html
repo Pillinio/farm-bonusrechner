@@ -521,6 +521,9 @@
                     <span class="placeholder-icon">&#x1F4C9;</span>
                     <span class="placeholder-text">Keine Wachstumsdaten vorhanden</span>
                 </div>
+
+                <!-- Bilanz Zu- und Abgänge -->
+                <div id="h4-balance" style="margin-top:20px;"></div>
             </div>
         </div>
 
@@ -890,6 +893,7 @@ function renderH4() {
     const { labels, flow, maxMonth } = sliceYear(_selectedYear);
     if (maxMonth < 0) {
         setBadge('h4', '—'); destroyChart('h4'); showPlaceholder('h4');
+        renderH4Balance(null, null, -1);
         return;
     }
 
@@ -911,8 +915,13 @@ function renderH4() {
         }
     }
 
-    if (!anyData) { setBadge('h4', '—'); destroyChart('h4'); showPlaceholder('h4'); return; }
+    if (!anyData) {
+        setBadge('h4', '—'); destroyChart('h4'); showPlaceholder('h4');
+        renderH4Balance(null, null, -1);
+        return;
+    }
     hidePlaceholder('h4');
+    renderH4Balance(labels, flow, maxMonth);
 
     const latestNet = [...netValues].reverse().find(v => v != null) || 0;
     const sign = latestNet > 0 ? '+' : '';
@@ -971,6 +980,104 @@ function renderH4() {
             scales: { y: { title: { display: true, text: 'Tiere' } } }
         }
     });
+}
+
+// ── H4 Bilanz: Zu- und Abgänge (Tabelle mit Monat + YTD-Summe) ──
+function renderH4Balance(labels, flow, maxMonth) {
+    const host = document.getElementById('h4-balance');
+    if (!host) return;
+    if (maxMonth < 0 || !flow) { host.innerHTML = ''; return; }
+
+    const totals = { births: 0, purchases: 0, deaths: 0, sales: 0 };
+    const rows = [];
+    for (let m = 0; m <= maxMonth; m++) {
+        const f = flow[m] || { births: 0, deaths: 0, sales: 0, purchases: 0 };
+        const zu = (f.births || 0) + (f.purchases || 0);
+        const ab = (f.deaths || 0) + (f.sales || 0);
+        const net = zu - ab;
+        totals.births    += f.births    || 0;
+        totals.purchases += f.purchases || 0;
+        totals.deaths    += f.deaths    || 0;
+        totals.sales     += f.sales     || 0;
+        rows.push({ label: labels[m], births: f.births || 0, purchases: f.purchases || 0, zu,
+                    deaths: f.deaths || 0, sales: f.sales || 0, ab, net });
+    }
+    const ytdZu  = totals.births + totals.purchases;
+    const ytdAb  = totals.deaths + totals.sales;
+    const ytdNet = ytdZu - ytdAb;
+
+    const fmt = n => n === 0 ? '<span style="color:#9ca3af;">0</span>' : n.toLocaleString('de-DE');
+    const netCell = n => {
+        if (n === 0) return '<span style="color:#9ca3af;">0</span>';
+        const sign = n > 0 ? '+' : '';
+        const color = n > 0 ? '#15803d' : '#b91c1c';
+        return `<span style="color:${color};font-weight:600;">${sign}${n.toLocaleString('de-DE')}</span>`;
+    };
+
+    const summaryCards = `
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:12px; margin-bottom:16px;">
+            <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-left:4px solid #22c55e; padding:12px 14px; border-radius:8px;">
+                <div style="font-size:0.78em; color:#15803d; text-transform:uppercase; letter-spacing:0.3px; font-weight:600;">Zugänge YTD</div>
+                <div style="font-size:1.4em; font-weight:700; color:#111827; margin-top:4px;">${ytdZu.toLocaleString('de-DE')} Tiere</div>
+                <div style="font-size:0.8em; color:#6b7280; margin-top:2px;">${totals.births.toLocaleString('de-DE')} Geburten · ${totals.purchases.toLocaleString('de-DE')} Zukäufe</div>
+            </div>
+            <div style="background:#fef2f2; border:1px solid #fecaca; border-left:4px solid #ef4444; padding:12px 14px; border-radius:8px;">
+                <div style="font-size:0.78em; color:#b91c1c; text-transform:uppercase; letter-spacing:0.3px; font-weight:600;">Abgänge YTD</div>
+                <div style="font-size:1.4em; font-weight:700; color:#111827; margin-top:4px;">${ytdAb.toLocaleString('de-DE')} Tiere</div>
+                <div style="font-size:0.8em; color:#6b7280; margin-top:2px;">${totals.deaths.toLocaleString('de-DE')} Todesfälle · ${totals.sales.toLocaleString('de-DE')} Verkäufe</div>
+            </div>
+            <div style="background:#eff6ff; border:1px solid #bfdbfe; border-left:4px solid ${ytdNet >= 0 ? '#2E75B6' : '#f59e0b'}; padding:12px 14px; border-radius:8px;">
+                <div style="font-size:0.78em; color:#1e40af; text-transform:uppercase; letter-spacing:0.3px; font-weight:600;">Netto-Bilanz YTD</div>
+                <div style="font-size:1.4em; font-weight:700; color:${ytdNet >= 0 ? '#15803d' : '#b91c1c'}; margin-top:4px;">${ytdNet > 0 ? '+' : ''}${ytdNet.toLocaleString('de-DE')} Tiere</div>
+                <div style="font-size:0.8em; color:#6b7280; margin-top:2px;">Zugänge − Abgänge</div>
+            </div>
+        </div>`;
+
+    const tableRows = rows.map(r => `
+        <tr>
+            <td style="padding:6px 10px; font-weight:500;">${r.label}</td>
+            <td style="padding:6px 10px; text-align:right;">${fmt(r.births)}</td>
+            <td style="padding:6px 10px; text-align:right;">${fmt(r.purchases)}</td>
+            <td style="padding:6px 10px; text-align:right; font-weight:600; color:#15803d; background:#f0fdf4;">${r.zu === 0 ? '<span style="color:#9ca3af;">0</span>' : '+' + r.zu.toLocaleString('de-DE')}</td>
+            <td style="padding:6px 10px; text-align:right;">${fmt(r.deaths)}</td>
+            <td style="padding:6px 10px; text-align:right;">${fmt(r.sales)}</td>
+            <td style="padding:6px 10px; text-align:right; font-weight:600; color:#b91c1c; background:#fef2f2;">${r.ab === 0 ? '<span style="color:#9ca3af;">0</span>' : '−' + r.ab.toLocaleString('de-DE')}</td>
+            <td style="padding:6px 10px; text-align:right;">${netCell(r.net)}</td>
+        </tr>`).join('');
+
+    const totalRow = `
+        <tr style="border-top:2px solid #1a1a2e; background:#f9fafb; font-weight:700;">
+            <td style="padding:8px 10px;">Summe ${_selectedYear}</td>
+            <td style="padding:8px 10px; text-align:right;">${totals.births.toLocaleString('de-DE')}</td>
+            <td style="padding:8px 10px; text-align:right;">${totals.purchases.toLocaleString('de-DE')}</td>
+            <td style="padding:8px 10px; text-align:right; color:#15803d; background:#dcfce7;">+${ytdZu.toLocaleString('de-DE')}</td>
+            <td style="padding:8px 10px; text-align:right;">${totals.deaths.toLocaleString('de-DE')}</td>
+            <td style="padding:8px 10px; text-align:right;">${totals.sales.toLocaleString('de-DE')}</td>
+            <td style="padding:8px 10px; text-align:right; color:#b91c1c; background:#fee2e2;">−${ytdAb.toLocaleString('de-DE')}</td>
+            <td style="padding:8px 10px; text-align:right;">${netCell(ytdNet)}</td>
+        </tr>`;
+
+    host.innerHTML = summaryCards + `
+        <div style="overflow-x:auto; border:1px solid #e5e7eb; border-radius:8px;">
+            <table style="width:100%; border-collapse:collapse; font-size:0.88em;">
+                <thead>
+                    <tr style="background:#1a1a2e; color:white;">
+                        <th style="padding:8px 10px; text-align:left; font-weight:600;">Monat</th>
+                        <th style="padding:8px 10px; text-align:right; font-weight:600;">Geburten</th>
+                        <th style="padding:8px 10px; text-align:right; font-weight:600;">Zukäufe</th>
+                        <th style="padding:8px 10px; text-align:right; font-weight:600; background:#15803d;">Zugänge</th>
+                        <th style="padding:8px 10px; text-align:right; font-weight:600;">Todesfälle</th>
+                        <th style="padding:8px 10px; text-align:right; font-weight:600;">Verkäufe</th>
+                        <th style="padding:8px 10px; text-align:right; font-weight:600; background:#b91c1c;">Abgänge</th>
+                        <th style="padding:8px 10px; text-align:right; font-weight:600;">Netto</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${tableRows}
+                    ${totalRow}
+                </tbody>
+            </table>
+        </div>`;
 }
 
 // ── Load snapshots once, populate state, render all year-dependent KPIs ──

@@ -649,6 +649,7 @@ async function loadF1() {
         const { data: txns } = await sb
             .from('bank_transactions')
             .select('transaction_date, debit_nad')
+            .eq('active', true)
             .gte('transaction_date', YEAR + '-01-01')
             .not('debit_nad', 'is', null);
 
@@ -742,6 +743,7 @@ async function loadCashflow() {
         const { data } = await sb
             .from('bank_transactions')
             .select('transaction_date, debit_nad, credit_nad, description, category')
+            .eq('active', true)
             .gte('transaction_date', YEAR + '-01-01')
             .order('transaction_date', { ascending: true });
 
@@ -990,6 +992,7 @@ async function loadF3() {
         const { data } = await sb
             .from('bank_transactions')
             .select('transaction_date, credit_nad, description, category')
+            .eq('active', true)
             .gte('transaction_date', YEAR + '-01-01')
             .not('credit_nad', 'is', null)
             .gt('credit_nad', 0)
@@ -1197,6 +1200,7 @@ async function loadF5() {
         const { data: txns } = await sb
             .from('bank_transactions')
             .select('credit_nad, debit_nad, transaction_date')
+            .eq('active', true)
             .gte('transaction_date', YEAR + '-01-01');
 
         if (!txns?.length) return showNoData('f5');
@@ -1333,6 +1337,7 @@ async function loadF8() {
         const { data: txns } = await sb
             .from('bank_transactions')
             .select('debit_nad, transaction_date')
+            .eq('active', true)
             .gte('transaction_date', YEAR + '-01-01')
             .not('debit_nad', 'is', null);
 
