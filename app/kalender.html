@@ -964,14 +964,20 @@ async function approveCalendarEntry(entryId) {
 async function deleteCalendarEntry(entryId) {
     if (!confirm('Eintrag wirklich löschen?')) return;
     try {
-        // If entry was synced to Google Calendar, try to remove it there too
         const entry = _monthEntries.find(e => e.id === entryId);
+        const { data: deleted, error } = await sb.from('farm_calendar')
+            .delete()
+            .eq('id', entryId)
+            .select('id');
+        if (error) throw error;
+        if (!deleted || deleted.length === 0) {
+            alert('Löschen fehlgeschlagen: Keine Berechtigung für diesen Eintrag.');
+            return;
+        }
         if (entry?.google_event_id) {
             sb.functions.invoke('notify-calendar', { body: { action: 'rejected', entryId } })
                 .catch(e => console.warn('Calendar cleanup failed:', e));
         }
-        const { error } = await sb.from('farm_calendar').delete().eq('id', entryId);
-        if (error) throw error;
         await loadMonthData();
     } catch (err) {
         console.error('Delete error:', err);
