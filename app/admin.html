@@ -174,7 +174,7 @@
         <div class="section-tabs">
             <button class="active" onclick="showSection('budget')">Budget</button>
             <button onclick="showSection('bonus')">Bonus-Parameter</button>
-            <button onclick="showSection('carrying')">Tragfaehigkeit</button>
+            <button onclick="showSection('carrying')">Tragfähigkeit</button>
             <button onclick="showSection('rules')">Kategorisierung</button>
             <button onclick="showSection('uncat')">Unkategorisiert</button>
             <button onclick="showSection('market')">Marktpreise</button>
@@ -264,10 +264,10 @@
             <button class="btn btn-success" onclick="saveBonusParams()">Speichern (neue Version)</button>
         </div>
 
-        <!-- C. Tragfaehigkeit -->
+        <!-- C. Tragfähigkeit -->
         <div id="section-carrying" class="section">
             <div class="section-header">
-                <h2>Tragfaehigkeit (Carrying Capacity)</h2>
+                <h2>Tragfähigkeit (Carrying Capacity)</h2>
             </div>
             <div class="form-row">
                 <div class="form-group">
@@ -336,8 +336,8 @@
                 <h2>Marktpreise manuell erfassen</h2>
             </div>
             <p style="color:#6b7280; font-size:0.9em; margin-bottom:16px;">
-                Hier koennen Auktionspreise, Meatco-Preise oder andere Marktdaten manuell eingegeben werden.
-                Automatisierte Quellen: FX-Kurse (taeglich), LPO-Preise (via Parser).
+                Hier können Auktionspreise, Meatco-Preise oder andere Marktdaten manuell eingegeben werden.
+                Automatisierte Quellen: FX-Kurse (täglich), LPO-Preise (via Parser).
             </p>
             <div class="form-row">
                 <div class="form-group">
@@ -464,7 +464,7 @@
             <hr style="margin: 24px 0; border: none; border-top: 1px solid #e5e7eb;">
 
             <div class="section-header">
-                <h2>Letzte Eintraege</h2>
+                <h2>Letzte Einträge</h2>
                 <button class="btn btn-secondary btn-sm" onclick="loadRecentPrices()">Aktualisieren</button>
             </div>
             <table id="market-recent-table">
@@ -536,10 +536,10 @@
             </div>
             <p style="color:#6b7280; font-size:0.9em; margin-bottom:16px;">
                 Erfassen Sie hier wo die Herde und Bullen aktuell stehen. Diese Daten werden als Ausgangspunkt
-                für alle zukuenftigen Bewegungen verwendet.
+                für alle zukünftigen Bewegungen verwendet.
             </p>
             <div style="display:grid; grid-template-columns: 2fr 1fr 1fr auto; gap:8px; margin-bottom:16px;">
-                <select id="init-camp"><option value="">-- Kamp waehlen --</option></select>
+                <select id="init-camp"><option value="">-- Kamp wählen --</option></select>
                 <select id="init-category">
                     <option value="mixed">Herde</option>
                     <option value="bulls">Bullen</option>
@@ -609,6 +609,36 @@
             </div>
             <button class="btn btn-primary" onclick="inviteUser()">Einladung senden (Magic Link)</button>
         </div>
+
+        <!-- K. Import-Historie -->
+        <div id="section-imports" class="section">
+            <div class="section-header">
+                <h2>Import-Historie</h2>
+                <div style="display:flex; gap:12px; align-items:center;">
+                    <span id="import-freshness-badge" style="font-size:0.85em; padding:4px 10px; border-radius:6px; background:#e5e7eb; color:#374151;">—</span>
+                    <button class="btn btn-secondary btn-sm" onclick="loadImportHistory()">Aktualisieren</button>
+                </div>
+            </div>
+            <p style="font-size:0.88em; color:#6b7280; margin-bottom:12px;">
+                Letzte 20 automatische und manuelle Datenimporte (LPO, Meatco, Bank, Buchhaltung).
+                Badge oben zeigt den letzten erfolgreichen Import — wenn älter als 8 Tage wird es rot.
+            </p>
+            <table id="imports-table">
+                <thead>
+                    <tr>
+                        <th>Zeitpunkt</th>
+                        <th>Typ</th>
+                        <th>Datei</th>
+                        <th class="num">Datensätze</th>
+                        <th>Status</th>
+                        <th>Trigger</th>
+                    </tr>
+                </thead>
+                <tbody id="imports-tbody">
+                    <tr><td colspan="6" style="text-align:center; color:#9ca3af; padding:20px;">Lade...</td></tr>
+                </tbody>
+            </table>
+        </div>
     </div>
 
     <div class="footer">
@@ -656,7 +686,7 @@ async function checkAdminAuth() {
     const userId = session.user.id;
     const { data: profile } = await sb.from('profiles').select('role').eq('id', userId).single();
     if (!profile || profile.role !== 'owner') {
-        alert('Zugriff verweigert. Nur Eigentuemer (Owner) koennen auf die Administration zugreifen.');
+        alert('Zugriff verweigert. Nur Eigentümer (Owner) können auf die Administration zugreifen.');
         window.location.href = 'cockpit.html';
         return null;
     }
@@ -844,7 +874,7 @@ async function saveCarryingCapacity() {
 
     const { error } = await sb.from('carrying_capacity_assumptions').insert(payload);
     if (error) return showStatus('Fehler: ' + error.message, 'error');
-    showStatus('Tragfaehigkeit gespeichert.');
+    showStatus('Tragfähigkeit gespeichert.');
 }
 
 // ══════════════════════════════════════════════════════════════════
@@ -978,7 +1008,7 @@ async function loadUncategorized() {
                 <td style="text-align:right">${(row.amount_nad || 0).toLocaleString('de-DE')} NAD</td>
                 <td>
                     <select class="uncat-category" style="width:100%">
-                        <option value="">-- waehlen --</option>
+                        <option value="">-- wählen --</option>
                         ${catOptions}
                     </select>
                 </td>
@@ -992,7 +1022,7 @@ function toggleAllUncat(master) {
 
 async function bulkAssignCategory() {
     const bulkCat = document.getElementById('bulk-category').value;
-    if (!bulkCat) return showStatus('Bitte Kategorie waehlen.', 'error');
+    if (!bulkCat) return showStatus('Bitte Kategorie wählen.', 'error');
 
     const rows = document.querySelectorAll('#uncat-tbody tr');
     let count = 0;
@@ -1028,7 +1058,7 @@ async function bulkAssignCategory() {
 
 function populateCategoryDropdowns() {
     const bulkSelect = document.getElementById('bulk-category');
-    bulkSelect.innerHTML = '<option value="">-- waehlen --</option>' +
+    bulkSelect.innerHTML = '<option value="">-- wählen --</option>' +
         allCategories.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
 }
 
@@ -1320,7 +1350,7 @@ const BUDGET_CATEGORIES = [
     'Ammunition', 'Auditors Remuneration', 'Bank Charges', 'Bookkeeping Fees',
     'Bullen einkaufen', 'Bush Clearing / Eradication', 'Consumables & Small Tools',
     'Electricity & Water', 'Farm Management Equipment', 'Fodder & Lick',
-    'Fuel, Gas & Oil (Bulk)', 'Household Farm & Gaeste', 'Insurance', 'Land Tax',
+    'Fuel, Gas & Oil (Bulk)', 'Household Farm & Gäste', 'Insurance', 'Land Tax',
     'Livestock - Cattle Purchase', 'Membership Fees & Permits', 'Rations / Store',
     'Repair Building', 'Repair Fence', 'Repair Machine & Plant',
     'Repairs Water Installation', 'Rep. & Maint. Vehicles',
@@ -1594,7 +1624,7 @@ async function loadInitialCampDropdown() {
 
     const select = document.getElementById('init-camp');
     if (select && camps) {
-        select.innerHTML = '<option value="">-- Kamp waehlen --</option>' +
+        select.innerHTML = '<option value="">-- Kamp wählen --</option>' +
             camps.map(c => `<option value="${escapeHtml(c.name)}">${escapeHtml(c.name)}</option>`).join('');
     }
 }
@@ -1604,7 +1634,7 @@ function addInitialPosition() {
     const category = document.getElementById('init-category').value;
     const count = parseInt(document.getElementById('init-count').value);
     if (!camp || !count || count < 1) {
-        return showStatus('Bitte Camp und gueltige Anzahl angeben.', 'error');
+        return showStatus('Bitte Camp und gültige Anzahl angeben.', 'error');
     }
     initialPositions.push({ camp, category, count });
     document.getElementById('init-count').value = '';
@@ -1708,6 +1738,83 @@ function escapeHtml(str) {
     return div.innerHTML;
 }
 
+// ── Import-Historie ──────────────────────────────────────────────
+const IMPORT_SOURCE_LABELS = {
+    lpo: 'LPO Weekly',
+    meatco: 'Meatco Schlacht',
+    slaughter_other: 'Schlachthof (andere)',
+    bank_nedbank: 'Nedbank',
+    bank_pointbreak: 'Pointbreak',
+    accounting: 'Buchhaltung',
+};
+
+const IMPORT_STATUS_STYLE = {
+    success:         { color: '#15803d', bg: '#dcfce7', label: 'OK' },
+    pending_review:  { color: '#b45309', bg: '#fef3c7', label: 'Prüfung' },
+    failed:          { color: '#b91c1c', bg: '#fee2e2', label: 'Fehler' },
+    duplicate:       { color: '#4b5563', bg: '#f3f4f6', label: 'Dupl.' },
+};
+
+async function loadImportHistory() {
+    const tbody = document.getElementById('imports-tbody');
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:#9ca3af; padding:20px;">Lade...</td></tr>';
+
+    const { data, error } = await sb.from('data_imports')
+        .select('source_type, file_name, records_count, status, triggered_by, imported_at, error_message')
+        .order('imported_at', { ascending: false })
+        .limit(20);
+
+    const badge = document.getElementById('import-freshness-badge');
+
+    if (error) {
+        tbody.innerHTML = `<tr><td colspan="6" style="color:#b91c1c; padding:20px;">Fehler: ${escapeHtml(error.message)}</td></tr>`;
+        badge.textContent = 'Fehler';
+        badge.style.background = '#fee2e2'; badge.style.color = '#b91c1c';
+        return;
+    }
+
+    if (!data || data.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:#9ca3af; padding:20px;">Noch keine Importe protokolliert.</td></tr>';
+        badge.textContent = 'Keine Importe';
+        badge.style.background = '#fef3c7'; badge.style.color = '#b45309';
+        return;
+    }
+
+    // Freshness: time since last success
+    const lastSuccess = data.find(r => r.status === 'success');
+    if (lastSuccess) {
+        const ageMs  = Date.now() - new Date(lastSuccess.imported_at).getTime();
+        const ageDays = Math.floor(ageMs / 86400000);
+        let color, bg, label;
+        if (ageDays <= 1)       { color = '#15803d'; bg = '#dcfce7'; label = 'Heute aktuell'; }
+        else if (ageDays <= 7)  { color = '#15803d'; bg = '#dcfce7'; label = `Letzter Import vor ${ageDays} Tag${ageDays === 1 ? '' : 'en'}`; }
+        else                    { color = '#b91c1c'; bg = '#fee2e2'; label = `⚠ Letzter Import vor ${ageDays} Tagen`; }
+        badge.textContent = label;
+        badge.style.background = bg; badge.style.color = color;
+    } else {
+        badge.textContent = '⚠ Kein erfolgreicher Import';
+        badge.style.background = '#fee2e2'; badge.style.color = '#b91c1c';
+    }
+
+    tbody.innerHTML = data.map(r => {
+        const dt = new Date(r.imported_at);
+        const when = dt.toLocaleString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+        const typeLbl = IMPORT_SOURCE_LABELS[r.source_type] || r.source_type;
+        const stStyle = IMPORT_STATUS_STYLE[r.status] || { color: '#374151', bg: '#f3f4f6', label: r.status };
+        const statusBadge = `<span style="display:inline-block; padding:2px 8px; border-radius:10px; font-size:0.8em; background:${stStyle.bg}; color:${stStyle.color};">${stStyle.label}</span>`;
+        const errLine = r.status === 'failed' && r.error_message
+            ? `<div style="font-size:0.78em; color:#b91c1c; margin-top:2px;">${escapeHtml(r.error_message.slice(0, 180))}</div>` : '';
+        return `<tr>
+            <td>${when}</td>
+            <td>${escapeHtml(typeLbl)}</td>
+            <td style="max-width:340px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${escapeHtml(r.file_name || '')}">${escapeHtml(r.file_name || '—')}${errLine}</td>
+            <td class="num">${r.records_count ?? 0}</td>
+            <td>${statusBadge}</td>
+            <td>${escapeHtml(r.triggered_by || 'manual')}</td>
+        </tr>`;
+    }).join('');
+}
+
 // ── Init ─────────────────────────────────────────────────────────
 (async function init() {
     const user = await checkAdminAuth();
@@ -1729,6 +1836,7 @@ function escapeHtml(str) {
     renderInitList();
     await loadSavedInitialPositions();
     await loadUsers();
+    await loadImportHistory();
 })();
 </script>
 
