@@ -34,7 +34,7 @@ interface QuarterlyReport {
 
   pasture: {
     stocking_rate_pct: number | null;
-    avg_veld_condition: number | null;
+    avg_pasture_condition: number | null;
     rainfall_vs_normal_pct: number | null;
   } | null;
 
@@ -291,17 +291,17 @@ async function queryPasture(
 ): Promise<{ data: QuarterlyReport["pasture"]; quality: QuarterlyReport["data_quality"] }> {
   const quality: QuarterlyReport["data_quality"] = [];
 
-  // Veld condition average for the quarter
-  const { data: veld, error: veldErr } = await sb
-    .from("veld_observations")
+  // Pasture condition average for the quarter
+  const { data: pasture, error: pastureErr } = await sb
+    .from("pasture_observations")
     .select("condition_score")
     .gte("snapshot_date", startDate)
     .lt("snapshot_date", endDate);
 
-  if (veldErr || !veld?.length) {
-    quality.push({ source: "veld_observations", status: veldErr ? "missing" : "partial", note: veldErr?.message ?? "No veld observations in period" });
+  if (pastureErr || !pasture?.length) {
+    quality.push({ source: "pasture_observations", status: pastureErr ? "missing" : "partial", note: pastureErr?.message ?? "No pasture observations in period" });
   } else {
-    quality.push({ source: "veld_observations", status: "ok" });
+    quality.push({ source: "pasture_observations", status: "ok" });
   }
 
   // Carrying capacity for stocking rate
@@ -337,8 +337,11 @@ async function queryPasture(
     quality.push({ source: "weather_observations", status: "ok" });
   }
 
-  const avgVeldCondition = veld?.length
-    ? Math.round((veld.reduce((s: number, v: { condition_score: number }) => s + v.condition_score, 0) / veld.length) * 10) / 10
+  const pastureScored = (pasture ?? []).filter(
+    (v: { condition_score: number | null }) => v.condition_score != null,
+  );
+  const avgPastureCondition = pastureScored.length
+    ? Math.round((pastureScored.reduce((s: number, v: { condition_score: number }) => s + v.condition_score, 0) / pastureScored.length) * 10) / 10
     : null;
 
   // Stocking rate: (current LSU / max LSU based on capacity) * 100
@@ -401,14 +404,14 @@ async function queryPasture(
     }
   }
 
-  if (!veld?.length && !camps?.length && !rainfall?.length) {
+  if (!pasture?.length && !camps?.length && !rainfall?.length) {
     return { data: null, quality };
   }
 
   return {
     data: {
       stocking_rate_pct: stockingRate,
-      avg_veld_condition: avgVeldCondition,
+      avg_pasture_condition: avgPastureCondition,
       rainfall_vs_normal_pct: rainfallVsNormal,
     },
     quality,

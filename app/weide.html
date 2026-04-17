@@ -789,14 +789,14 @@
                 <div class="kpi-sub">Letzer Herdensnapshot</div>
             </div>
             <div class="kpi-card">
-                <div class="kpi-label">Tragekapazitaet</div>
+                <div class="kpi-label">Tragekapazität</div>
                 <div class="kpi-value" id="kpi-capacity"><span class="loading-spinner"></span></div>
                 <div class="kpi-sub">Gesamt über alle Kamps</div>
             </div>
             <div class="kpi-card">
                 <div class="kpi-label">Auslastung</div>
                 <div class="kpi-value" id="kpi-ratio"><span class="loading-spinner"></span></div>
-                <div class="kpi-sub" id="kpi-ratio-sub">LSU / Kapazitaet</div>
+                <div class="kpi-sub" id="kpi-ratio-sub">LSU / Kapazität</div>
                 <div class="kpi-status-bar status-gray" id="kpi-ratio-bar"></div>
             </div>
         </div>
@@ -837,7 +837,7 @@
             </thead>
             <tbody id="w1-camp-tbody"></tbody>
         </table>
-        <div class="no-data" id="w1-camp-nodata" style="display:none;">Keine Kamp-Zuordnung vorhanden. Herd-Eintraege mit Kamp-Zuordnung erfassen, um die Besatzdichte je Kamp zu sehen.</div>
+        <div class="no-data" id="w1-camp-nodata" style="display:none;">Keine Kamp-Zuordnung vorhanden. Herd-Einträge mit Kamp-Zuordnung erfassen, um die Besatzdichte je Kamp zu sehen.</div>
     </div>
 
     <!-- Kamp Overview -->
@@ -885,6 +885,7 @@
             </div>
         </div>
 
+        <div id="camp-rain-hint" style="font-size:0.82em; color:#6b7280; margin-bottom:6px;"></div>
         <div id="camp-table-wrap">
             <table class="data-table" id="camp-table">
                 <thead>
@@ -895,11 +896,12 @@
                         <th data-sort="bulls" class="num">&#x1F402; Bullen</th>
                         <th data-sort="days" class="num">Tage auf Kamp</th>
                         <th data-sort="condition" class="num">Zustand</th>
+                        <th data-sort="rain" class="num">&#x1F327;&#xFE0F; Regen (mm)</th>
                         <th data-sort="last_move">Letzter Wechsel</th>
                     </tr>
                 </thead>
                 <tbody id="camp-tbody">
-                    <tr><td colspan="7" class="no-data"><span class="loading-spinner"></span> Lade Kamps...</td></tr>
+                    <tr><td colspan="8" class="no-data"><span class="loading-spinner"></span> Lade Kamps...</td></tr>
                 </tbody>
             </table>
         </div>
@@ -1131,6 +1133,15 @@ let campSortCol = 'herd';
 let campSortDir = 'desc';
 let campOccupancyMap = {};  // camp_name -> { herd_count, bull_count, last_movement, days }
 
+// Regensaison Namibia: 1. Oktober bis 30. September. Summen in W3
+// beziehen sich auf die aktuell laufende Saison.
+function currentRainSeasonStart() {
+    const now = new Date();
+    const y = now.getFullYear();
+    // Ab Oktober: Saison begann dieses Jahr. Davor: letztes Jahr.
+    return new Date(now.getMonth() >= 9 ? y : y - 1, 9, 1);
+}
+
 async function loadCamps() {
     const tbody = document.getElementById('camp-tbody');
     try {
@@ -1142,7 +1153,7 @@ async function loadCamps() {
             .order('name');
 
         if (!camps?.length) {
-            tbody.innerHTML = '<tr><td colspan="7" class="no-data">Keine Camps gefunden.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="8" class="no-data">Keine Camps gefunden.</td></tr>';
             return;
         }
 
@@ -1183,16 +1194,31 @@ async function loadCamps() {
             }
         });
 
-        // Latest veld observation per camp
+        // Latest pasture observation per camp + Regensummen (aktuelle Saison)
         const { data: obs } = await sb
-            .from('veld_observations')
-            .select('camp_name, condition_score, snapshot_date')
+            .from('pasture_observations')
+            .select('camp_name, condition_score, rainfall_mm, snapshot_date')
             .order('snapshot_date', { ascending: false });
 
+        const seasonStart = currentRainSeasonStart();
+        const seasonStartStr = seasonStart.toISOString().slice(0, 10);
         const latestObs = {};
+        const rainByCamp = {};
         (obs || []).forEach(o => {
-            if (!latestObs[o.camp_name]) latestObs[o.camp_name] = o;
+            if (!latestObs[o.camp_name] && o.condition_score != null) {
+                latestObs[o.camp_name] = o;
+            }
+            if (o.rainfall_mm != null && o.snapshot_date >= seasonStartStr) {
+                rainByCamp[o.camp_name] = (rainByCamp[o.camp_name] || 0) + Number(o.rainfall_mm);
+            }
         });
+
+        // Hinweistext über der Tabelle: welcher Zeitraum wird summiert
+        const hint = document.getElementById('camp-rain-hint');
+        if (hint) {
+            const startLabel = seasonStart.toLocaleDateString('de-DE', { month: 'long', year: 'numeric' });
+            hint.textContent = 'Regen-Spalte: Summe manueller Kamp-Messungen seit ' + startLabel + ' (aktuelle Regensaison).';
+        }
 
         // Build data array
         campTableData = camps.map(c => {
@@ -1205,6 +1231,8 @@ async function loadCamps() {
                 bull_count: Math.max(0, occ.bull_count || 0),
                 days: occ.days,
                 condition_score: ob?.condition_score,
+                rainfall_season_mm: rainByCamp[c.name] || 0,
+                has_rainfall: rainByCamp[c.name] != null,
                 last_movement: occ.last_movement,
             };
         });
@@ -1215,7 +1243,7 @@ async function loadCamps() {
 
     } catch (err) {
         console.error('loadCamps error:', err);
-        tbody.innerHTML = '<tr><td colspan="7" class="no-data">Fehler beim Laden der Camps.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="8" class="no-data">Fehler beim Laden der Camps.</td></tr>';
     }
 }
 
@@ -1228,6 +1256,9 @@ function renderCampTable() {
         const condBadge = c.condition_score
             ? `<span class="condition-badge ${condClass}">${c.condition_score}/5</span>`
             : '\u2014';
+        const rainCell = c.has_rainfall
+            ? Number(c.rainfall_season_mm).toFixed(1)
+            : '\u2014';
         return `<tr class="${rowClass}">
             <td><strong>${escHtml(c.name)}</strong></td>
             <td class="num">${c.area_ha ? Number(c.area_ha).toFixed(2) : '\u2014'}</td>
@@ -1235,6 +1266,7 @@ function renderCampTable() {
             <td class="num">${c.bull_count || '\u2014'}</td>
             <td class="num">${c.days != null ? c.days : '\u2014'}</td>
             <td class="num">${condBadge}</td>
+            <td class="num">${rainCell}</td>
             <td>${c.last_movement ? new Date(c.last_movement).toLocaleDateString('de-DE') : '\u2014'}</td>
         </tr>`;
     }).join('');
@@ -1256,6 +1288,7 @@ function sortCampTable(col, toggle = true) {
         bulls:     (a, b) => (a.bull_count || 0) - (b.bull_count || 0),
         days:      (a, b) => (a.days ?? -1) - (b.days ?? -1),
         condition: (a, b) => (a.condition_score || 0) - (b.condition_score || 0),
+        rain:      (a, b) => (a.rainfall_season_mm || 0) - (b.rainfall_season_mm || 0),
         last_move: (a, b) => (a.last_movement || '').localeCompare(b.last_movement || '')
     };
     const cmp = comparators[col] || comparators.name;
@@ -1302,7 +1335,7 @@ async function saveQuickMove() {
     const notes = document.getElementById('qm-notes').value.trim() || null;
 
     if (!date || !count || count < 1) {
-        alert('Bitte Datum und gueltige Anzahl angeben.');
+        alert('Bitte Datum und gültige Anzahl angeben.');
         return;
     }
     if (!from_camp && !to_camp) {
@@ -1772,16 +1805,19 @@ async function loadMap() {
             return;
         }
 
-        // Load latest veld observations
-        const { data: veld } = await sb
-            .from('veld_observations')
+        // Load latest pasture observations
+        const { data: pasture } = await sb
+            .from('pasture_observations')
             .select('camp_name, condition_score, snapshot_date')
             .order('snapshot_date', { ascending: false });
 
-        const latestVeld = {};
-        if (veld) {
-            veld.forEach(v => {
-                if (!latestVeld[v.camp_name]) latestVeld[v.camp_name] = v;
+        const latestPasture = {};
+        if (pasture) {
+            pasture.forEach(v => {
+                // nur Einträge mit Condition-Score für Kartenfarbe, mm-only skippen
+                if (v.condition_score != null && !latestPasture[v.camp_name]) {
+                    latestPasture[v.camp_name] = v;
+                }
             });
         }
 
@@ -1802,7 +1838,7 @@ async function loadMap() {
         };
 
         function campStyle(campName) {
-            const score = latestVeld[campName]?.condition_score;
+            const score = latestPasture[campName]?.condition_score;
             return {
                 fillColor: conditionColors[score] || '#9ca3af',
                 weight: 2,
@@ -1820,8 +1856,8 @@ async function loadMap() {
             },
             onEachFeature: function(feature, layer) {
                 const p = feature.properties;
-                const veldData = latestVeld[p.name];
-                const score = veldData?.condition_score;
+                const pastureData = latestPasture[p.name];
+                const score = pastureData?.condition_score;
                 const scoreText = score
                     ? score + '/5 — ' + (conditionLabels[score] || '')
                     : 'Keine Bewertung';
@@ -1963,10 +1999,10 @@ async function loadMap() {
 
             if (assets && assets.length > 0) {
                 const assetConfig = {
-                    borehole:      { emoji: '\uD83D\uDCA7', label: 'Bohrlocher',  color: '#3b82f6' },
-                    dam:           { emoji: '\uD83C\uDF0A', label: 'Daemme',      color: '#06b6d4' },
-                    windmill:      { emoji: '\uD83D\uDD04', label: 'Windmuehlen', color: '#f97316' },
-                    trough:        { emoji: '\uD83D\uDEB0', label: 'Traenken',    color: '#14b8a6' },
+                    borehole:      { emoji: '\uD83D\uDCA7', label: 'Bohrlöcher',  color: '#3b82f6' },
+                    dam:           { emoji: '\uD83C\uDF0A', label: 'Dämme',       color: '#06b6d4' },
+                    windmill:      { emoji: '\uD83D\uDD04', label: 'Windmühlen',  color: '#f97316' },
+                    trough:        { emoji: '\uD83D\uDEB0', label: 'Tränken',     color: '#14b8a6' },
                     house:         { emoji: '\uD83C\uDFE0', label: 'Gebäude',    color: '#6b7280' },
                     hunting_blind: { emoji: '\uD83C\uDFAF', label: 'Ansitze',     color: '#92400e' }
                 };
@@ -1990,8 +2026,8 @@ async function loadMap() {
 
                     const marker = L.marker([a.lat, a.lng], { icon: icon });
                     const typeLabel = {
-                        borehole: 'Bohrloch', dam: 'Damm', windmill: 'Windmuehle',
-                        trough: 'Traenke', house: 'Gebäude', hunting_blind: 'Ansitz'
+                        borehole: 'Bohrloch', dam: 'Damm', windmill: 'Windmühle',
+                        trough: 'Tränke', house: 'Gebäude', hunting_blind: 'Ansitz'
                     };
                     marker.bindPopup(
                         '<strong>' + escHtml(a.name) + '</strong><br>' +
@@ -2081,7 +2117,7 @@ async function toggleNDVI() {
         btn.textContent = 'Lade NDVI...';
         const metaResp = await fetch('data/ndvi-meta.json?_=' + Date.now());
         if (!metaResp.ok) {
-            metaEl.textContent = 'Keine NDVI-Daten. Bitte fetch-sentinel.py ausfuehren.';
+            metaEl.textContent = 'Keine NDVI-Daten. Bitte fetch-sentinel.py ausführen.';
             btn.innerHTML = '&#x1F6F0;&#xFE0F; NDVI Overlay';
             return;
         }
@@ -2161,7 +2197,7 @@ async function loadK3() {
         } else {
             alertClass = 'alert-red';
             alertLabel = inRainSeason
-                ? 'Kritisch \u2014 Destocking pruefen'
+                ? 'Kritisch \u2014 Destocking prüfen'
                 : 'Kritisch (Trockenzeit)';
         }
 
@@ -2222,10 +2258,10 @@ async function loadK4() {
             alertLabel = 'Leichtes Risiko';
         } else if (hotDays <= 5) {
             alertClass = 'alert-orange';
-            alertLabel = 'Erhoehtes Risiko';
+            alertLabel = 'Erhöhtes Risiko';
         } else {
             alertClass = 'alert-red';
-            alertLabel = 'Hitzestress \u2014 Schatten/Wasser pruefen';
+            alertLabel = 'Hitzestress \u2014 Schatten/Wasser prüfen';
         }
 
         card.className = 'alert-kpi-card ' + alertClass;
@@ -2293,8 +2329,8 @@ async function loadW1Detail() {
         barEl.className = 'utilization-bar-fill ' +
             (utilizationPct <= 80 ? 'bar-green' : utilizationPct <= 100 ? 'bar-yellow' : 'bar-red');
 
-        labelEl.textContent = Math.round(totalLSU) + ' LSU / ' + Math.round(totalCapacity) + ' Kapazitaet';
-        subEl.textContent = Math.round(totalArea) + ' ha Gesamtflaeche, '
+        labelEl.textContent = Math.round(totalLSU) + ' LSU / ' + Math.round(totalCapacity) + ' Kapazität';
+        subEl.textContent = Math.round(totalArea) + ' ha Gesamtfläche, '
             + (utilizationPct <= 80 ? 'Nachhaltig' : utilizationPct <= 100 ? 'Grenzbereich' : 'Überbesetzt');
 
         // Per-camp assignments

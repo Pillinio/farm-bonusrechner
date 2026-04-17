@@ -407,40 +407,40 @@
             color: #991b1b;
         }
 
-        .veld-grid {
+        .weide-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
             gap: 12px;
         }
 
-        .veld-card {
+        .weide-card {
             border-radius: 10px;
             padding: 14px;
             text-align: center;
             border: 1px solid #e2e8f0;
         }
 
-        .veld-card .camp-name {
+        .weide-card .camp-name {
             font-weight: 600;
             font-size: 0.95em;
             color: #374151;
             margin-bottom: 4px;
         }
 
-        .veld-card .camp-score {
+        .weide-card .camp-score {
             font-size: 1.4em;
             font-weight: 700;
         }
 
-        .veld-card .camp-date {
+        .weide-card .camp-date {
             font-size: 0.75em;
             color: #6b7280;
             margin-top: 2px;
         }
 
-        .veld-good    { background: #dcfce7; }
-        .veld-fair    { background: #fef9c3; }
-        .veld-poor    { background: #fee2e2; }
+        .weide-good    { background: #dcfce7; }
+        .weide-fair    { background: #fef9c3; }
+        .weide-poor    { background: #fee2e2; }
 
         .cashflow-row {
             display: flex;
@@ -498,6 +498,16 @@
         /* ============ Monatsmeldung (form) styles ============ */
         .mm-form-container {
             padding: 4px 0 12px;
+        }
+        .mm-edit-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            font-size: 0.78em;
+            background: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+            border-radius: 10px;
+            white-space: nowrap;
         }
         .mm-sub-heading {
             font-size: 0.78em;
@@ -1061,7 +1071,7 @@
                 flex-direction: column;
             }
 
-            .veld-grid {
+            .weide-grid {
                 grid-template-columns: 1fr 1fr;
             }
 
@@ -1341,7 +1351,7 @@
 
                         <!-- Subsection: Weide & Wasser -->
                         <h3 class="mm-subsection-title" style="margin-top:24px;">&#x1F331; Weide &amp; Wasser</h3>
-                        <div class="mm-sub-heading">Veld Condition pro Kamp</div>
+                        <div class="mm-sub-heading">Weidezustand pro Kamp</div>
                         <div id="mm-campList">
                             <div class="mm-text-muted">Camps werden geladen...</div>
                         </div>
@@ -1435,14 +1445,14 @@
             </div>
 
             <!-- 4. Weidezustand -->
-            <div class="section" id="sec-veld">
-                <div class="section-header" onclick="Monat.toggleSection('veld')">
+            <div class="section" id="sec-weide">
+                <div class="section-header" onclick="Monat.toggleSection('weide')">
                     <span class="section-icon">&#x1F331;</span>
                     <span class="section-title">Weidezustand</span>
-                    <span class="section-collapse-toggle" id="toggle-veld">&#x25BC;</span>
+                    <span class="section-collapse-toggle" id="toggle-weide">&#x25BC;</span>
                 </div>
-                <div class="section-body" id="body-veld">
-                    <div id="veld-content">
+                <div class="section-body" id="body-weide">
+                    <div id="weide-content">
                         <div class="loading-placeholder"><span class="loading-spinner"></span> Lade Weidezustand...</div>
                     </div>
                 </div>
@@ -1976,13 +1986,13 @@ const Monat = {
     },
 
     // ── 4. Weidezustand ──
-    async loadVeld() {
-        const wrap = document.getElementById('veld-content');
+    async loadWeide() {
+        const wrap = document.getElementById('weide-content');
 
         wrap.innerHTML = '<div class="loading-placeholder"><span class="loading-spinner"></span> Lade Weidezustand...</div>';
 
         const { data, error } = await sb
-            .from('veld_observations')
+            .from('pasture_observations')
             .select('camp_name, condition_score, snapshot_date')
             .order('snapshot_date', { ascending: false });
 
@@ -1998,6 +2008,9 @@ const Monat = {
 
         const campMap = {};
         data.forEach(obs => {
+            // Nur Beobachtungen mit Condition-Score für die Weide-Liste;
+            // reine Regen-Einträge (rainfall_mm ohne condition_score) überspringen.
+            if (obs.condition_score == null) return;
             if (!campMap[obs.camp_name]) {
                 campMap[obs.camp_name] = obs;
             }
@@ -2006,20 +2019,20 @@ const Monat = {
         const camps = Object.values(campMap).sort((a, b) => (a.camp_name || '').localeCompare(b.camp_name || ''));
 
         const self = this;
-        let html = '<div class="veld-grid">';
+        let html = '<div class="weide-grid">';
         camps.forEach(obs => {
             const score = obs.condition_score || 0;
-            let colorClass = 'veld-good';
+            let colorClass = 'weide-good';
             let label = 'Gut';
             if (score <= 2) {
-                colorClass = 'veld-poor';
+                colorClass = 'weide-poor';
                 label = 'Schlecht';
             } else if (score <= 3) {
-                colorClass = 'veld-fair';
-                label = 'Maessig';
+                colorClass = 'weide-fair';
+                label = 'Mäßig';
             }
 
-            html += '<div class="veld-card ' + colorClass + '">';
+            html += '<div class="weide-card ' + colorClass + '">';
             html += '<div class="camp-name">' + (obs.camp_name || '--') + '</div>';
             html += '<div class="camp-score">' + score + '/5</div>';
             html += '<div class="camp-date">' + label + ' &middot; ' + self.fmtDate(obs.snapshot_date) + '</div>';
@@ -2113,7 +2126,7 @@ const Monat = {
             this.loadOccupancy(),
             this.loadHerd(),
             this.loadCashflow(),
-            this.loadVeld(),
+            this.loadWeide(),
             this.loadWeather()
         ]);
 
@@ -2227,7 +2240,7 @@ Monat.meldung = {
 
         const { data, error } = await sb
             .from('herd_snapshots')
-            .select('id, snapshot_date, cows, bulls, heifers, calves, oxen, notes')
+            .select('id, snapshot_date, cows, bulls, heifers, calves, oxen, notes, edit_count, updated_at, updated_by')
             .order('snapshot_date', { ascending: false })
             .limit(24);
 
@@ -2242,16 +2255,23 @@ Monat.meldung = {
 
         const self = this;
         let html = '<table class="data-table" style="font-size:0.88em;"><thead><tr>'
-            + '<th>Stichtag</th><th class="num">Bestand</th><th>Notiz</th><th style="width:170px;">Aktion</th>'
+            + '<th>Stichtag</th><th class="num">Bestand</th><th>Notiz</th><th>Status</th><th style="width:170px;">Aktion</th>'
             + '</tr></thead><tbody>';
         for (const r of data) {
             const total = (r.cows||0)+(r.bulls||0)+(r.heifers||0)+(r.calves||0)+(r.oxen||0);
             const d = new Date(r.snapshot_date).toLocaleDateString('de-DE');
             const notePreview = (r.notes || '').substring(0, 60) + ((r.notes || '').length > 60 ? '…' : '');
+            let statusBadge = '';
+            if (r.edit_count && r.edit_count > 0) {
+                const editedAt = r.updated_at ? new Date(r.updated_at).toLocaleDateString('de-DE') : '';
+                const times = r.edit_count === 1 ? '1× bearbeitet' : r.edit_count + '× bearbeitet';
+                statusBadge = `<span class="mm-edit-badge" title="Zuletzt bearbeitet ${editedAt}">✏️ ${times}${editedAt ? ' · ' + editedAt : ''}</span>`;
+            }
             html += `<tr>
                 <td>${d}</td>
                 <td class="num">${total}</td>
                 <td>${self.esc(notePreview)}</td>
+                <td>${statusBadge}</td>
                 <td style="white-space:nowrap;">
                     <button class="mm-btn mm-btn-outline" style="padding:4px 10px; font-size:0.82em;" onclick="Monat.meldung.editMeldung('${r.id}','${r.snapshot_date}')">Bearbeiten</button>
                     <button class="mm-btn" style="padding:4px 10px; font-size:0.82em; background:#dc2626; color:white; border:none;" onclick="Monat.meldung.deleteMeldung('${r.id}','${r.snapshot_date}')">Löschen</button>
@@ -2265,11 +2285,11 @@ Monat.meldung = {
     // ── Delete whole Monatsmeldung (parent + 4 children by snapshot_date) ──
     async deleteMeldung(snapshotId, snapshotDate) {
         const dStr = new Date(snapshotDate).toLocaleDateString('de-DE');
-        if (!confirm('Monatsmeldung vom ' + dStr + ' komplett löschen?\n\nAlle Zusatzdaten (Weide-Bewertungen, Asset-Status, Task-Ausführungen, Vorfälle) für diesen Stichtag werden mit entfernt.')) return;
+        if (!confirm('Monatsmeldung vom ' + dStr + ' komplett löschen?\n\nAlle Zusatzdaten (Weide-Bewertungen, Asset-Status, Task-Ausführungen, Vorfälle) für diesen Stichtag werden mit entfernt.\n\nHinweis: Nur Owner dürfen löschen.')) return;
 
-        // 1) delete children (by snapshot_date) in parallel — non-blocking if no rows
+        // 1) delete children (by snapshot_date) — errors bubble up
         const childResults = await Promise.allSettled([
-            sb.from('veld_observations').delete().eq('snapshot_date', snapshotDate),
+            sb.from('pasture_observations').delete().eq('snapshot_date', snapshotDate),
             sb.from('asset_status_reports').delete().eq('snapshot_date', snapshotDate),
             sb.from('task_executions').delete().eq('snapshot_date', snapshotDate),
             sb.from('incidents').delete().eq('snapshot_date', snapshotDate),
@@ -2282,9 +2302,18 @@ Monat.meldung = {
             }
         }
 
-        // 2) delete parent snapshot
-        const { error } = await sb.from('herd_snapshots').delete().eq('id', snapshotId);
+        // 2) delete parent snapshot — verify via .select() that a row was actually removed
+        //    (RLS blockt DELETE stillschweigend ohne Fehler; wir erkennen es an leerem data)
+        const { data: deleted, error } = await sb
+            .from('herd_snapshots')
+            .delete()
+            .eq('id', snapshotId)
+            .select('id');
         if (error) { alert('Fehler: ' + error.message); return; }
+        if (!deleted || deleted.length === 0) {
+            alert('Löschen wurde nicht durchgeführt — vermutlich fehlt die Berechtigung (nur Owner dürfen Monatsmeldungen löschen).');
+            return;
+        }
 
         this.showMsg('Meldung gelöscht.', 'success');
         if (this.editingSnapshotId === snapshotId) this.cancelEdit();
@@ -2295,9 +2324,9 @@ Monat.meldung = {
     // ── Edit Monatsmeldung: prefill form ──
     async editMeldung(snapshotId, snapshotDate) {
         // Fetch parent + children in parallel
-        const [snapRes, veldRes, assetRes, taskRes, incRes] = await Promise.all([
+        const [snapRes, pastureRes, assetRes, taskRes, incRes] = await Promise.all([
             sb.from('herd_snapshots').select('*').eq('id', snapshotId).single(),
-            sb.from('veld_observations').select('camp_name, condition_score').eq('snapshot_date', snapshotDate),
+            sb.from('pasture_observations').select('camp_name, condition_score, rainfall_mm').eq('snapshot_date', snapshotDate),
             sb.from('asset_status_reports').select('asset_id, status, metric_value').eq('snapshot_date', snapshotDate),
             sb.from('task_executions').select('task_template_id, covered_count, completed').eq('snapshot_date', snapshotDate),
             sb.from('incidents').select('incident_type, severity, affected_count, description').eq('snapshot_date', snapshotDate),
@@ -2327,12 +2356,15 @@ Monat.meldung = {
         this.setVal('mm-sickNotes', '');
         this.setVal('mm-openNotes', s.notes || '');
 
-        // Veld: by camp name
-        const veldByCamp = {};
-        (veldRes.data || []).forEach(v => { veldByCamp[v.camp_name] = v.condition_score; });
+        // Weide: by camp name (condition + rainfall)
+        const pastureByCamp = {};
+        (pastureRes.data || []).forEach(v => { pastureByCamp[v.camp_name] = v; });
         for (let i = 0; i < this.camps.length; i++) {
-            const el = document.getElementById('mm-camp_score_' + i);
-            if (el) el.value = veldByCamp[this.camps[i].name] != null ? String(veldByCamp[this.camps[i].name]) : '';
+            const scoreEl = document.getElementById('mm-camp_score_' + i);
+            const rainEl  = document.getElementById('mm-camp_rain_' + i);
+            const obs = pastureByCamp[this.camps[i].name];
+            if (scoreEl) scoreEl.value = obs && obs.condition_score != null ? String(obs.condition_score) : '';
+            if (rainEl)  rainEl.value  = obs && obs.rainfall_mm     != null ? String(obs.rainfall_mm)     : '';
         }
 
         // Assets: by asset_id
@@ -2425,6 +2457,7 @@ Monat.meldung = {
                     <option value="2">2 Schlecht</option>
                     <option value="1">1 Kritisch</option>
                 </select>
+                <input type="number" id="mm-camp_rain_${i}" placeholder="Regen mm" min="0" step="0.1" inputmode="decimal" title="Niederschlag seit letzter Messung (manuelle Kamp-Regenstation)">
             </div>
         `).join('');
     },
@@ -2589,13 +2622,16 @@ Monat.meldung = {
                 sickCount: this.val('mm-sickCount'), sickNotes: this.val('mm-sickNotes'),
                 openNotes: this.val('mm-openNotes'),
                 campScores: {},
+                campRainMm: {},
                 assetStatuses: {},
                 assetMetrics: {},
                 savedAt: new Date().toISOString()
             };
             this.camps.forEach((c, i) => {
                 const el = document.getElementById('mm-camp_score_' + i);
+                const rainEl = document.getElementById('mm-camp_rain_' + i);
                 if (el) draft.campScores[c.id] = el.value;
+                if (rainEl) draft.campRainMm[c.id] = rainEl.value;
             });
             this.assets.forEach((a, i) => {
                 const sEl = document.getElementById('mm-asset_status_' + i);
@@ -2623,10 +2659,12 @@ Monat.meldung = {
             });
             if (d.sickNotes) this.setVal('mm-sickNotes', d.sickNotes);
             if (d.openNotes) this.setVal('mm-openNotes', d.openNotes);
-            if (d.campScores) {
+            if (d.campScores || d.campRainMm) {
                 this.camps.forEach((c, i) => {
                     const el = document.getElementById('mm-camp_score_' + i);
-                    if (el && d.campScores[c.id]) el.value = d.campScores[c.id];
+                    const rainEl = document.getElementById('mm-camp_rain_' + i);
+                    if (el && d.campScores && d.campScores[c.id]) el.value = d.campScores[c.id];
+                    if (rainEl && d.campRainMm && d.campRainMm[c.id]) rainEl.value = d.campRainMm[c.id];
                 });
             }
             if (d.assetStatuses) {
@@ -2719,7 +2757,7 @@ Monat.meldung = {
             // Edit mode: delete all children first (delete-then-insert strategy)
             if (isEdit) {
                 const delResults = await Promise.allSettled([
-                    sb.from('veld_observations').delete().eq('snapshot_date', snapshotDate),
+                    sb.from('pasture_observations').delete().eq('snapshot_date', snapshotDate),
                     sb.from('asset_status_reports').delete().eq('snapshot_date', snapshotDate),
                     sb.from('task_executions').delete().eq('snapshot_date', snapshotDate),
                     sb.from('incidents').delete().eq('snapshot_date', snapshotDate),
@@ -2749,17 +2787,21 @@ Monat.meldung = {
             // Keep snapErr var shape for downstream (if referenced)
             const snapErr = null;
 
-            // 2. veld_observations
-            let veldCount = 0;
+            // 2. pasture_observations
+            let pastureCount = 0;
             for (let i = 0; i < this.camps.length; i++) {
                 const scoreEl = document.getElementById('mm-camp_score_' + i);
-                if (!scoreEl || !scoreEl.value) continue;
-                const { error } = await sb.from('veld_observations').insert({
+                const rainEl  = document.getElementById('mm-camp_rain_' + i);
+                const hasScore = scoreEl && scoreEl.value;
+                const hasRain  = rainEl && rainEl.value !== '';
+                if (!hasScore && !hasRain) continue;
+                const { error } = await sb.from('pasture_observations').insert({
                     snapshot_date: snapshotDate,
                     camp_name: this.camps[i].name,
-                    condition_score: parseInt(scoreEl.value)
+                    condition_score: hasScore ? parseInt(scoreEl.value) : null,
+                    rainfall_mm:     hasRain  ? parseFloat(rainEl.value) : null
                 });
-                if (!error) veldCount++;
+                if (!error) pastureCount++;
             }
 
             // 3. asset_status_reports
@@ -2812,7 +2854,7 @@ Monat.meldung = {
             const total = cows + bulls + heifers + oxen + calves;
             const action = isEdit ? 'aktualisiert' : 'gespeichert';
             this.showMsg(
-                `Monatsmeldung ${action}: ${total} Tiere, ${veldCount} Veld, ${assetCount} Assets, ${taskCount} Aufgaben, ${incCount} Vorfälle, ${photoRefs.length} Fotos.`,
+                `Monatsmeldung ${action}: ${total} Tiere, ${pastureCount} Weide-Bewertungen, ${assetCount} Assets, ${taskCount} Aufgaben, ${incCount} Vorfälle, ${photoRefs.length} Fotos.`,
                 'success'
             );
 
