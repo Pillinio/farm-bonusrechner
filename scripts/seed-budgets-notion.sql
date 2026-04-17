@@ -22,7 +22,7 @@ INSERT INTO budgets (fiscal_year, month, category, planned_nad, actual_nad) VALU
   (2026, 0, 'Farm Management Equipment',          47900,    0),
   (2026, 0, 'Fodder & Lick',                     330000,    0),
   (2026, 0, 'Fuel, Gas & Oil (Bulk)',            300000,    0),
-  (2026, 0, 'Household Farm & Gaeste',            18000,    0),
+  (2026, 0, 'Household Farm & Gäste',             18000,    0),
   (2026, 0, 'Insurance',                          40000,    0),
   (2026, 0, 'Land Tax',                           70000,    0),
   (2026, 0, 'Livestock - Cattle Purchase',       855000,    0),

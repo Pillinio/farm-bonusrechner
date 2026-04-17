@@ -92,7 +92,7 @@ Stand: 2026-04-12 | Letzte Prüfung: manuell verifiziert gegen DB + Codebase
 
 ### 5d. Weide & Klima (weide.html)
 - [x] Leaflet-Karte mit Camp-Polygonen (GeoJSON via RPC)
-- [x] Veld-Condition Farboverlay pro Camp
+- [x] Weide-Condition Farboverlay pro Camp
 - [x] Saisonale Regenprognose (K2) mit Chart + Tabelle
 - [x] K3 Consecutive Dry Days KPI
 - [x] K4 Heat Stress Risk KPI
@@ -112,7 +112,7 @@ Stand: 2026-04-12 | Letzte Prüfung: manuell verifiziert gegen DB + Codebase
 ### 5f. Herd-Entry (herd-entry.html)
 - [x] 4 Sektionen: Herde, Weide, Operatives, Fotos
 - [x] Magic-Link Auth
-- [x] 5 DB-Inserts auf Submit (herd_snapshots, veld_observations, asset_status_reports, task_executions, incidents)
+- [x] 5 DB-Inserts auf Submit (herd_snapshots, pasture_observations, asset_status_reports, task_executions, incidents)
 - [x] LocalStorage Auto-Save (30s)
 - [x] Double-Submit Prevention
 - [x] Offline-Detection Banner

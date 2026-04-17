@@ -574,7 +574,7 @@
                     <span class="card-status-dot status-gray"></span>
                 </div>
                 <div class="card-value" data-kpi="m3"><span class="loading-spinner"></span></div>
-                <div class="card-subtitle">Monatliche Veraenderung</div>
+                <div class="card-subtitle">Monatliche Veränderung</div>
             </div>
         </div>
 
@@ -618,7 +618,7 @@
                     <span class="card-status-dot status-gray"></span>
                 </div>
                 <div class="card-value" data-kpi="m7"><span class="loading-spinner"></span></div>
-                <div class="card-subtitle">Angekuendigt vs. tatsaechlich geliefert</div>
+                <div class="card-subtitle">Angekündigt vs. tatsächlich geliefert</div>
             </div>
         </div>
 
@@ -941,7 +941,7 @@ function renderLivePanel() {
     const perHeadRows = liveData.filter(r => r.weight_basis === 'per_head' || r.unit === 'per_head');
     const tbody = document.querySelector('#auction-latest-table tbody');
     if (!perHeadRows.length) {
-        tbody.innerHTML = '<tr><td colspan="4" class="no-data">Keine Auktionspreise im gewaehlten Zeitraum</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="4" class="no-data">Keine Auktionspreise im gewählten Zeitraum</td></tr>';
         return;
     }
 
@@ -1075,7 +1075,7 @@ async function loadM3() {
 
             return setCard('m3', {
                 value: sign + change.toFixed(1) + ' %',
-                subtitle: 'Monatliche Veraenderung (Budget)',
+                subtitle: 'Monatliche Veränderung (Budget)',
                 status
             });
         }
@@ -1099,7 +1099,7 @@ async function loadM3() {
 
         setCard('m3', {
             value: sign + change.toFixed(1) + ' %',
-            subtitle: 'Monatliche Veraenderung',
+            subtitle: 'Monatliche Veränderung',
             status
         });
     } catch { noData('m3'); }

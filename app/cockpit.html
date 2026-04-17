@@ -634,7 +634,7 @@
             <div class="card-body">
                 <div class="card-top">
                     <span class="card-icon">&#x1F4B0;</span>
-                    <span class="card-title">Liquiditaetsreichweite</span>
+                    <span class="card-title">Liquiditätsreichweite</span>
                     <span class="card-status-dot status-gray"></span>
                 </div>
                 <div class="card-value" data-kpi="f1"><span class="loading-spinner"></span></div>
@@ -666,7 +666,7 @@
                     <span class="card-status-dot status-gray"></span>
                 </div>
                 <div class="card-value" data-kpi="h4"><span class="loading-spinner"></span></div>
-                <div class="card-subtitle">Nettoveraenderung Herde</div>
+                <div class="card-subtitle">Nettoveränderung Herde</div>
             </div>
         </a>
 
@@ -680,7 +680,7 @@
                     <span class="card-status-dot status-gray"></span>
                 </div>
                 <div class="card-value" data-kpi="w1"><span class="loading-spinner"></span></div>
-                <div class="card-subtitle">LSU vs. Kapazitaet</div>
+                <div class="card-subtitle">LSU vs. Kapazität</div>
             </div>
         </a>
 
@@ -690,7 +690,7 @@
             <div class="card-body">
                 <div class="card-top">
                     <span class="card-icon">&#x1F4C8;</span>
-                    <span class="card-title">Rentabilitaet je kg</span>
+                    <span class="card-title">Rentabilität je kg</span>
                     <span class="card-status-dot status-gray"></span>
                 </div>
                 <div class="card-value" data-kpi="f4"><span class="loading-spinner"></span></div>
@@ -953,7 +953,7 @@ async function loadW1() {
         const totalArea = camps.reduce((s, c) => s + (c.area_ha || 0), 0);
         const totalCapacity = totalArea * lsuPerHa;
 
-        if (totalCapacity <= 0) return noData('w1', 'Kapazitaet unbekannt');
+        if (totalCapacity <= 0) return noData('w1', 'Kapazität unbekannt');
 
         const ratio = Math.round(totalLSU / totalCapacity * 100);
         const status = ratio <= 80 ? 'green' : ratio <= 100 ? 'yellow' : 'red';
@@ -1216,7 +1216,7 @@ function renderUpcoming(entries) {
     const tbody = document.getElementById('upcoming-tbody');
 
     if (!entries.length) {
-        tbody.innerHTML = '<tr><td colspan="4" class="calendar-empty">Keine Eintraege in den nächsten 30 Tagen.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="4" class="calendar-empty">Keine Einträge in den nächsten 30 Tagen.</td></tr>';
         return;
     }
 
