@@ -577,6 +577,102 @@
         }
         .mm-dynamic-row select { min-width: 120px; }
         .mm-dynamic-row input[type="number"] { width: 90px; }
+
+        /* Kamp-Akkordeon (Monatsbericht) */
+        .mm-camp-accordion {
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            margin-bottom: 8px;
+        }
+        .mm-camp-accordion[open] {
+            border-color: #2E75B6;
+            box-shadow: 0 1px 4px rgba(46,117,182,0.08);
+        }
+        .mm-camp-summary {
+            cursor: pointer;
+            padding: 10px 14px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            list-style: none;
+            user-select: none;
+        }
+        .mm-camp-summary::-webkit-details-marker { display: none; }
+        .mm-camp-summary::before {
+            content: '▶';
+            color: #9ca3af;
+            font-size: 0.75em;
+            transition: transform 0.15s;
+            flex-shrink: 0;
+        }
+        .mm-camp-accordion[open] .mm-camp-summary::before {
+            transform: rotate(90deg);
+        }
+        .mm-camp-title {
+            font-weight: 600;
+            color: #111827;
+            min-width: 180px;
+        }
+        .mm-camp-occ {
+            color: #6b7280;
+            font-size: 0.85em;
+            flex: 1;
+        }
+        .mm-camp-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.72em;
+            font-weight: 600;
+        }
+        .mm-camp-badge-rain {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+        .mm-camp-status {
+            margin-left: auto;
+            color: transparent;
+            font-weight: 700;
+            width: 20px;
+            text-align: center;
+        }
+        .mm-camp-status.done {
+            color: #16a34a;
+        }
+        .mm-camp-body {
+            padding: 14px 16px 18px 16px;
+            border-top: 1px solid #f3f4f6;
+            background: #fafbfc;
+        }
+        .mm-camp-body select,
+        .mm-camp-body input[type="number"],
+        .mm-camp-body textarea {
+            width: 100%;
+            padding: 8px 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 0.88em;
+            font-family: inherit;
+        }
+        .mm-camp-body textarea { min-height: 50px; resize: vertical; }
+        .mm-camp-body .mm-field label {
+            font-size: 0.82em;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 4px;
+            display: block;
+        }
+        .mm-camp-body .mm-row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 10px;
+        }
+        .mm-camp-body .mm-row .mm-field {
+            flex: 1 1 150px;
+            min-width: 140px;
+        }
         .mm-task-row {
             display: flex;
             align-items: center;
@@ -1210,86 +1306,25 @@
                             <button type="button" class="mm-btn mm-btn-outline" onclick="Monat.meldung.cancelEdit()" style="margin-left:12px; padding:4px 12px; font-size:0.8em;">Abbrechen</button>
                         </div>
 
-                        <!-- Subsection: Herdenbewegungen -->
-                        <h3 class="mm-subsection-title">&#x1F404; Herdenbewegungen (Rotation / Zugang / Abgang)</h3>
-
-                        <details id="movement-form-details" style="margin-bottom:18px;">
-                            <summary style="cursor:pointer;font-weight:600;color:#2E75B6;font-size:0.95em;margin-bottom:10px;">
-                                &#x2795; Neue Bewegung erfassen
-                            </summary>
-                            <div class="entry-form" id="movement-form">
-                                <div class="form-group">
-                                    <label for="mv-date">Datum</label>
-                                    <input type="date" id="mv-date">
-                                </div>
-                                <div class="form-group">
-                                    <label for="mv-from">Von Kamp</label>
-                                    <select id="mv-from">
-                                        <option value="">-- Zugang / Geburt --</option>
-                                    </select>
-                                </div>
-                                <div class="form-group">
-                                    <label for="mv-to">Nach Kamp</label>
-                                    <select id="mv-to">
-                                        <option value="">-- Abgang / Verkauf / Tod --</option>
-                                    </select>
-                                </div>
-                                <div class="form-group">
-                                    <label for="mv-count">Anzahl</label>
-                                    <input type="number" id="mv-count" min="1" value="1">
-                                </div>
-                                <div class="form-group">
-                                    <label for="mv-category">Tierkategorie</label>
-                                    <select id="mv-category">
-                                        <option value="cows">Kühe</option>
-                                        <option value="bulls">Bullen</option>
-                                        <option value="heifers">Färsen</option>
-                                        <option value="calves">Kälber</option>
-                                        <option value="oxen">Ochsen</option>
-                                        <option value="mixed">Gemischt</option>
-                                    </select>
-                                </div>
-                                <div class="form-group">
-                                    <label for="mv-reason">Grund</label>
-                                    <select id="mv-reason">
-                                        <option value="rotation">Rotation</option>
-                                        <option value="birth">Geburt</option>
-                                        <option value="purchase">Zukauf</option>
-                                        <option value="sale">Verkauf</option>
-                                        <option value="death">Tod</option>
-                                        <option value="separation">Separation</option>
-                                        <option value="other">Sonstiges</option>
-                                    </select>
-                                </div>
-                                <div class="form-group full-width">
-                                    <label for="mv-notes">Notizen</label>
-                                    <textarea id="mv-notes" rows="2" placeholder="Optional..."></textarea>
-                                </div>
-                                <div class="form-group full-width" style="flex-direction:row;gap:12px;align-items:center;">
-                                    <button class="btn-save" id="btn-save-movement" onclick="Monat.saveMovement()">Speichern</button>
-                                    <div class="form-msg" id="mv-msg"></div>
+                        <!-- 1. Kopfdaten -->
+                        <div class="mm-row" style="align-items:flex-end;">
+                            <div class="mm-field">
+                                <label for="mm-snapshotDate">Stichtag</label>
+                                <input type="date" id="mm-snapshotDate">
+                            </div>
+                            <div class="mm-field" style="flex: 2;">
+                                <label>Fortschritt</label>
+                                <div id="mm-progress" style="padding:8px 12px; background:#f3f4f6; border-radius:6px; color:#374151; font-weight:500; font-size:0.92em;">
+                                    <span id="mm-progress-text">0 / 0 Kamps erfasst</span>
+                                    <button type="button" id="mm-expand-all" onclick="Monat.meldung.toggleAllCamps()" style="float:right; background:#2E75B6; color:white; border:none; padding:4px 12px; border-radius:4px; cursor:pointer; font-size:0.85em;">Alle ausklappen</button>
                                 </div>
                             </div>
-                        </details>
-
-                        <div class="mm-sub-heading">Bewegungen im ausgewählten Monat</div>
-                        <div id="movements-table-wrap">
-                            <div class="loading-placeholder"><span class="loading-spinner"></span> Lade Bewegungen...</div>
                         </div>
 
-                        <div class="mm-sub-heading" style="margin-top:16px;">Kamp-Belegung (aktuell)</div>
-                        <div id="occupancy-table-wrap">
-                            <div class="loading-placeholder"><span class="loading-spinner"></span> Lade Belegung...</div>
-                        </div>
+                        <!-- 2. Herden-Summen -->
+                        <h3 class="mm-subsection-title" style="margin-top:24px;">&#x1F404; Herden-Summen</h3>
 
-                        <!-- Subsection: Herde -->
-                        <h3 class="mm-subsection-title" style="margin-top:24px;">&#x1F404; Herde</h3>
-                        <div class="mm-field">
-                            <label for="mm-snapshotDate">Stichtag</label>
-                            <input type="date" id="mm-snapshotDate">
-                        </div>
-
-                        <div class="mm-sub-heading">Aktueller Bestand</div>
+                        <div class="mm-sub-heading">Aktueller Bestand am Stichtag</div>
                         <div class="mm-row">
                             <div class="mm-field">
                                 <label for="mm-cows">K&uuml;he</label>
@@ -1349,51 +1384,95 @@
                             <textarea id="mm-sickNotes" placeholder="z.B. 2 K&uuml;he mit Durchfall, Kamp 3..."></textarea>
                         </div>
 
-                        <!-- Subsection: Weide & Wasser -->
-                        <h3 class="mm-subsection-title" style="margin-top:24px;">&#x1F331; Weide &amp; Wasser</h3>
-                        <div class="mm-sub-heading">Weidezustand pro Kamp</div>
-                        <div id="mm-campList">
-                            <div class="mm-text-muted">Camps werden geladen...</div>
-                        </div>
-                        <div class="mm-sub-heading">Bohrl&ouml;cher &amp; D&auml;mme</div>
-                        <div id="mm-assetList">
-                            <div class="mm-text-muted">Assets werden geladen...</div>
+                        <!-- 3. Herdenbewegungen -->
+                        <h3 class="mm-subsection-title" style="margin-top:24px;">&#x1F501; Herdenbewegungen im Monat</h3>
+                        <div class="mm-text-muted" style="margin-bottom:10px;">
+                            Bewegungen werden sofort gespeichert, unabh&auml;ngig vom "Absenden"-Button. Kamps ohne Bewegung bleiben beim Vormonat-Stand.
                         </div>
 
-                        <!-- Subsection: Operatives -->
-                        <h3 class="mm-subsection-title" style="margin-top:24px;">&#x1F6E0;&#xFE0F; Operatives</h3>
-                        <div class="mm-sub-heading">Aufgaben-Checkliste</div>
-                        <div id="mm-taskList">
-                            <div class="mm-text-muted">Aufgaben werden geladen...</div>
+                        <details id="movement-form-details" style="margin-bottom:14px;">
+                            <summary style="cursor:pointer;font-weight:600;color:#2E75B6;font-size:0.95em;padding:6px 0;">
+                                &#x2795; Neue Bewegung erfassen
+                            </summary>
+                            <div class="entry-form" id="movement-form">
+                                <div class="form-group">
+                                    <label for="mv-date">Datum</label>
+                                    <input type="date" id="mv-date">
+                                </div>
+                                <div class="form-group">
+                                    <label for="mv-from">Von Kamp</label>
+                                    <select id="mv-from">
+                                        <option value="">-- Zugang / Geburt --</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="mv-to">Nach Kamp</label>
+                                    <select id="mv-to">
+                                        <option value="">-- Abgang / Verkauf / Tod --</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="mv-count">Anzahl</label>
+                                    <input type="number" id="mv-count" min="1" value="1">
+                                </div>
+                                <div class="form-group">
+                                    <label for="mv-category">Tierkategorie</label>
+                                    <select id="mv-category">
+                                        <option value="cows">K&uuml;he</option>
+                                        <option value="bulls">Bullen</option>
+                                        <option value="heifers">F&auml;rsen</option>
+                                        <option value="calves">K&auml;lber</option>
+                                        <option value="oxen">Ochsen</option>
+                                        <option value="mixed">Gemischt</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="mv-reason">Grund</label>
+                                    <select id="mv-reason">
+                                        <option value="rotation">Rotation</option>
+                                        <option value="birth">Geburt</option>
+                                        <option value="purchase">Zukauf</option>
+                                        <option value="sale">Verkauf</option>
+                                        <option value="death">Tod</option>
+                                        <option value="separation">Separation</option>
+                                        <option value="other">Sonstiges</option>
+                                    </select>
+                                </div>
+                                <div class="form-group full-width">
+                                    <label for="mv-notes">Notizen</label>
+                                    <textarea id="mv-notes" rows="2" placeholder="Optional..."></textarea>
+                                </div>
+                                <div class="form-group full-width" style="flex-direction:row;gap:12px;align-items:center;">
+                                    <button class="btn-save" id="btn-save-movement" onclick="Monat.saveMovement()">Speichern</button>
+                                    <div class="form-msg" id="mv-msg"></div>
+                                </div>
+                            </div>
+                        </details>
+
+                        <div id="movements-table-wrap">
+                            <div class="loading-placeholder"><span class="loading-spinner"></span> Lade Bewegungen...</div>
                         </div>
-                        <div class="mm-sub-heading">Neue Vorf&auml;lle</div>
+
+                        <!-- 4. Kamp-Erfassung (Akkordeons) -->
+                        <h3 class="mm-subsection-title" style="margin-top:24px;">&#x1F3D5;&#xFE0F; Kamp-Zustand</h3>
+                        <div class="mm-text-muted" style="margin-bottom:10px;">
+                            Pro Kamp: Qualit&auml;t, Grasarten, Zaun, Reservoir, Wasserf&ouml;rderung, Regen (wenn Station), Notizen.
+                        </div>
+                        <div id="mm-campAccordion">
+                            <div class="mm-text-muted">Kamps werden geladen...</div>
+                        </div>
+
+                        <!-- 5. Vorfälle -->
+                        <h3 class="mm-subsection-title" style="margin-top:24px;">&#x26A0;&#xFE0F; Vorf&auml;lle</h3>
                         <div id="mm-incidentList"></div>
                         <button type="button" class="mm-btn mm-btn-outline" onclick="Monat.meldung.addIncident()" style="margin-top:8px;padding:8px 14px;font-size:0.85em;">
                             + Vorfall hinzuf&uuml;gen
                         </button>
-                        <div class="mm-sub-heading">Offene Punkte / W&uuml;nsche</div>
+
+                        <!-- 6. Freitext-Bemerkungen -->
+                        <h3 class="mm-subsection-title" style="margin-top:24px;">&#x1F4AC; Bemerkungen</h3>
                         <div class="mm-field">
                             <textarea id="mm-openNotes" placeholder="Freitext f&uuml;r offene Themen, W&uuml;nsche, Hinweise..."></textarea>
-                        </div>
-
-                        <!-- Subsection: Fotos -->
-                        <h3 class="mm-subsection-title" style="margin-top:24px;">&#x1F4F7; Fotos (optional)</h3>
-                        <div id="mm-photoSlots">
-                            <div class="mm-photo-slot" onclick="this.querySelector('input').click()">
-                                <span class="mm-photo-icon">&#128247;</span>
-                                <span class="mm-photo-text">Foto aufnehmen oder ausw&auml;hlen</span>
-                                <input type="file" accept="image/*" capture="environment" onchange="Monat.meldung.handlePhoto(this, 0)">
-                            </div>
-                            <div class="mm-photo-slot" onclick="this.querySelector('input').click()">
-                                <span class="mm-photo-icon">&#128247;</span>
-                                <span class="mm-photo-text">Foto aufnehmen oder ausw&auml;hlen</span>
-                                <input type="file" accept="image/*" capture="environment" onchange="Monat.meldung.handlePhoto(this, 1)">
-                            </div>
-                            <div class="mm-photo-slot" onclick="this.querySelector('input').click()">
-                                <span class="mm-photo-icon">&#128247;</span>
-                                <span class="mm-photo-text">Foto aufnehmen oder ausw&auml;hlen</span>
-                                <input type="file" accept="image/*" capture="environment" onchange="Monat.meldung.handlePhoto(this, 2)">
-                            </div>
                         </div>
 
                         <!-- Submit bar -->
@@ -1820,48 +1899,13 @@ const Monat = {
     },
 
     // ── 1b. Load Kamp Occupancy ──
+    // Belegung pro Kamp wird jetzt im Monatsmeldungs-Akkordeon-Kopf angezeigt
+    // (Monat.meldung.occupancy). Diese Funktion triggert nur noch ein Refresh
+    // des Akkordeons, falls die Meldung aktiv ist.
     async loadOccupancy() {
-        const wrap = document.getElementById('occupancy-table-wrap');
-
-        wrap.innerHTML = '<div class="loading-placeholder"><span class="loading-spinner"></span> Lade Belegung...</div>';
-
-        const { data, error } = await sb
-            .from('camp_occupancy')
-            .select('*')
-            .order('camp');
-
-        if (error || !data) {
-            wrap.innerHTML = '<p style="color:#991b1b;">Fehler: ' + ((error && error.message) || '') + '</p>';
-            return;
+        if (Monat.meldung && Monat.meldung.initialized) {
+            await Monat.meldung.refreshOccupancy();
         }
-
-        if (data.length === 0) {
-            wrap.innerHTML = '<p style="color:#9ca3af;">Keine Belegungsdaten vorhanden.</p>';
-            return;
-        }
-
-        let html = '<table class="data-table"><thead><tr>';
-        html += '<th>Kamp</th><th class="num">Aktuelle Tiere</th><th>Letzter Wechsel</th><th class="num">Tage seit Wechsel</th>';
-        html += '</tr></thead><tbody>';
-
-        const self = this;
-        data.forEach(row => {
-            const days = row.days_since_last_movement || 0;
-            let rowClass = '';
-            if (days > 90) rowClass = 'occ-red';
-            else if (days > 60) rowClass = 'occ-yellow';
-            else rowClass = 'occ-green';
-
-            html += '<tr class="' + rowClass + '">';
-            html += '<td><strong>' + (row.camp || '--') + '</strong></td>';
-            html += '<td class="num">' + self.fmt(row.current_head) + '</td>';
-            html += '<td>' + self.fmtDate(row.last_movement) + '</td>';
-            html += '<td class="num">' + days + ' Tage</td>';
-            html += '</tr>';
-        });
-
-        html += '</tbody></table>';
-        wrap.innerHTML = html;
     },
 
     // ── 2. Herdenstruktur ──
@@ -1992,9 +2036,9 @@ const Monat = {
         wrap.innerHTML = '<div class="loading-placeholder"><span class="loading-spinner"></span> Lade Weidezustand...</div>';
 
         const { data, error } = await sb
-            .from('pasture_observations')
-            .select('camp_name, condition_score, snapshot_date')
-            .order('snapshot_date', { ascending: false });
+            .from('camp_vegetation')
+            .select('camp_name, condition_score, observation_date')
+            .order('observation_date', { ascending: false });
 
         if (error || !data) {
             wrap.innerHTML = '<p style="color:#991b1b;">Fehler: ' + ((error && error.message) || '') + '</p>';
@@ -2035,7 +2079,7 @@ const Monat = {
             html += '<div class="weide-card ' + colorClass + '">';
             html += '<div class="camp-name">' + (obs.camp_name || '--') + '</div>';
             html += '<div class="camp-score">' + score + '/5</div>';
-            html += '<div class="camp-date">' + label + ' &middot; ' + self.fmtDate(obs.snapshot_date) + '</div>';
+            html += '<div class="camp-date">' + label + ' &middot; ' + self.fmtDate(obs.observation_date) + '</div>';
             html += '</div>';
         });
         html += '</div>';
@@ -2170,15 +2214,14 @@ const Monat = {
 };
 
 // ══════════════════════════════════════════════════════════════════
-// Monat.meldung — Monatsmeldung data entry (migrated from herd-entry.html)
+// Monat.meldung — Monatsmeldung data entry
 // ══════════════════════════════════════════════════════════════════
 Monat.meldung = {
     // State
-    camps: [],
-    assets: [],
-    tasks: [],
-    photoFiles: [null, null, null],
-    photoLabels: ['', '', ''],
+    camps: [],               // [{ id, name, has_rain_station }]
+    occupancy: {},           // { camp_name: { current_head, last_movement } }
+    grassSpecies: [],        // [{ scientific_name, common_name, category }]
+    campPhotoFiles: {},      // { camp_name: [file0|null, file1|null] }
     draftTimer: null,
     isSubmitting: false,
     incidentCount: 0,
@@ -2191,6 +2234,7 @@ Monat.meldung = {
     num(id) { return parseInt(this.val(id)) || 0; },
     setVal(id, v) { const el = document.getElementById(id); if (el) el.value = v; },
     esc(s) { const d = document.createElement('div'); d.textContent = s == null ? '' : String(s); return d.innerHTML; },
+    campKey(name) { return name.replace(/[^a-zA-Z0-9]/g, '_'); },
     formatDate(d) {
         return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
     },
@@ -2219,18 +2263,23 @@ Monat.meldung = {
         const firstOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
         this.setVal('mm-snapshotDate', this.formatDate(firstOfMonth));
 
-        // Load reference data (parallel)
-        await Promise.all([this.loadCamps(), this.loadAssets(), this.loadTasks()]);
+        await Promise.all([
+            this.loadCamps(),
+            this.loadGrassSpecies(),
+            this.loadOccupancy(),
+        ]);
+        this.renderCampAccordion();
+        this.updateProgress();
 
-        // Load existing Monatsmeldungen
         await this.loadExistingMeldungen();
-
-        // Restore draft
         this.restoreDraft();
 
-        // Auto-save every 30s
         const self = this;
         this.draftTimer = setInterval(() => self.saveDraft(), 30000);
+
+        // Hook: bei Datumswechsel oder nach Bewegung neu laden
+        const dateInput = document.getElementById('mm-snapshotDate');
+        if (dateInput) dateInput.addEventListener('change', () => self.refreshOccupancy());
     },
 
     // ── Load existing Monatsmeldungen ──
@@ -2282,16 +2331,13 @@ Monat.meldung = {
         wrap.innerHTML = html;
     },
 
-    // ── Delete whole Monatsmeldung (parent + 4 children by snapshot_date) ──
+    // ── Delete Monatsmeldung (Kamp-Zustand + Vorfälle + Parent; Bewegungen bleiben) ──
     async deleteMeldung(snapshotId, snapshotDate) {
         const dStr = new Date(snapshotDate).toLocaleDateString('de-DE');
-        if (!confirm('Monatsmeldung vom ' + dStr + ' komplett löschen?\n\nAlle Zusatzdaten (Weide-Bewertungen, Asset-Status, Task-Ausführungen, Vorfälle) für diesen Stichtag werden mit entfernt.\n\nHinweis: Nur Owner dürfen löschen.')) return;
+        if (!confirm('Monatsmeldung vom ' + dStr + ' komplett löschen?\n\nKamp-Zustand und Vorfälle für diesen Stichtag werden entfernt.\nHerdenbewegungen bleiben erhalten (eigene Historie).\n\nHinweis: Nur Owner dürfen löschen.')) return;
 
-        // 1) delete children (by snapshot_date) — errors bubble up
         const childResults = await Promise.allSettled([
-            sb.from('pasture_observations').delete().eq('snapshot_date', snapshotDate),
-            sb.from('asset_status_reports').delete().eq('snapshot_date', snapshotDate),
-            sb.from('task_executions').delete().eq('snapshot_date', snapshotDate),
+            sb.from('camp_vegetation').delete().eq('observation_date', snapshotDate),
             sb.from('incidents').delete().eq('snapshot_date', snapshotDate),
         ]);
         for (const r of childResults) {
@@ -2302,8 +2348,6 @@ Monat.meldung = {
             }
         }
 
-        // 2) delete parent snapshot — verify via .select() that a row was actually removed
-        //    (RLS blockt DELETE stillschweigend ohne Fehler; wir erkennen es an leerem data)
         const { data: deleted, error } = await sb
             .from('herd_snapshots')
             .delete()
@@ -2323,12 +2367,9 @@ Monat.meldung = {
 
     // ── Edit Monatsmeldung: prefill form ──
     async editMeldung(snapshotId, snapshotDate) {
-        // Fetch parent + children in parallel
-        const [snapRes, pastureRes, assetRes, taskRes, incRes] = await Promise.all([
+        const [snapRes, vegRes, incRes] = await Promise.all([
             sb.from('herd_snapshots').select('*').eq('id', snapshotId).single(),
-            sb.from('pasture_observations').select('camp_name, condition_score, rainfall_mm').eq('snapshot_date', snapshotDate),
-            sb.from('asset_status_reports').select('asset_id, status, metric_value').eq('snapshot_date', snapshotDate),
-            sb.from('task_executions').select('task_template_id, covered_count, completed').eq('snapshot_date', snapshotDate),
+            sb.from('camp_vegetation').select('*').eq('observation_date', snapshotDate),
             sb.from('incidents').select('incident_type, severity, affected_count, description').eq('snapshot_date', snapshotDate),
         ]);
 
@@ -2348,46 +2389,38 @@ Monat.meldung = {
         this.setVal('mm-births', s.births ?? 0);
         this.setVal('mm-sales', s.sales ?? 0);
         this.setVal('mm-purchases', s.purchases ?? 0);
-        // deaths is combined in DB; we can't split back exactly — put total into deathsAdult, 0 in calves
         this.setVal('mm-deathsAdult', s.deaths ?? 0);
         this.setVal('mm-deathsCalves', 0);
-        // notes split: sick notes and open notes were combined — put full string in openNotes
         this.setVal('mm-sickCount', 0);
         this.setVal('mm-sickNotes', '');
         this.setVal('mm-openNotes', s.notes || '');
 
-        // Weide: by camp name (condition + rainfall)
-        const pastureByCamp = {};
-        (pastureRes.data || []).forEach(v => { pastureByCamp[v.camp_name] = v; });
-        for (let i = 0; i < this.camps.length; i++) {
-            const scoreEl = document.getElementById('mm-camp_score_' + i);
-            const rainEl  = document.getElementById('mm-camp_rain_' + i);
-            const obs = pastureByCamp[this.camps[i].name];
-            if (scoreEl) scoreEl.value = obs && obs.condition_score != null ? String(obs.condition_score) : '';
-            if (rainEl)  rainEl.value  = obs && obs.rainfall_mm     != null ? String(obs.rainfall_mm)     : '';
+        // Kamp-Zustand: prefill pro Akkordeon
+        const vegByCamp = {};
+        (vegRes.data || []).forEach(v => { vegByCamp[v.camp_name] = v; });
+        for (const c of this.camps) {
+            const k = this.campKey(c.name);
+            const v = vegByCamp[c.name] || {};
+            const set = (id, val) => { const el = document.getElementById(id); if (el) el.value = val ?? ''; };
+            set('mm-camp-condition-' + k,   v.condition_score);
+            set('mm-camp-fence-' + k,        v.fence_status);
+            set('mm-camp-reservoir-' + k,    v.reservoir_level_pct);
+            set('mm-camp-pump-' + k,         v.water_pump_status);
+            set('mm-camp-bush-' + k,         v.bush_encroachment);
+            set('mm-camp-grazing-' + k,      v.grazing_pressure);
+            set('mm-camp-perennial-' + k,    v.perennial_pct);
+            set('mm-camp-bare-' + k,         v.bare_soil_pct);
+            set('mm-camp-notes-' + k,        v.notes);
+            if (c.has_rain_station) set('mm-camp-rain-' + k, v.rainfall_mm);
+            // Grasarten Multi-Select
+            const grassEl = document.getElementById('mm-camp-grass-' + k);
+            if (grassEl && Array.isArray(v.dominant_species)) {
+                const set2 = new Set(v.dominant_species);
+                [...grassEl.options].forEach(o => { o.selected = set2.has(o.value); });
+            }
+            this.updateCampStatusBadge(c.name);
         }
-
-        // Assets: by asset_id
-        const assetById = {};
-        (assetRes.data || []).forEach(a => { assetById[a.asset_id] = a; });
-        for (let i = 0; i < this.assets.length; i++) {
-            const row = assetById[this.assets[i].id];
-            const sel = document.getElementById('mm-asset_status_' + i);
-            const metric = document.getElementById('mm-asset_metric_' + i);
-            if (sel) sel.value = row ? row.status : '';
-            if (metric) metric.value = row && row.metric_value != null ? row.metric_value : '';
-        }
-
-        // Tasks: by task_template_id
-        const taskById = {};
-        (taskRes.data || []).forEach(t => { taskById[t.task_template_id] = t; });
-        for (let i = 0; i < this.tasks.length; i++) {
-            const row = taskById[this.tasks[i].id];
-            const done = document.getElementById('mm-task_done_' + i);
-            const cnt = document.getElementById('mm-task_count_' + i);
-            if (done) done.checked = !!(row && row.completed);
-            if (cnt) cnt.value = row ? (row.covered_count ?? 0) : 0;
-        }
+        this.updateProgress();
 
         // Incidents: clear + re-create
         document.getElementById('mm-incidentList').innerHTML = '';
@@ -2402,7 +2435,11 @@ Monat.meldung = {
             this.setVal('mm-inc_desc_' + idx, inc.description || '');
         }
 
-        // Update UI state: expand section, lock date, update banner + button
+        // Bewegungen für den Monat neu laden: month-picker auf snapshotDate-Monat setzen
+        const mp = document.getElementById('month-picker');
+        if (mp) { mp.value = snapshotDate.slice(0, 7); }
+        if (Monat.loadMovements) Monat.loadMovements();
+
         const body = document.getElementById('body-meldung');
         const toggle = document.getElementById('toggle-meldung');
         if (body && body.classList.contains('hidden')) {
@@ -2436,86 +2473,232 @@ Monat.meldung = {
         this.resetForm();
     },
 
-    // ── Load camps ──
+    // ── Load active camps (alphabetisch) ──
     async loadCamps() {
-        const container = document.getElementById('mm-campList');
-        const { data, error } = await sb.from('farm_camps').select('id, name').order('name');
-        if (error || !data || data.length === 0) {
-            container.innerHTML = '<div class="mm-text-muted">Keine Camps gefunden.</div>';
-            return;
-        }
-        this.camps = data;
-        const self = this;
-        container.innerHTML = this.camps.map((c, i) => `
-            <div class="mm-dynamic-row">
-                <span class="mm-name">${self.esc(c.name)}</span>
-                <select id="mm-camp_score_${i}" data-camp-id="${c.id}" data-camp-name="${self.esc(c.name)}">
-                    <option value="">--</option>
-                    <option value="5">5 Exzellent</option>
-                    <option value="4">4 Gut</option>
-                    <option value="3">3 Mittel</option>
-                    <option value="2">2 Schlecht</option>
-                    <option value="1">1 Kritisch</option>
-                </select>
-                <input type="number" id="mm-camp_rain_${i}" placeholder="Regen mm" min="0" step="0.1" inputmode="decimal" title="Niederschlag seit letzter Messung (manuelle Kamp-Regenstation)">
-            </div>
-        `).join('');
-    },
-
-    // ── Load assets ──
-    async loadAssets() {
-        const container = document.getElementById('mm-assetList');
         const { data, error } = await sb
-            .from('farm_assets')
-            .select('id, name, asset_type')
-            .in('asset_type', ['borehole', 'dam'])
+            .from('farm_camps')
+            .select('id, name, has_rain_station')
+            .eq('active', true)
+            .neq('name', 'Außengrenze Farm')
             .order('name');
-        if (error || !data || data.length === 0) {
-            container.innerHTML = '<div class="mm-text-muted">Keine Bohrl&ouml;cher/D&auml;mme gefunden.</div>';
-            return;
-        }
-        this.assets = data;
-        const self = this;
-        container.innerHTML = this.assets.map((a, i) => {
-            const unit = a.asset_type === 'borehole' ? 'l/h' : 'F&uuml;llstand %';
-            const typeLabel = a.asset_type === 'borehole' ? 'Bohrloch' : 'Damm';
-            return `
-            <div class="mm-dynamic-row">
-                <span class="mm-name">${self.esc(a.name)} <span class="mm-text-muted">(${typeLabel})</span></span>
-                <select id="mm-asset_status_${i}" data-asset-id="${a.id}">
-                    <option value="">--</option>
-                    <option value="gruen">Gr&uuml;n</option>
-                    <option value="gelb">Gelb</option>
-                    <option value="rot">Rot</option>
-                    <option value="offline">Offline</option>
-                </select>
-                <input type="number" id="mm-asset_metric_${i}" placeholder="${unit}" min="0" step="any" inputmode="decimal">
-            </div>`;
-        }).join('');
+        if (error) { console.error('loadCamps', error); this.camps = []; return; }
+        this.camps = data || [];
     },
 
-    // ── Load tasks ──
-    async loadTasks() {
-        const container = document.getElementById('mm-taskList');
-        const { data, error } = await sb.from('task_templates').select('id, name, description, target_scope').order('name');
-        if (error || !data || data.length === 0) {
-            container.innerHTML = '<div class="mm-text-muted">Keine Aufgabenvorlagen gefunden.</div>';
+    // ── Load grass species reference list for dominant-species multi-select ──
+    async loadGrassSpecies() {
+        const { data } = await sb
+            .from('grass_species')
+            .select('scientific_name, common_name, category')
+            .order('category').order('scientific_name');
+        this.grassSpecies = data || [];
+    },
+
+    // ── Load current occupancy per camp from camp_occupancy VIEW ──
+    async loadOccupancy() {
+        const { data } = await sb.from('camp_occupancy').select('camp, current_head, last_movement');
+        const map = {};
+        (data || []).forEach(o => { map[o.camp] = o; });
+        this.occupancy = map;
+    },
+
+    async refreshOccupancy() {
+        await this.loadOccupancy();
+        // Nur Badges aktualisieren, nicht komplettes Render (um User-Eingaben nicht zu verlieren)
+        for (const c of this.camps) this.updateCampOccupancyBadge(c.name);
+    },
+
+    // ── Render Kamp-Akkordeon ──
+    renderCampAccordion() {
+        const container = document.getElementById('mm-campAccordion');
+        if (!container) return;
+        if (!this.camps.length) {
+            container.innerHTML = '<div class="mm-text-muted">Keine aktiven Kamps gefunden.</div>';
             return;
         }
-        this.tasks = data;
         const self = this;
-        container.innerHTML = this.tasks.map((t, i) => `
-            <div class="mm-task-row">
-                <input type="checkbox" id="mm-task_done_${i}" data-task-id="${t.id}">
-                <div class="mm-task-info">
-                    <div class="mm-task-name">${self.esc(t.name)}</div>
-                    ${t.description ? `<div class="mm-task-meta">${self.esc(t.description)}</div>` : ''}
+        container.innerHTML = this.camps.map(c => self.renderCampBlock(c)).join('');
+        // Wire change-listeners für Status-Badge + Progress
+        container.addEventListener('input', (e) => {
+            const det = e.target.closest('details[data-camp]');
+            if (det) {
+                self.updateCampStatusBadge(det.dataset.camp);
+                self.updateProgress();
+            }
+        });
+    },
+
+    renderCampBlock(c) {
+        const k = this.campKey(c.name);
+        const occ = this.occupancy[c.name];
+        const occText = occ
+            ? `${occ.current_head} Tiere · letzte Bew. ${new Date(occ.last_movement).toLocaleDateString('de-DE')}`
+            : 'leer';
+        const rainBadge = c.has_rain_station ? '<span class="mm-camp-badge mm-camp-badge-rain">📍 Regenstation</span>' : '';
+        const grassOptions = this.grassSpecies.map(g =>
+            `<option value="${this.esc(g.scientific_name)}">${this.esc(g.common_name || g.scientific_name)} (${this.esc(g.category)})</option>`
+        ).join('');
+        const rainField = c.has_rain_station ? `
+            <div class="mm-field">
+                <label>🌧 Regen (mm seit letzter Messung)</label>
+                <input type="number" id="mm-camp-rain-${k}" min="0" step="0.1" inputmode="decimal">
+            </div>` : '';
+
+        return `
+        <details class="mm-camp-accordion" data-camp="${this.esc(c.name)}">
+            <summary class="mm-camp-summary">
+                <span class="mm-camp-title">${this.esc(c.name)}</span>
+                <span class="mm-camp-occ">${occText}</span>
+                ${rainBadge}
+                <span class="mm-camp-status" id="mm-camp-status-${k}"></span>
+            </summary>
+            <div class="mm-camp-body">
+                <div class="mm-row">
+                    <div class="mm-field">
+                        <label>Qualität (1–5)</label>
+                        <select id="mm-camp-condition-${k}">
+                            <option value="">--</option>
+                            <option value="5">5 Exzellent</option>
+                            <option value="4">4 Gut</option>
+                            <option value="3">3 Mittel</option>
+                            <option value="2">2 Schlecht</option>
+                            <option value="1">1 Kritisch</option>
+                        </select>
+                    </div>
+                    <div class="mm-field">
+                        <label>Zaun-Zustand</label>
+                        <select id="mm-camp-fence-${k}">
+                            <option value="">--</option>
+                            <option value="green">🟢 Gut</option>
+                            <option value="yellow">🟡 Reparatur nötig</option>
+                            <option value="red">🔴 Dringend</option>
+                            <option value="na">n.a.</option>
+                        </select>
+                    </div>
+                    <div class="mm-field">
+                        <label>Reservoir-Füllstand (%)</label>
+                        <input type="number" id="mm-camp-reservoir-${k}" min="0" max="100" placeholder="leer wenn kein Reservoir" inputmode="numeric">
+                    </div>
+                    <div class="mm-field">
+                        <label>Wasserförderung</label>
+                        <select id="mm-camp-pump-${k}">
+                            <option value="">--</option>
+                            <option value="solar_ok">☀️ Solar OK</option>
+                            <option value="solar_issue">☀️ Solar Problem</option>
+                            <option value="wind_ok">🌬 Wind OK</option>
+                            <option value="wind_issue">🌬 Wind Problem</option>
+                            <option value="na">n.a.</option>
+                        </select>
+                    </div>
+                    ${rainField}
                 </div>
-                <div class="mm-task-counts">
-                    <input type="number" id="mm-task_count_${i}" min="0" value="0" inputmode="numeric" placeholder="Anz.">
+                <div class="mm-field">
+                    <label>Grasarten (Mehrfach-Auswahl mit Strg/Cmd-Klick)</label>
+                    <select id="mm-camp-grass-${k}" multiple size="5" style="min-height:120px;">${grassOptions}</select>
+                </div>
+                <div class="mm-row">
+                    <div class="mm-field">
+                        <label>Verbuschung</label>
+                        <select id="mm-camp-bush-${k}">
+                            <option value="">--</option>
+                            <option value="none">keine</option>
+                            <option value="light">leicht</option>
+                            <option value="moderate">mittel</option>
+                            <option value="heavy">stark</option>
+                        </select>
+                    </div>
+                    <div class="mm-field">
+                        <label>Weidedruck</label>
+                        <select id="mm-camp-grazing-${k}">
+                            <option value="">--</option>
+                            <option value="low">gering</option>
+                            <option value="moderate">mittel</option>
+                            <option value="high">hoch</option>
+                            <option value="overutilized">überweidet</option>
+                        </select>
+                    </div>
+                    <div class="mm-field">
+                        <label>Dauergras (%)</label>
+                        <input type="number" id="mm-camp-perennial-${k}" min="0" max="100" inputmode="numeric">
+                    </div>
+                    <div class="mm-field">
+                        <label>Bodenblöße (%)</label>
+                        <input type="number" id="mm-camp-bare-${k}" min="0" max="100" inputmode="numeric">
+                    </div>
+                </div>
+                <div class="mm-field">
+                    <label>Notizen</label>
+                    <textarea id="mm-camp-notes-${k}" rows="2" placeholder="Beobachtungen, Auffälligkeiten..."></textarea>
                 </div>
             </div>
-        `).join('');
+        </details>`;
+    },
+
+    // ── Kamp-State Helpers ──
+    collectCampData(c) {
+        const k = this.campKey(c.name);
+        const get = (id) => { const el = document.getElementById(id); return el ? el.value : ''; };
+        const num = (id) => { const v = get(id); return v === '' ? null : Number(v); };
+        const txt = (id) => { const v = get(id); return v === '' ? null : v; };
+        const grassEl = document.getElementById('mm-camp-grass-' + k);
+        const grass = grassEl ? [...grassEl.selectedOptions].map(o => o.value) : [];
+        return {
+            condition_score:     num('mm-camp-condition-' + k),
+            rainfall_mm:         c.has_rain_station ? num('mm-camp-rain-' + k) : null,
+            fence_status:        txt('mm-camp-fence-' + k),
+            reservoir_level_pct: num('mm-camp-reservoir-' + k),
+            water_pump_status:   txt('mm-camp-pump-' + k),
+            bush_encroachment:   txt('mm-camp-bush-' + k),
+            grazing_pressure:    txt('mm-camp-grazing-' + k),
+            perennial_pct:       num('mm-camp-perennial-' + k),
+            bare_soil_pct:       num('mm-camp-bare-' + k),
+            dominant_species:    grass.length ? grass : null,
+            notes:               txt('mm-camp-notes-' + k),
+        };
+    },
+
+    campHasData(c) {
+        const d = this.collectCampData(c);
+        return d.condition_score != null || d.rainfall_mm != null
+            || d.fence_status || d.reservoir_level_pct != null || d.water_pump_status
+            || d.bush_encroachment || d.grazing_pressure
+            || d.perennial_pct != null || d.bare_soil_pct != null
+            || (d.dominant_species && d.dominant_species.length) || d.notes;
+    },
+
+    updateCampStatusBadge(campName) {
+        const k = this.campKey(campName);
+        const el = document.getElementById('mm-camp-status-' + k);
+        if (!el) return;
+        const c = this.camps.find(x => x.name === campName);
+        el.textContent = this.campHasData(c) ? '✓' : '';
+        el.className = 'mm-camp-status' + (this.campHasData(c) ? ' done' : '');
+    },
+
+    updateCampOccupancyBadge(campName) {
+        const details = document.querySelector(`details[data-camp="${campName.replace(/"/g, '\\"')}"]`);
+        if (!details) return;
+        const el = details.querySelector('.mm-camp-occ');
+        if (!el) return;
+        const occ = this.occupancy[campName];
+        el.textContent = occ
+            ? `${occ.current_head} Tiere · letzte Bew. ${new Date(occ.last_movement).toLocaleDateString('de-DE')}`
+            : 'leer';
+    },
+
+    updateProgress() {
+        const done = this.camps.filter(c => this.campHasData(c)).length;
+        const total = this.camps.length;
+        const el = document.getElementById('mm-progress-text');
+        if (el) el.textContent = `${done} / ${total} Kamps erfasst`;
+    },
+
+    toggleAllCamps() {
+        const details = document.querySelectorAll('#mm-campAccordion details');
+        const allOpen = [...details].every(d => d.open);
+        details.forEach(d => { d.open = !allOpen; });
+        const btn = document.getElementById('mm-expand-all');
+        if (btn) btn.textContent = allOpen ? 'Alle ausklappen' : 'Alle einklappen';
     },
 
     // ── Incidents ──
@@ -2563,52 +2746,6 @@ Monat.meldung = {
         if (el) el.remove();
     },
 
-    // ── Photos ──
-    handlePhoto(input, idx) {
-        const file = input.files[0];
-        if (!file) return;
-        this.photoFiles[idx] = file;
-        const slot = input.closest('.mm-photo-slot');
-        const self = this;
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            slot.classList.add('has-photo');
-            slot.innerHTML = `
-                <button type="button" class="mm-photo-remove" onclick="event.stopPropagation(); Monat.meldung.removePhoto(${idx})">&times;</button>
-                <img src="${e.target.result}" alt="Foto ${idx + 1}">
-                <input type="text" class="mm-photo-label-input" placeholder="Beschriftung..." value="${self.esc(self.photoLabels[idx])}" onchange="Monat.meldung.photoLabels[${idx}]=this.value">
-                <input type="file" accept="image/*" capture="environment" onchange="Monat.meldung.handlePhoto(this, ${idx})">
-            `;
-        };
-        reader.readAsDataURL(file);
-    },
-
-    removePhoto(idx) {
-        this.photoFiles[idx] = null;
-        this.photoLabels[idx] = '';
-        const slots = document.getElementById('mm-photoSlots').children;
-        slots[idx].classList.remove('has-photo');
-        slots[idx].innerHTML = `
-            <span class="mm-photo-icon">&#128247;</span>
-            <span class="mm-photo-text">Foto aufnehmen oder ausw&auml;hlen</span>
-            <input type="file" accept="image/*" capture="environment" onchange="Monat.meldung.handlePhoto(this, ${idx})">
-        `;
-    },
-
-    async uploadPhotos(snapshotDate) {
-        const urls = [];
-        for (let i = 0; i < 3; i++) {
-            if (!this.photoFiles[i]) continue;
-            const ext = this.photoFiles[i].name.split('.').pop();
-            const path = `herd-photos/${snapshotDate}/${Date.now()}_${i}.${ext}`;
-            const { error } = await sb.storage.from('farm-uploads').upload(path, this.photoFiles[i]);
-            if (!error) {
-                urls.push({ path, label: this.photoLabels[i] || '' });
-            }
-        }
-        return urls;
-    },
-
     // ── Draft save / restore ──
     saveDraft() {
         try {
@@ -2621,23 +2758,13 @@ Monat.meldung = {
                 deathsAdult: this.val('mm-deathsAdult'), sales: this.val('mm-sales'), purchases: this.val('mm-purchases'),
                 sickCount: this.val('mm-sickCount'), sickNotes: this.val('mm-sickNotes'),
                 openNotes: this.val('mm-openNotes'),
-                campScores: {},
-                campRainMm: {},
-                assetStatuses: {},
-                assetMetrics: {},
+                campData: {},
                 savedAt: new Date().toISOString()
             };
-            this.camps.forEach((c, i) => {
-                const el = document.getElementById('mm-camp_score_' + i);
-                const rainEl = document.getElementById('mm-camp_rain_' + i);
-                if (el) draft.campScores[c.id] = el.value;
-                if (rainEl) draft.campRainMm[c.id] = rainEl.value;
-            });
-            this.assets.forEach((a, i) => {
-                const sEl = document.getElementById('mm-asset_status_' + i);
-                const mEl = document.getElementById('mm-asset_metric_' + i);
-                if (sEl) draft.assetStatuses[a.id] = sEl.value;
-                if (mEl) draft.assetMetrics[a.id] = mEl.value;
+            this.camps.forEach(c => {
+                const d = self.collectCampData(c);
+                // nur speichern, wenn mindestens ein Feld gesetzt
+                if (self.campHasData(c)) draft.campData[c.name] = d;
             });
             localStorage.setItem(this.DRAFT_KEY, JSON.stringify(draft));
             const indicator = document.getElementById('mm-draftIndicator');
@@ -2659,21 +2786,30 @@ Monat.meldung = {
             });
             if (d.sickNotes) this.setVal('mm-sickNotes', d.sickNotes);
             if (d.openNotes) this.setVal('mm-openNotes', d.openNotes);
-            if (d.campScores || d.campRainMm) {
-                this.camps.forEach((c, i) => {
-                    const el = document.getElementById('mm-camp_score_' + i);
-                    const rainEl = document.getElementById('mm-camp_rain_' + i);
-                    if (el && d.campScores && d.campScores[c.id]) el.value = d.campScores[c.id];
-                    if (rainEl && d.campRainMm && d.campRainMm[c.id]) rainEl.value = d.campRainMm[c.id];
-                });
-            }
-            if (d.assetStatuses) {
-                this.assets.forEach((a, i) => {
-                    const sEl = document.getElementById('mm-asset_status_' + i);
-                    const mEl = document.getElementById('mm-asset_metric_' + i);
-                    if (sEl && d.assetStatuses[a.id]) sEl.value = d.assetStatuses[a.id];
-                    if (mEl && d.assetMetrics && d.assetMetrics[a.id]) mEl.value = d.assetMetrics[a.id];
-                });
+            if (d.campData) {
+                for (const c of this.camps) {
+                    const entry = d.campData[c.name];
+                    if (!entry) continue;
+                    const k = self.campKey(c.name);
+                    const set = (id, val) => { const el = document.getElementById(id); if (el && val != null && val !== '') el.value = val; };
+                    set('mm-camp-condition-' + k,   entry.condition_score);
+                    set('mm-camp-fence-' + k,        entry.fence_status);
+                    set('mm-camp-reservoir-' + k,    entry.reservoir_level_pct);
+                    set('mm-camp-pump-' + k,         entry.water_pump_status);
+                    set('mm-camp-bush-' + k,         entry.bush_encroachment);
+                    set('mm-camp-grazing-' + k,      entry.grazing_pressure);
+                    set('mm-camp-perennial-' + k,    entry.perennial_pct);
+                    set('mm-camp-bare-' + k,         entry.bare_soil_pct);
+                    set('mm-camp-notes-' + k,        entry.notes);
+                    if (c.has_rain_station) set('mm-camp-rain-' + k, entry.rainfall_mm);
+                    const grassEl = document.getElementById('mm-camp-grass-' + k);
+                    if (grassEl && Array.isArray(entry.dominant_species)) {
+                        const s = new Set(entry.dominant_species);
+                        [...grassEl.options].forEach(o => { o.selected = s.has(o.value); });
+                    }
+                    self.updateCampStatusBadge(c.name);
+                }
+                this.updateProgress();
             }
             const savedAt = d.savedAt ? new Date(d.savedAt).toLocaleString('de-DE') : '';
             const indicator = document.getElementById('mm-draftIndicator');
@@ -2694,16 +2830,16 @@ Monat.meldung = {
         if (!container) return;
         container.querySelectorAll('input[type="number"]').forEach(el => el.value = el.defaultValue || '');
         container.querySelectorAll('textarea').forEach(el => el.value = '');
-        container.querySelectorAll('select').forEach(el => el.selectedIndex = 0);
-        container.querySelectorAll('input[type="checkbox"]').forEach(el => el.checked = false);
+        container.querySelectorAll('select').forEach(el => {
+            if (el.multiple) { [...el.options].forEach(o => o.selected = false); }
+            else el.selectedIndex = 0;
+        });
         document.getElementById('mm-incidentList').innerHTML = '';
         this.incidentCount = 0;
-        this.photoFiles = [null, null, null];
-        this.photoLabels = ['', '', ''];
-        for (let i = 0; i < 3; i++) this.removePhoto(i);
+        this.camps.forEach(c => this.updateCampStatusBadge(c.name));
+        this.updateProgress();
         const now = new Date();
         this.setVal('mm-snapshotDate', this.formatDate(new Date(now.getFullYear(), now.getMonth(), 1)));
-        // Restart auto-save
         const self = this;
         if (!this.draftTimer) this.draftTimer = setInterval(() => self.saveDraft(), 30000);
     },
@@ -2739,9 +2875,6 @@ Monat.meldung = {
             if (sickCount > 0) notes += `Kranke Tiere: ${sickCount} - ${sickNotes}\n`;
             if (openNotes) notes += `Offene Punkte: ${openNotes}\n`;
 
-            // Upload photos
-            const photoRefs = await this.uploadPhotos(snapshotDate);
-
             const isEdit = !!this.editingSnapshotId;
             const parentPayload = {
                 snapshot_date: snapshotDate,
@@ -2751,15 +2884,13 @@ Monat.meldung = {
                 sales: salesVal,
                 purchases: purchasesVal,
                 notes: notes || null,
-                photos_ref: photoRefs.length > 0 ? photoRefs : null
+                photos_ref: null
             };
 
-            // Edit mode: delete all children first (delete-then-insert strategy)
+            // Edit mode: alte Kamp-Beobachtungen + Vorfälle löschen (delete-then-insert)
             if (isEdit) {
                 const delResults = await Promise.allSettled([
-                    sb.from('pasture_observations').delete().eq('snapshot_date', snapshotDate),
-                    sb.from('asset_status_reports').delete().eq('snapshot_date', snapshotDate),
-                    sb.from('task_executions').delete().eq('snapshot_date', snapshotDate),
+                    sb.from('camp_vegetation').delete().eq('observation_date', snapshotDate),
                     sb.from('incidents').delete().eq('snapshot_date', snapshotDate),
                 ]);
                 for (const r of delResults) {
@@ -2770,7 +2901,7 @@ Monat.meldung = {
                 }
             }
 
-            // 1. herd_snapshots (insert on new, update on edit)
+            // 1. herd_snapshots
             let snapshot;
             if (isEdit) {
                 const { data, error } = await sb.from('herd_snapshots')
@@ -2784,57 +2915,23 @@ Monat.meldung = {
                 if (error) throw new Error('Herde speichern fehlgeschlagen: ' + error.message);
                 snapshot = data;
             }
-            // Keep snapErr var shape for downstream (if referenced)
-            const snapErr = null;
 
-            // 2. pasture_observations
-            let pastureCount = 0;
-            for (let i = 0; i < this.camps.length; i++) {
-                const scoreEl = document.getElementById('mm-camp_score_' + i);
-                const rainEl  = document.getElementById('mm-camp_rain_' + i);
-                const hasScore = scoreEl && scoreEl.value;
-                const hasRain  = rainEl && rainEl.value !== '';
-                if (!hasScore && !hasRain) continue;
-                const { error } = await sb.from('pasture_observations').insert({
+            // 2. camp_vegetation — pro Kamp mit Daten einen Eintrag
+            let campCount = 0;
+            for (const c of this.camps) {
+                if (!this.campHasData(c)) continue;
+                const d = this.collectCampData(c);
+                const { error } = await sb.from('camp_vegetation').insert({
+                    camp_name: c.name,
+                    observation_date: snapshotDate,
                     snapshot_date: snapshotDate,
-                    camp_name: this.camps[i].name,
-                    condition_score: hasScore ? parseInt(scoreEl.value) : null,
-                    rainfall_mm:     hasRain  ? parseFloat(rainEl.value) : null
+                    ...d
                 });
-                if (!error) pastureCount++;
+                if (!error) campCount++;
+                else console.error('camp_vegetation insert', c.name, error);
             }
 
-            // 3. asset_status_reports
-            let assetCount = 0;
-            for (let i = 0; i < this.assets.length; i++) {
-                const statusEl = document.getElementById('mm-asset_status_' + i);
-                const metricEl = document.getElementById('mm-asset_metric_' + i);
-                if (!statusEl || !statusEl.value) continue;
-                const { error } = await sb.from('asset_status_reports').insert({
-                    snapshot_date: snapshotDate,
-                    asset_id: this.assets[i].id,
-                    status: statusEl.value,
-                    metric_value: metricEl && metricEl.value ? parseFloat(metricEl.value) : null
-                });
-                if (!error) assetCount++;
-            }
-
-            // 4. task_executions
-            let taskCount = 0;
-            for (let i = 0; i < this.tasks.length; i++) {
-                const doneEl = document.getElementById('mm-task_done_' + i);
-                if (!doneEl || !doneEl.checked) continue;
-                const countEl = document.getElementById('mm-task_count_' + i);
-                const { error } = await sb.from('task_executions').insert({
-                    snapshot_date: snapshotDate,
-                    task_template_id: this.tasks[i].id,
-                    completed: true,
-                    covered_count: countEl ? parseInt(countEl.value) || 0 : 0
-                });
-                if (!error) taskCount++;
-            }
-
-            // 5. incidents
+            // 3. incidents
             let incCount = 0;
             const incidentCards = document.querySelectorAll('#mm-incidentList .mm-incident-card');
             for (const card of incidentCards) {
@@ -2854,7 +2951,7 @@ Monat.meldung = {
             const total = cows + bulls + heifers + oxen + calves;
             const action = isEdit ? 'aktualisiert' : 'gespeichert';
             this.showMsg(
-                `Monatsmeldung ${action}: ${total} Tiere, ${pastureCount} Weide-Bewertungen, ${assetCount} Assets, ${taskCount} Aufgaben, ${incCount} Vorfälle, ${photoRefs.length} Fotos.`,
+                `Monatsmeldung ${action}: ${total} Tiere, ${campCount} Kamps, ${incCount} Vorfälle.`,
                 'success'
             );
 

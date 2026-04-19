@@ -291,17 +291,17 @@ async function queryPasture(
 ): Promise<{ data: QuarterlyReport["pasture"]; quality: QuarterlyReport["data_quality"] }> {
   const quality: QuarterlyReport["data_quality"] = [];
 
-  // Pasture condition average for the quarter
+  // Pasture condition average for the quarter — ab 2026-04 aus camp_vegetation
   const { data: pasture, error: pastureErr } = await sb
-    .from("pasture_observations")
+    .from("camp_vegetation")
     .select("condition_score")
-    .gte("snapshot_date", startDate)
-    .lt("snapshot_date", endDate);
+    .gte("observation_date", startDate)
+    .lt("observation_date", endDate);
 
   if (pastureErr || !pasture?.length) {
-    quality.push({ source: "pasture_observations", status: pastureErr ? "missing" : "partial", note: pastureErr?.message ?? "No pasture observations in period" });
+    quality.push({ source: "camp_vegetation", status: pastureErr ? "missing" : "partial", note: pastureErr?.message ?? "No camp vegetation observations in period" });
   } else {
-    quality.push({ source: "pasture_observations", status: "ok" });
+    quality.push({ source: "camp_vegetation", status: "ok" });
   }
 
   // Carrying capacity for stocking rate

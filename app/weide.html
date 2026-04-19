@@ -845,44 +845,7 @@
         <div class="section-title">
             <span class="section-icon">&#x1F3D5;&#xFE0F;</span>
             W3 — Kamp-Übersicht
-            <button onclick="toggleQuickMoveForm()" style="margin-left:auto; background:#2E75B6; color:white; border:none; padding:6px 14px; border-radius:6px; cursor:pointer; font-size:0.85em;">+ Bewegung erfassen</button>
-        </div>
-
-        <!-- Quick Movement Form -->
-        <div id="quick-move-form" style="display:none; margin-bottom:16px; padding:16px; background:#eff6ff; border:1px solid #bfdbfe; border-radius:8px;">
-            <div style="font-weight:600; margin-bottom:12px; color:#1e40af;">Herdenbewegung erfassen</div>
-            <div style="display:grid; grid-template-columns: 1fr 1fr 1fr 1fr 1fr; gap:8px; margin-bottom:12px;">
-                <input type="date" id="qm-date" style="padding:8px; border:1px solid #d1d5db; border-radius:6px;">
-                <select id="qm-from" style="padding:8px; border:1px solid #d1d5db; border-radius:6px;">
-                    <option value="">Von Kamp (leer = neu)</option>
-                </select>
-                <select id="qm-to" style="padding:8px; border:1px solid #d1d5db; border-radius:6px;">
-                    <option value="">Nach Kamp (leer = Abgang)</option>
-                </select>
-                <select id="qm-category" style="padding:8px; border:1px solid #d1d5db; border-radius:6px;">
-                    <option value="mixed">Herde</option>
-                    <option value="cows">Kühe</option>
-                    <option value="bulls">Bullen</option>
-                    <option value="heifers">Färsen</option>
-                    <option value="calves">Kälber</option>
-                    <option value="oxen">Ochsen</option>
-                </select>
-                <input type="number" id="qm-count" placeholder="Anzahl" min="1" style="padding:8px; border:1px solid #d1d5db; border-radius:6px;">
-            </div>
-            <div style="display:grid; grid-template-columns: 1fr 2fr auto auto; gap:8px;">
-                <select id="qm-reason" style="padding:8px; border:1px solid #d1d5db; border-radius:6px;">
-                    <option value="rotation">Rotation</option>
-                    <option value="birth">Geburt</option>
-                    <option value="purchase">Zukauf</option>
-                    <option value="sale">Verkauf</option>
-                    <option value="death">Todesfall</option>
-                    <option value="separation">Separation</option>
-                    <option value="other">Sonstiges</option>
-                </select>
-                <input type="text" id="qm-notes" placeholder="Notiz (optional)" style="padding:8px; border:1px solid #d1d5db; border-radius:6px;">
-                <button onclick="saveQuickMove()" style="background:#22c55e; color:white; border:none; padding:8px 20px; border-radius:6px; cursor:pointer; font-weight:500;">Speichern</button>
-                <button onclick="toggleQuickMoveForm()" style="background:#6b7280; color:white; border:none; padding:8px 20px; border-radius:6px; cursor:pointer;">Abbrechen</button>
-            </div>
+            <a href="berichte.html#monat" style="margin-left:auto; background:#2E75B6; color:white; padding:6px 14px; border-radius:6px; text-decoration:none; font-size:0.85em;">Bewegungen im Monatsbericht erfassen &rarr;</a>
         </div>
 
         <div id="camp-rain-hint" style="font-size:0.82em; color:#6b7280; margin-bottom:6px;"></div>
@@ -1304,66 +1267,8 @@ function sortCampTable(col, toggle = true) {
     renderCampTable();
 }
 
-// ── Quick Movement Form ──────────────────────────────────────────
-function toggleQuickMoveForm() {
-    const form = document.getElementById('quick-move-form');
-    const visible = form.style.display === 'block';
-    form.style.display = visible ? 'none' : 'block';
-
-    if (!visible) {
-        // Populate camp dropdowns
-        const dateInput = document.getElementById('qm-date');
-        if (!dateInput.value) dateInput.value = new Date().toISOString().split('T')[0];
-
-        const campOpts = campTableData.map(c =>
-            `<option value="${escHtml(c.name)}">${escHtml(c.name)}</option>`
-        ).join('');
-        document.getElementById('qm-from').innerHTML =
-            '<option value="">Von Kamp (leer = neu)</option>' + campOpts;
-        document.getElementById('qm-to').innerHTML =
-            '<option value="">Nach Kamp (leer = Abgang)</option>' + campOpts;
-    }
-}
-
-async function saveQuickMove() {
-    const date = document.getElementById('qm-date').value;
-    const from_camp = document.getElementById('qm-from').value || null;
-    const to_camp = document.getElementById('qm-to').value || null;
-    const category = document.getElementById('qm-category').value;
-    const count = parseInt(document.getElementById('qm-count').value);
-    const reason = document.getElementById('qm-reason').value;
-    const notes = document.getElementById('qm-notes').value.trim() || null;
-
-    if (!date || !count || count < 1) {
-        alert('Bitte Datum und gültige Anzahl angeben.');
-        return;
-    }
-    if (!from_camp && !to_camp) {
-        alert('Mindestens Von- oder Nach-Camp angeben.');
-        return;
-    }
-
-    const { error } = await sb.from('herd_movements').insert({
-        movement_date: date,
-        from_camp, to_camp,
-        head_count: count,
-        animal_category: category,
-        reason, notes,
-    });
-
-    if (error) {
-        alert('Fehler: ' + error.message);
-        return;
-    }
-
-    // Clear form
-    document.getElementById('qm-count').value = '';
-    document.getElementById('qm-notes').value = '';
-    document.getElementById('quick-move-form').style.display = 'none';
-
-    await loadAll();
-    loadRecentMovements();
-}
+// Herdenbewegungen werden ausschließlich im Monatsbericht erfasst (berichte.html#monat).
+// W3 zeigt Bewegungen nur noch read-only über die Tabelle "Letzte Bewegungen".
 
 // ── Bewegungshistorie ────────────────────────────────────────────
 const MOVEMENT_REASON_LABELS = {
