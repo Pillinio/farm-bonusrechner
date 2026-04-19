@@ -502,34 +502,21 @@
                     </select>
                 </div>
                 <div>
-                    <label style="display:block;font-weight:600;font-size:0.85em;color:#374151;margin-bottom:4px;">Tierkategorie</label>
-                    <select id="trade-category" style="width:100%;padding:8px 12px;border:1px solid #d1d5db;border-radius:6px;font-size:0.9em;">
-                        <option value="cows">Kühe</option>
-                        <option value="bulls">Bullen</option>
-                        <option value="heifers">Färsen</option>
-                        <option value="oxen">Ochsen</option>
-                        <option value="calves">Kälber</option>
-                        <option value="weaners">Absetzer</option>
-                        <option value="tollies">Tollies</option>
-                        <option value="mixed">Gemischt</option>
-                    </select>
-                </div>
-                <div>
-                    <label style="display:block;font-weight:600;font-size:0.85em;color:#374151;margin-bottom:4px;">Anzahl</label>
-                    <input type="number" id="trade-count" min="1" placeholder="z.B. 30" style="width:100%;padding:8px 12px;border:1px solid #d1d5db;border-radius:6px;font-size:0.9em;">
-                </div>
-                <div>
                     <label style="display:block;font-weight:600;font-size:0.85em;color:#374151;margin-bottom:4px;">Zieldatum</label>
                     <input type="date" id="trade-date" style="width:100%;padding:8px 12px;border:1px solid #d1d5db;border-radius:6px;font-size:0.9em;">
-                </div>
-                <div>
-                    <label style="display:block;font-weight:600;font-size:0.85em;color:#374151;margin-bottom:4px;">Preis pro Tier (NAD)</label>
-                    <input type="number" id="trade-price" step="100" min="0" placeholder="z.B. 12000" style="width:100%;padding:8px 12px;border:1px solid #d1d5db;border-radius:6px;font-size:0.9em;">
                 </div>
                 <div>
                     <label style="display:block;font-weight:600;font-size:0.85em;color:#374151;margin-bottom:4px;">Abnehmer / Herkunft</label>
                     <input type="text" id="trade-destination" placeholder="z.B. Meatco, WHKLA Auktion" style="width:100%;padding:8px 12px;border:1px solid #d1d5db;border-radius:6px;font-size:0.9em;">
                 </div>
+            </div>
+
+            <!-- Dynamische Tierkategorien-Positionen -->
+            <div style="margin-bottom:12px;">
+                <label style="display:block;font-weight:600;font-size:0.85em;color:#374151;margin-bottom:6px;">Tierpositionen</label>
+                <div id="trade-items-container"></div>
+                <button type="button" onclick="addTradeItemRow()" style="margin-top:8px; background:#f3f4f6; color:#374151; border:1px dashed #9ca3af; padding:6px 14px; border-radius:6px; cursor:pointer; font-size:0.85em;">+ Tier hinzufügen</button>
+                <div id="trade-items-total" style="margin-top:8px; font-size:0.85em; color:#6b7280;"></div>
             </div>
             <div style="margin-bottom:12px;">
                 <label style="display:block;font-weight:600;font-size:0.85em;color:#374151;margin-bottom:4px;">Notizen</label>
@@ -584,7 +571,7 @@
         </div>
         <div style="margin-bottom:12px;">
             <label style="display:block; font-weight:600; font-size:0.85em; color:#374151; margin-bottom:4px;">Beschreibung / Details</label>
-            <textarea id="goal-description" rows="3" placeholder="Details, Umfang, benoetigte Ressourcen..." style="width:100%; padding:8px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:0.9em; font-family:inherit;"></textarea>
+            <textarea id="goal-description" rows="3" placeholder="Details, Umfang, benötigte Ressourcen..." style="width:100%; padding:8px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:0.9em; font-family:inherit;"></textarea>
         </div>
         <div style="display:flex; gap:8px;">
             <button id="goal-save-btn" onclick="saveGoal()" style="background:#22c55e; color:white; border:none; padding:8px 20px; border-radius:6px; cursor:pointer; font-weight:500;">Speichern</button>
@@ -855,18 +842,81 @@ const TRADE_STATUS_LABELS = {
     completed: 'Abgeschlossen', cancelled: 'Storniert'
 };
 
+// ── Trade Items (dynamische Zeilen) ──────────────────────────────
+function tradeCategoryOptions(selected) {
+    return Object.entries(TRADE_CAT_LABELS).map(([k, v]) =>
+        `<option value="${k}"${selected === k ? ' selected' : ''}>${v}</option>`
+    ).join('');
+}
+
+function addTradeItemRow(prefill = null) {
+    const container = document.getElementById('trade-items-container');
+    const row = document.createElement('div');
+    row.className = 'trade-item-row';
+    row.style.cssText = 'display:grid; grid-template-columns: 1.4fr 1fr 1.2fr auto; gap:8px; margin-bottom:8px; align-items:center;';
+    const cat = prefill?.category || 'oxen';
+    const count = prefill?.head_count ?? '';
+    const price = prefill?.price_per_head ?? '';
+    row.innerHTML = `
+        <select class="trade-item-cat" style="padding:8px 12px;border:1px solid #d1d5db;border-radius:6px;font-size:0.9em;">
+            ${tradeCategoryOptions(cat)}
+        </select>
+        <input type="number" class="trade-item-count" min="1" placeholder="Anzahl" value="${count}" style="padding:8px 12px;border:1px solid #d1d5db;border-radius:6px;font-size:0.9em;">
+        <input type="number" class="trade-item-price" step="100" min="0" placeholder="Preis/Tier (NAD, optional)" value="${price}" style="padding:8px 12px;border:1px solid #d1d5db;border-radius:6px;font-size:0.9em;">
+        <button type="button" onclick="removeTradeItemRow(this)" title="Zeile entfernen" style="background:#fee2e2; color:#991b1b; border:none; padding:6px 10px; border-radius:6px; cursor:pointer; font-weight:600;">×</button>
+    `;
+    container.appendChild(row);
+    row.querySelector('.trade-item-count').addEventListener('input', updateTradeItemsTotal);
+    row.querySelector('.trade-item-price').addEventListener('input', updateTradeItemsTotal);
+    updateTradeItemsTotal();
+}
+
+function removeTradeItemRow(btn) {
+    btn.closest('.trade-item-row').remove();
+    updateTradeItemsTotal();
+}
+
+function collectTradeItems() {
+    const items = [];
+    document.querySelectorAll('#trade-items-container .trade-item-row').forEach(row => {
+        const cat = row.querySelector('.trade-item-cat').value;
+        const cnt = parseInt(row.querySelector('.trade-item-count').value);
+        const prcRaw = row.querySelector('.trade-item-price').value;
+        const prc = prcRaw === '' ? null : parseFloat(prcRaw);
+        if (cat && cnt > 0) {
+            items.push({ category: cat, head_count: cnt, price_per_head: isNaN(prc) ? null : prc });
+        }
+    });
+    return items;
+}
+
+function updateTradeItemsTotal() {
+    const items = collectTradeItems();
+    const heads = items.reduce((s, it) => s + it.head_count, 0);
+    const nad = items.reduce((s, it) => s + (it.price_per_head ? it.price_per_head * it.head_count : 0), 0);
+    const el = document.getElementById('trade-items-total');
+    if (!el) return;
+    if (!items.length) { el.textContent = ''; return; }
+    const nadStr = nad > 0 ? ' · ' + nad.toLocaleString('de-DE', { maximumFractionDigits: 0 }) + ' NAD' : '';
+    el.textContent = 'Gesamt: ' + heads + ' Tier(e)' + nadStr;
+}
+
+function resetTradeItems() {
+    document.getElementById('trade-items-container').innerHTML = '';
+    updateTradeItemsTotal();
+}
+
 function toggleTradeForm() {
     const sec = document.getElementById('trade-form-section');
     if (sec.style.display === 'none') {
         _editingTradeId = null;
         document.getElementById('trade-form-title').textContent = 'Kauf / Verkauf planen';
         document.getElementById('trade-type').value = 'sell';
-        document.getElementById('trade-category').value = 'oxen';
-        document.getElementById('trade-count').value = '';
         document.getElementById('trade-date').value = '';
-        document.getElementById('trade-price').value = '';
         document.getElementById('trade-destination').value = '';
         document.getElementById('trade-notes').value = '';
+        resetTradeItems();
+        addTradeItemRow();
         sec.style.display = 'block';
     } else {
         sec.style.display = 'none';
@@ -876,28 +926,45 @@ function toggleTradeForm() {
 function cancelTrade() {
     _editingTradeId = null;
     document.getElementById('trade-form-section').style.display = 'none';
+    resetTradeItems();
+}
+
+// Normalisiert Plan-Daten in ein Items-Array — fällt bei Altdaten
+// (animal_category/head_count ohne items) auf Legacy-Einzelzeile zurück.
+function tradeItemsOf(t) {
+    if (Array.isArray(t.items) && t.items.length) return t.items;
+    if (t.animal_category && t.head_count) {
+        return [{
+            category: t.animal_category,
+            head_count: t.head_count,
+            price_per_head: t.estimated_price_per_head ?? null
+        }];
+    }
+    return [];
 }
 
 async function saveTrade() {
     const type = document.getElementById('trade-type').value;
-    const category = document.getElementById('trade-category').value;
-    const count = parseInt(document.getElementById('trade-count').value);
     const date = document.getElementById('trade-date').value || null;
-    const price = parseFloat(document.getElementById('trade-price').value) || null;
     const destination = document.getElementById('trade-destination').value.trim() || null;
     const notes = document.getElementById('trade-notes').value.trim() || null;
 
-    if (!count || count < 1) { alert('Bitte Anzahl eintragen (mindestens 1).'); return; }
+    const items = collectTradeItems();
+    if (items.length === 0) { alert('Bitte mindestens eine Tierposition mit Anzahl eintragen.'); return; }
+
+    const totalNad = items.reduce((s, it) => s + (it.price_per_head ? it.price_per_head * it.head_count : 0), 0);
 
     const payload = {
         trade_type: type,
-        animal_category: category,
-        head_count: count,
+        items,
         target_date: date,
-        estimated_price_per_head: price,
-        estimated_total_nad: price ? price * count : null,
+        estimated_total_nad: totalNad > 0 ? totalNad : null,
         destination,
-        notes
+        notes,
+        // Legacy-Felder bleiben leer; items ist die Quelle
+        animal_category: null,
+        head_count: null,
+        estimated_price_per_head: null
     };
 
     let error;
@@ -917,19 +984,22 @@ function editTrade(id) {
     _editingTradeId = id;
     document.getElementById('trade-form-title').textContent = 'Planung bearbeiten';
     document.getElementById('trade-type').value = t.trade_type;
-    document.getElementById('trade-category').value = t.animal_category;
-    document.getElementById('trade-count').value = t.head_count;
     document.getElementById('trade-date').value = t.target_date || '';
-    document.getElementById('trade-price').value = t.estimated_price_per_head || '';
     document.getElementById('trade-destination').value = t.destination || '';
     document.getElementById('trade-notes').value = t.notes || '';
+    resetTradeItems();
+    const items = tradeItemsOf(t);
+    if (items.length === 0) addTradeItemRow();
+    else items.forEach(it => addTradeItemRow(it));
     document.getElementById('trade-form-section').style.display = 'block';
     document.getElementById('trade-form-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 async function deleteTrade(id) {
     const t = _tradesCache.find(x => x.id === id);
-    const label = t ? `${t.trade_type === 'sell' ? 'Verkauf' : 'Kauf'} ${t.head_count} ${TRADE_CAT_LABELS[t.animal_category]}` : 'Planung';
+    const items = t ? tradeItemsOf(t) : [];
+    const totalHead = items.reduce((s, it) => s + (it.head_count || 0), 0);
+    const label = t ? `${t.trade_type === 'sell' ? 'Verkauf' : 'Kauf'} ${totalHead} Tier(e)` : 'Planung';
     if (!confirm(`"${label}" wirklich löschen?`)) return;
     const { error } = await sb.from('cattle_trade_plans').delete().eq('id', id);
     if (error) { alert('Fehler beim Löschen: ' + error.message); return; }
@@ -947,8 +1017,9 @@ function renderTradeSummary(trades) {
     const active = trades.filter(t => t.status === 'planned' || t.status === 'in_progress');
     const sells = active.filter(t => t.trade_type === 'sell');
     const buys = active.filter(t => t.trade_type === 'buy');
-    const sellHead = sells.reduce((s, t) => s + t.head_count, 0);
-    const buyHead = buys.reduce((s, t) => s + t.head_count, 0);
+    const sumHeads = arr => arr.reduce((s, t) => s + tradeItemsOf(t).reduce((h, it) => h + (it.head_count || 0), 0), 0);
+    const sellHead = sumHeads(sells);
+    const buyHead = sumHeads(buys);
     const sellNad = sells.reduce((s, t) => s + (Number(t.estimated_total_nad) || 0), 0);
     const buyNad = buys.reduce((s, t) => s + (Number(t.estimated_total_nad) || 0), 0);
     const netNad = sellNad - buyNad;
@@ -992,13 +1063,22 @@ async function loadTrades() {
                 ? '<span style="background:#dcfce7;color:#15803d;padding:2px 8px;border-radius:4px;font-size:0.8em;font-weight:600;">Verkauf</span>'
                 : '<span style="background:#fee2e2;color:#b91c1c;padding:2px 8px;border-radius:4px;font-size:0.8em;font-weight:600;">Kauf</span>';
             const total = t.estimated_total_nad ? Number(t.estimated_total_nad).toLocaleString('de-DE', { maximumFractionDigits: 0 }) + ' NAD' : '—';
-            const price = t.estimated_price_per_head ? Number(t.estimated_price_per_head).toLocaleString('de-DE', { maximumFractionDigits: 0 }) + ' NAD' : '—';
+            const items = tradeItemsOf(t);
+            const totalHead = items.reduce((s, it) => s + (it.head_count || 0), 0);
+            const itemsLabel = items.length
+                ? items.map(it => `${it.head_count}× ${escHtml(TRADE_CAT_LABELS[it.category] || it.category)}`).join(', ')
+                : '—';
+            // Durchschnittspreis über alle Positionen mit gesetztem Preis
+            const pricedHeads = items.filter(it => it.price_per_head).reduce((s, it) => s + it.head_count, 0);
+            const pricedNad = items.filter(it => it.price_per_head).reduce((s, it) => s + it.price_per_head * it.head_count, 0);
+            const avgPrice = pricedHeads > 0 ? Math.round(pricedNad / pricedHeads) : null;
+            const priceCell = avgPrice ? '⌀ ' + avgPrice.toLocaleString('de-DE') + ' NAD' : '—';
             return `
                 <tr>
                     <td>${typeLabel}</td>
-                    <td>${t.head_count}× ${escHtml(TRADE_CAT_LABELS[t.animal_category] || t.animal_category)}</td>
+                    <td><strong>${totalHead}</strong> Tiere<br><span style="font-size:0.85em; color:#6b7280;">${itemsLabel}</span></td>
                     <td>${formatDate(t.target_date)}</td>
-                    <td>${price}</td>
+                    <td>${priceCell}</td>
                     <td style="font-weight:600;">${total}</td>
                     <td>${escHtml(t.destination || '—')}</td>
                     <td>
