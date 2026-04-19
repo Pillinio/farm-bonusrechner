@@ -144,10 +144,10 @@ async function processFile(route, absPath) {
   const stat = fs.statSync(absPath);
   const fileHash = sha256Sync(absPath);
 
-  // Dedup check
+  // Dedup check — rolled-back imports don't block a re-import of the same file
   const existing = await supabaseQuery(
     'data_imports',
-    `?file_hash=eq.${fileHash}&select=id,status&limit=1`
+    `?file_hash=eq.${fileHash}&status=neq.rolled_back&select=id,status&limit=1`
   );
   if (existing.length > 0) {
     log('DEBUG', `skip (already imported): ${filename}`);
@@ -221,11 +221,16 @@ async function processFile(route, absPath) {
     return { failed: true, error: err.message };
   }
 
-  const status = ingestResp.status === 'duplicate' ? 'duplicate' : 'success';
+  // Edge Function sagt "duplicate" via raw_events-Hash — kein neuer data_imports-Eintrag
+  if (ingestResp.status === 'duplicate') {
+    log('INFO', `↺ ${filename}: duplicate (raw_events hash match, keine neue DB-Schreibung)`);
+    return { skipped: true };
+  }
+
   const records = ingestResp.records_inserted || 0;
   const rawEventId = ingestResp.raw_event_id || null;
 
-  log('INFO', `✓ ${filename}: ${status} (${records} records)`);
+  log('INFO', `✓ ${filename}: success (${records} records)`);
 
   await supabaseInsert('data_imports', {
     source_type: route.sourceType,
@@ -234,7 +239,7 @@ async function processFile(route, absPath) {
     file_size_bytes: stat.size,
     file_hash: fileHash,
     records_count: records,
-    status,
+    status: 'success',
     triggered_by: 'auto',
     raw_event_id: rawEventId,
     period_start: parsedJson.price_date || parsedJson.report_date || null,

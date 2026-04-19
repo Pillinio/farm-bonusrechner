@@ -610,7 +610,32 @@
             <button class="btn btn-primary" onclick="inviteUser()">Einladung senden (Magic Link)</button>
         </div>
 
-        <!-- K. Import-Historie -->
+        <!-- K1. PDF Upload -->
+        <div id="section-upload" class="section">
+            <div class="section-header">
+                <h2>PDF hochladen</h2>
+            </div>
+            <p style="font-size:0.88em; color:#6b7280; margin-bottom:12px;">
+                LPO Weekly, Meatco Schlachtabrechnung, oder andere Schlachtberichte als PDF ablegen —
+                Claude extrahiert automatisch, du bestätigst vor dem Speichern.
+                Max. 30 MB, nur PDF. Doppelte Dateien (gleicher Inhalt) werden abgelehnt.
+            </p>
+            <div id="upload-dropzone" style="border:2px dashed #d1d5db; border-radius:10px; padding:32px 20px; text-align:center; background:#fafbfc; cursor:pointer; transition:all 0.2s;">
+                <div style="font-size:2.4em; color:#9ca3af; margin-bottom:6px;">&#x1F4C4;</div>
+                <div style="font-weight:600; color:#374151;">PDF hier hineinziehen oder klicken zum Auswählen</div>
+                <div style="font-size:0.82em; color:#6b7280; margin-top:4px;">LPO Weekly · Meatco · Beefcor · RMAA · Savanna</div>
+                <input type="file" id="upload-file-input" accept="application/pdf" style="display:none;">
+            </div>
+
+            <div id="upload-progress" style="display:none; margin-top:16px; padding:14px; background:#eff6ff; border:1px solid #bfdbfe; border-radius:8px;">
+                <div style="font-weight:600; color:#1e40af;" id="upload-progress-label">Lade hoch…</div>
+                <div id="upload-progress-detail" style="font-size:0.85em; color:#3b82f6; margin-top:4px;"></div>
+            </div>
+
+            <div id="upload-preview" style="display:none; margin-top:16px;"></div>
+        </div>
+
+        <!-- K2. Import-Historie -->
         <div id="section-imports" class="section">
             <div class="section-header">
                 <h2>Import-Historie</h2>
@@ -620,8 +645,9 @@
                 </div>
             </div>
             <p style="font-size:0.88em; color:#6b7280; margin-bottom:12px;">
-                Letzte 20 automatische und manuelle Datenimporte (LPO, Meatco, Bank, Buchhaltung).
-                Badge oben zeigt den letzten erfolgreichen Import — wenn älter als 8 Tage wird es rot.
+                Letzte 20 Datenimporte (Upload, Auto-Sync). Klick auf „Rückgängig" löscht alle
+                verknüpften Zeilen (Preise, Schlachtberichte) aus der DB. Die hochgeladene PDF bleibt
+                im Storage als Audit-Trail.
             </p>
             <table id="imports-table">
                 <thead>
@@ -632,10 +658,11 @@
                         <th class="num">Datensätze</th>
                         <th>Status</th>
                         <th>Trigger</th>
+                        <th style="width:110px;">Aktion</th>
                     </tr>
                 </thead>
                 <tbody id="imports-tbody">
-                    <tr><td colspan="6" style="text-align:center; color:#9ca3af; padding:20px;">Lade...</td></tr>
+                    <tr><td colspan="7" style="text-align:center; color:#9ca3af; padding:20px;">Lade...</td></tr>
                 </tbody>
             </table>
         </div>
@@ -1753,34 +1780,34 @@ const IMPORT_STATUS_STYLE = {
     pending_review:  { color: '#b45309', bg: '#fef3c7', label: 'Prüfung' },
     failed:          { color: '#b91c1c', bg: '#fee2e2', label: 'Fehler' },
     duplicate:       { color: '#4b5563', bg: '#f3f4f6', label: 'Dupl.' },
+    rolled_back:     { color: '#6b21a8', bg: '#f3e8ff', label: 'Rückgängig' },
 };
 
 async function loadImportHistory() {
     const tbody = document.getElementById('imports-tbody');
-    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:#9ca3af; padding:20px;">Lade...</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; color:#9ca3af; padding:20px;">Lade...</td></tr>';
 
     const { data, error } = await sb.from('data_imports')
-        .select('source_type, file_name, records_count, status, triggered_by, imported_at, error_message')
+        .select('id, source_type, file_name, records_count, status, triggered_by, imported_at, error_message')
         .order('imported_at', { ascending: false })
         .limit(20);
 
     const badge = document.getElementById('import-freshness-badge');
 
     if (error) {
-        tbody.innerHTML = `<tr><td colspan="6" style="color:#b91c1c; padding:20px;">Fehler: ${escapeHtml(error.message)}</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="7" style="color:#b91c1c; padding:20px;">Fehler: ${escapeHtml(error.message)}</td></tr>`;
         badge.textContent = 'Fehler';
         badge.style.background = '#fee2e2'; badge.style.color = '#b91c1c';
         return;
     }
 
     if (!data || data.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:#9ca3af; padding:20px;">Noch keine Importe protokolliert.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; color:#9ca3af; padding:20px;">Noch keine Importe protokolliert.</td></tr>';
         badge.textContent = 'Keine Importe';
         badge.style.background = '#fef3c7'; badge.style.color = '#b45309';
         return;
     }
 
-    // Freshness: time since last success
     const lastSuccess = data.find(r => r.status === 'success');
     if (lastSuccess) {
         const ageMs  = Date.now() - new Date(lastSuccess.imported_at).getTime();
@@ -1804,6 +1831,12 @@ async function loadImportHistory() {
         const statusBadge = `<span style="display:inline-block; padding:2px 8px; border-radius:10px; font-size:0.8em; background:${stStyle.bg}; color:${stStyle.color};">${stStyle.label}</span>`;
         const errLine = r.status === 'failed' && r.error_message
             ? `<div style="font-size:0.78em; color:#b91c1c; margin-top:2px;">${escapeHtml(r.error_message.slice(0, 180))}</div>` : '';
+
+        const canRollback = r.status === 'success' && r.records_count > 0;
+        const action = canRollback
+            ? `<button class="btn btn-danger btn-sm" onclick="rollbackImport('${r.id}', '${escapeHtml(r.file_name || '').replace(/'/g, "\\'")}')">Rückgängig</button>`
+            : '—';
+
         return `<tr>
             <td>${when}</td>
             <td>${escapeHtml(typeLbl)}</td>
@@ -1811,8 +1844,272 @@ async function loadImportHistory() {
             <td class="num">${r.records_count ?? 0}</td>
             <td>${statusBadge}</td>
             <td>${escapeHtml(r.triggered_by || 'manual')}</td>
+            <td>${action}</td>
         </tr>`;
     }).join('');
+}
+
+async function rollbackImport(importId, fileName) {
+    if (!confirm(`Import "${fileName}" wirklich rückgängig machen?\n\nAlle verknüpften Zeilen in market_prices / slaughter_reports werden gelöscht. Die PDF bleibt im Storage.`)) return;
+
+    const { data: sess } = await sb.auth.getSession();
+    if (!sess?.session?.access_token) { showStatus('Nicht eingeloggt', 'error'); return; }
+
+    try {
+        const resp = await fetch(`${SUPABASE_URL}/functions/v1/rollback-import`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${sess.session.access_token}`,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ import_id: importId }),
+        });
+        const data = await resp.json();
+        if (!resp.ok || data.error) throw new Error(data.error || `HTTP ${resp.status}`);
+
+        const summary = `${data.market_prices_deleted || 0} Preise, ${data.slaughter_reports_deleted || 0} Schlachtberichte (${data.slaughter_line_items_deleted || 0} Zeilen) gelöscht`;
+        showStatus(`Rollback erfolgreich: ${summary}`, 'success');
+        loadImportHistory();
+    } catch (e) {
+        showStatus(`Rollback fehlgeschlagen: ${e.message}`, 'error');
+    }
+}
+
+// ── PDF Upload + Preview + Commit ────────────────────────────────
+let _pendingPreview = null;
+
+function setupUploadDropzone() {
+    const zone = document.getElementById('upload-dropzone');
+    const input = document.getElementById('upload-file-input');
+    if (!zone || !input) return;
+
+    zone.onclick = () => input.click();
+    zone.ondragover = (e) => { e.preventDefault(); zone.style.background = '#eff6ff'; zone.style.borderColor = '#2E75B6'; };
+    zone.ondragleave = () => { zone.style.background = '#fafbfc'; zone.style.borderColor = '#d1d5db'; };
+    zone.ondrop = (e) => {
+        e.preventDefault();
+        zone.style.background = '#fafbfc'; zone.style.borderColor = '#d1d5db';
+        const f = e.dataTransfer.files?.[0];
+        if (f) handleUpload(f);
+    };
+    input.onchange = () => {
+        const f = input.files?.[0];
+        if (f) handleUpload(f);
+        input.value = '';
+    };
+}
+
+function setUploadProgress(label, detail, type = 'info') {
+    const p = document.getElementById('upload-progress');
+    const l = document.getElementById('upload-progress-label');
+    const d = document.getElementById('upload-progress-detail');
+    p.style.display = 'block';
+    l.textContent = label;
+    d.textContent = detail || '';
+    const palette = {
+        info:    { bg: '#eff6ff', border: '#bfdbfe', fg: '#1e40af', sub: '#3b82f6' },
+        success: { bg: '#dcfce7', border: '#bbf7d0', fg: '#15803d', sub: '#16a34a' },
+        error:   { bg: '#fee2e2', border: '#fecaca', fg: '#b91c1c', sub: '#dc2626' },
+    }[type];
+    p.style.background = palette.bg;
+    p.style.borderColor = palette.border;
+    l.style.color = palette.fg;
+    d.style.color = palette.sub;
+}
+
+async function handleUpload(file) {
+    if (file.size > 30 * 1024 * 1024) {
+        setUploadProgress('Datei zu groß', `${(file.size/1024/1024).toFixed(1)} MB > 30 MB Limit`, 'error');
+        return;
+    }
+    if (file.type !== 'application/pdf') {
+        setUploadProgress('Nur PDF-Dateien', `Typ: ${file.type || 'unbekannt'}`, 'error');
+        return;
+    }
+
+    document.getElementById('upload-preview').style.display = 'none';
+    document.getElementById('upload-preview').innerHTML = '';
+    _pendingPreview = null;
+
+    setUploadProgress('Lade PDF hoch…', file.name);
+
+    const { data: sess } = await sb.auth.getSession();
+    if (!sess?.session) { setUploadProgress('Nicht eingeloggt', '', 'error'); return; }
+
+    // Upload zum Storage
+    const storagePath = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9_.\-]/g, '_')}`;
+    const { error: upErr } = await sb.storage
+        .from('incoming-pdfs')
+        .upload(storagePath, file, { contentType: 'application/pdf', upsert: false });
+    if (upErr) {
+        setUploadProgress('Upload fehlgeschlagen', upErr.message, 'error');
+        return;
+    }
+
+    setUploadProgress('PDF wird analysiert…', 'Claude extrahiert Daten (15–30 Sek.)');
+
+    try {
+        const resp = await fetch(`${SUPABASE_URL}/functions/v1/process-upload`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${sess.session.access_token}`,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ storage_path: storagePath, file_name: file.name }),
+        });
+        const data = await resp.json();
+
+        if (data.duplicate) {
+            setUploadProgress('Bereits importiert',
+                `Diese Datei wurde am ${new Date(data.existing_import.imported_at).toLocaleString('de-DE')} mit ${data.existing_import.records_count} Zeilen importiert.`, 'error');
+            await sb.storage.from('incoming-pdfs').remove([storagePath]);
+            return;
+        }
+
+        if (!resp.ok || data.error) throw new Error(data.error || `HTTP ${resp.status}`);
+
+        _pendingPreview = {
+            ...data,
+            storage_path: storagePath,
+            file_name: file.name,
+        };
+
+        renderPreview();
+        setUploadProgress('Analyse fertig', `${file.name} — prüfe unten und bestätige`, 'success');
+    } catch (e) {
+        setUploadProgress('Analyse fehlgeschlagen', e.message.slice(0, 300), 'error');
+        await sb.storage.from('incoming-pdfs').remove([storagePath]);
+    }
+}
+
+function renderPreview() {
+    const p = _pendingPreview;
+    if (!p) return;
+
+    const host = document.getElementById('upload-preview');
+    const preview = p.preview;
+    const warnings = p.warnings || [];
+
+    const typeLabels = {
+        'lpo-weekly': 'LPO Weekly',
+        'meatco-slaughter': 'Meatco Schlacht',
+        'other-slaughter': 'Schlachtbericht (andere)',
+        'bank-statement': 'Bank Statement',
+        'unknown': 'Unbekannt',
+    };
+
+    let dataPreview = '';
+    if (preview.document_type === 'lpo-weekly' && preview.extracted_data) {
+        const d = preview.extracted_data;
+        const byProv = {};
+        for (const p of d.prices || []) {
+            const key = p.provider || 'sonstige';
+            byProv[key] = (byProv[key] || 0) + 1;
+        }
+        const rows = (d.prices || []).slice(0, 8).map(p =>
+            `<tr><td>${escapeHtml(p.commodity)}</td><td class="num">${p.price_nad}</td><td>${escapeHtml(p.unit)}</td><td>${escapeHtml(p.grade || '—')}</td></tr>`
+        ).join('');
+        dataPreview = `
+            <p><strong>Preisdatum:</strong> ${escapeHtml(d.price_date)} ${d.week_range ? '(' + escapeHtml(d.week_range) + ')' : ''}</p>
+            <p><strong>Anzahl Preise:</strong> ${d.prices?.length || 0} — ${Object.entries(byProv).map(([k,v]) => k+'='+v).join(', ')}</p>
+            <table class="data-table" style="font-size:0.88em; margin-top:8px;">
+                <thead><tr><th>Commodity</th><th class="num">NAD</th><th>Unit</th><th>Grade</th></tr></thead>
+                <tbody>${rows}${d.prices?.length > 8 ? `<tr><td colspan="4" style="text-align:center; color:#6b7280; font-style:italic;">… ${d.prices.length - 8} weitere Zeilen</td></tr>` : ''}</tbody>
+            </table>
+        `;
+    } else if ((preview.document_type === 'meatco-slaughter' || preview.document_type === 'other-slaughter') && preview.extracted_data) {
+        const d = preview.extracted_data;
+        const t = d.totals || {};
+        const rows = (d.line_items || []).slice(0, 6).map(li =>
+            `<tr><td>${escapeHtml(li.ear_tag_id || '—')}</td><td>${escapeHtml(li.grade || '—')}</td><td>${escapeHtml(li.gender || '—')}</td><td class="num">${li.cold_mass_kg ?? '—'}</td><td class="num">${li.gross_proceeds_nad ?? '—'}</td></tr>`
+        ).join('');
+        dataPreview = `
+            <p><strong>Statement:</strong> ${escapeHtml(d.statement_number || '—')} vom ${escapeHtml(d.report_date)}</p>
+            <p><strong>Summen:</strong> ${t.total_animals || 0} Tiere · ${(t.total_cold_mass_kg || 0).toFixed(1)} kg · Brutto N$ ${(t.total_gross_nad || 0).toFixed(2)} · Netto N$ ${(t.total_net_nad || 0).toFixed(2)}</p>
+            <table class="data-table" style="font-size:0.88em; margin-top:8px;">
+                <thead><tr><th>Ohrmarke</th><th>Grade</th><th>Gender</th><th class="num">kg</th><th class="num">Brutto</th></tr></thead>
+                <tbody>${rows}${d.line_items?.length > 6 ? `<tr><td colspan="5" style="text-align:center; color:#6b7280; font-style:italic;">… ${d.line_items.length - 6} weitere Tiere</td></tr>` : ''}</tbody>
+            </table>
+        `;
+    } else if (preview.document_type === 'unknown' || preview.document_type === 'bank-statement') {
+        dataPreview = `<p style="color:#b45309;">${escapeHtml(preview.summary_for_user || 'Dokumenttyp wird aktuell nicht unterstützt')}</p>`;
+    }
+
+    const warnHtml = warnings.length > 0
+        ? `<div style="background:#fef3c7; border:1px solid #fde68a; padding:10px 14px; border-radius:6px; margin-top:10px;">
+             <strong style="color:#92400e;">Hinweise (${warnings.length}):</strong>
+             <ul style="margin:6px 0 0 20px; font-size:0.88em; color:#92400e;">${warnings.slice(0, 8).map(w => `<li>${escapeHtml(w)}</li>`).join('')}</ul>
+           </div>` : '';
+
+    const canCommit = preview.document_type !== 'unknown' && preview.document_type !== 'bank-statement';
+
+    host.innerHTML = `
+        <div style="background:#fff; border:2px solid #2E75B6; border-radius:10px; padding:18px 22px;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:16px;">
+                <div>
+                    <h3 style="color:#1a1a2e; margin-bottom:4px;">Preview: ${escapeHtml(typeLabels[preview.document_type] || preview.document_type)}</h3>
+                    <div style="font-size:0.85em; color:#6b7280;">Vertrauen: ${Math.round((preview.confidence || 0) * 100)}% · ${escapeHtml(p.file_name)}</div>
+                </div>
+                <div style="display:flex; gap:8px;">
+                    <button class="btn btn-secondary btn-sm" onclick="cancelPreview()">Verwerfen</button>
+                    ${canCommit ? '<button class="btn btn-success" onclick="commitPreview()">Bestätigen &amp; Speichern</button>' : ''}
+                </div>
+            </div>
+            <p style="margin-top:10px; color:#374151;">${escapeHtml(preview.summary_for_user || '')}</p>
+            ${dataPreview}
+            ${warnHtml}
+        </div>
+    `;
+    host.style.display = 'block';
+}
+
+async function cancelPreview() {
+    if (_pendingPreview?.storage_path) {
+        await sb.storage.from('incoming-pdfs').remove([_pendingPreview.storage_path]);
+    }
+    _pendingPreview = null;
+    document.getElementById('upload-preview').style.display = 'none';
+    document.getElementById('upload-preview').innerHTML = '';
+    document.getElementById('upload-progress').style.display = 'none';
+}
+
+async function commitPreview() {
+    const p = _pendingPreview;
+    if (!p) return;
+
+    setUploadProgress('Speichere in Datenbank…', p.file_name);
+
+    const { data: sess } = await sb.auth.getSession();
+    if (!sess?.session) { setUploadProgress('Nicht eingeloggt', '', 'error'); return; }
+
+    try {
+        const resp = await fetch(`${SUPABASE_URL}/functions/v1/commit-import`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${sess.session.access_token}`,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                storage_path:   p.storage_path,
+                file_name:      p.file_name,
+                file_hash:      p.file_hash,
+                file_size:      p.file_size,
+                document_type:  p.preview.document_type,
+                extracted_data: p.preview.extracted_data,
+            }),
+        });
+        const data = await resp.json();
+        if (!resp.ok || data.error) throw new Error(data.error || `HTTP ${resp.status}`);
+
+        setUploadProgress('Import erfolgreich',
+            `Import-ID: ${data.import_id} · ${data.records_inserted || data.line_items_inserted || '?'} Zeilen gespeichert`, 'success');
+        _pendingPreview = null;
+        document.getElementById('upload-preview').style.display = 'none';
+        document.getElementById('upload-preview').innerHTML = '';
+        loadImportHistory();
+    } catch (e) {
+        setUploadProgress('Speichern fehlgeschlagen', e.message, 'error');
+    }
 }
 
 // ── Init ─────────────────────────────────────────────────────────
@@ -1837,6 +2134,7 @@ async function loadImportHistory() {
     await loadSavedInitialPositions();
     await loadUsers();
     await loadImportHistory();
+    setupUploadDropzone();
 })();
 </script>
 
