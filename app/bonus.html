@@ -1458,7 +1458,7 @@
             const params = getDomParams();
             const ebitBonusResult = calculateEbitBonus(ebit, params);
             const ebitBonusRaw = ebitBonusResult.total;
-            const ebitBonusWeighted = ebitBonusRaw * 0.7;
+            const ebitBonusWeighted = ebitBonusRaw * (params.ebitWeight / 100);
 
             let prodRating = "";
             let prodFactor = 0;
@@ -2214,25 +2214,31 @@
             const investment = parseFloat(document.getElementById('investment').value);
             const params = getDomParams();
 
+            // Gewichtung dynamisch aus dem Slider, nicht 0.7 hardcoden —
+            // sonst stimmen Dashboard, Break-Even und Sensitivitätsdiagramm
+            // nicht mehr mit der Hauptberechnung überein, sobald der User
+            // den EBIT-Anteil verstellt.
+            const ebitW = params.ebitWeight / 100;
+
             // Calculate key statistics
-            const bonus1M = calculateEbitBonus(1000000, params).total * 0.7;
-            const bonus2M = calculateEbitBonus(2000000, params).total * 0.7;
-            const maxBonus = calculateEbitBonus(parseFloat(document.getElementById('ebitCap').value) * 1000000, params).total * 0.7;
-            
+            const bonus1M = calculateEbitBonus(1000000, params).total * ebitW;
+            const bonus2M = calculateEbitBonus(2000000, params).total * ebitW;
+            const maxBonus = calculateEbitBonus(parseFloat(document.getElementById('ebitCap').value) * 1000000, params).total * ebitW;
+
             document.getElementById('bonus1M').textContent = formatNumber(bonus1M);
             document.getElementById('bonus2M').textContent = formatNumber(bonus2M);
             document.getElementById('maxBonus').textContent = formatNumber(maxBonus);
-            
+
             // Find break-even (extend search to ebitCap)
             const ebitCapValue = parseFloat(document.getElementById('ebitCap').value) * 1000000;
             let breakEven = 0;
             for (let ebit = 0; ebit <= ebitCapValue; ebit += 10000) {
-                if (calculateEbitBonus(ebit, params).total * 0.7 >= baseSalary * 0.01) {
+                if (calculateEbitBonus(ebit, params).total * ebitW >= baseSalary * 0.01) {
                     breakEven = ebit;
                     break;
                 }
             }
-            if (breakEven === 0 && calculateEbitBonus(ebitCapValue, params).total * 0.7 < baseSalary * 0.01) {
+            if (breakEven === 0 && calculateEbitBonus(ebitCapValue, params).total * ebitW < baseSalary * 0.01) {
                 document.getElementById('breakEven').textContent = '> ' + formatNumber(ebitCapValue);
             } else {
                 document.getElementById('breakEven').textContent = formatNumber(breakEven);
@@ -2247,12 +2253,13 @@
         function updateBonusChart() {
             const ctx = document.getElementById('bonusChart').getContext('2d');
             const params = getDomParams();
+            const ebitW = params.ebitWeight / 100;
             const ebitPoints = [];
             const bonusPoints = [];
 
             for (let ebit = 0; ebit <= 5000000; ebit += 250000) {
                 ebitPoints.push(ebit);
-                bonusPoints.push(calculateEbitBonus(ebit, params).total * 0.7);
+                bonusPoints.push(calculateEbitBonus(ebit, params).total * ebitW);
             }
             
             if (bonusChart) {
@@ -2306,9 +2313,12 @@
                 ebitPoints.push(ebit);
             }
 
-            const currentBonus = ebitPoints.map(ebit => calculateEbitBonus(ebit, params).total * 0.7);
+            const ebitW = params.ebitWeight / 100;
+            const currentBonus = ebitPoints.map(ebit => calculateEbitBonus(ebit, params).total * ebitW);
             
-            // Conservative scenario
+            // Vergleichs-Szenarien verwenden dieselbe EBIT-Gewichtung wie die
+            // aktuelle Einstellung, damit der Unterschied ausschließlich an den
+            // Tier-Raten hängt und nicht an einer fix einprogrammierten 70%.
             const conservativeBonus = ebitPoints.map(ebit => {
                 const tempTiers = [0.05, 0.08, 0.10, 0.12];
                 let bonus = 0;
@@ -2317,10 +2327,9 @@
                 if (cappedEbit > 100000) bonus += Math.min(cappedEbit - 100000, 400000) * tempTiers[1];
                 if (cappedEbit > 500000) bonus += Math.min(cappedEbit - 500000, 1500000) * tempTiers[2];
                 if (cappedEbit > 2000000) bonus += Math.min(cappedEbit - 2000000, 2000000) * tempTiers[3];
-                return bonus * 0.7;
+                return bonus * ebitW;
             });
-            
-            // Aggressive scenario
+
             const aggressiveBonus = ebitPoints.map(ebit => {
                 const tempTiers = [0.12, 0.18, 0.22, 0.28];
                 let bonus = 0;
@@ -2329,7 +2338,7 @@
                 if (cappedEbit > 100000) bonus += Math.min(cappedEbit - 100000, 400000) * tempTiers[1];
                 if (cappedEbit > 500000) bonus += Math.min(cappedEbit - 500000, 1500000) * tempTiers[2];
                 if (cappedEbit > 2000000) bonus += Math.min(cappedEbit - 2000000, 2000000) * tempTiers[3];
-                return bonus * 0.7;
+                return bonus * ebitW;
             });
             
             if (comparisonChart) {
@@ -2385,12 +2394,13 @@
         function updateDetailTable() {
             const baseSalary = parseInput(document.getElementById('baseSalary'));
             const params = getDomParams();
+            const ebitW = params.ebitWeight / 100;
             const tbody = document.getElementById('detailTable');
             const keyPoints = [100000, 250000, 500000, 750000, 1000000, 1500000, 2000000, 2500000, 3000000, 3500000, 4000000];
 
             let html = '';
             keyPoints.forEach(ebit => {
-                const bonus = calculateEbitBonus(ebit, params).total * 0.7;
+                const bonus = calculateEbitBonus(ebit, params).total * ebitW;
                 const percentage = calcPercent(bonus, baseSalary).toFixed(1);
                 const effectiveRate = calcPercent(bonus, ebit).toFixed(1);
                 

@@ -126,21 +126,34 @@ export function showDataSourceIndicator(defaults) {
     'transition: opacity 0.3s',
   ].join(';');
 
-  if (defaults.source === 'live') {
+  const warnCount = Array.isArray(defaults.warnings) ? defaults.warnings.length : 0;
+
+  if (defaults.source === 'live' && warnCount === 0) {
     indicator.style.background = '#d4edda';
     indicator.style.color = '#155724';
     indicator.style.border = '1px solid #c3e6cb';
     indicator.textContent = `Live-Daten vom ${defaults.dataDate}`;
-  } else {
+  } else if (defaults.source === 'live' && warnCount > 0) {
+    // Teilweise Live-Daten — einige Queries haben Warnungen geworfen,
+    // der User soll das sehen (nicht nur im title-Tooltip).
     indicator.style.background = '#fff3cd';
     indicator.style.color = '#856404';
     indicator.style.border = '1px solid #ffeaa7';
-    indicator.textContent = 'Manuelle Eingabe (Standardwerte)';
+    indicator.textContent = `Live-Daten vom ${defaults.dataDate} · ${warnCount} Warnung${warnCount === 1 ? '' : 'en'}`;
+  } else {
+    indicator.style.background = '#f8d7da';
+    indicator.style.color = '#721c24';
+    indicator.style.border = '1px solid #f5c6cb';
+    indicator.textContent = warnCount > 0
+      ? `Fallback-Werte · ${warnCount} Warnung${warnCount === 1 ? '' : 'en'} (Hover)`
+      : 'Manuelle Eingabe (Standardwerte)';
   }
 
-  // Show warnings on hover if any
-  if (defaults.warnings && defaults.warnings.length > 0) {
+  if (warnCount > 0) {
     indicator.title = defaults.warnings.join('\n');
+    // Zusätzlich zur UI auch in die Browser-Konsole loggen — erleichtert
+    // Debugging ohne dass der User über die Badge hovern muss.
+    console.warn('bonus-defaults warnings:', defaults.warnings);
   }
 
   // Click to dismiss
