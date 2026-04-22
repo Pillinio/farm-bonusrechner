@@ -2,8 +2,8 @@
 // Edge Function: receives parsed data from OpenClaw and dispatches to DB tables.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import schema from "./schema.json" with { type: "json" };
 import { createLogger } from "../_shared/logger.ts";
+import { verifyAuth } from "../_shared/auth.ts";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -108,12 +108,17 @@ async function handleBankStatement(
     let category = "uncategorized";
     if (rules && rules.length > 0) {
       const match = rules.find((r: { pattern: string; pattern_type: string; category_name: string }) => {
-        if (r.pattern_type === "contains")
-          return tx.description.toUpperCase().includes(r.pattern.toUpperCase());
-        if (r.pattern_type === "exact")
-          return tx.description.toUpperCase() === r.pattern.toUpperCase();
-        if (r.pattern_type === "regex")
-          return new RegExp(r.pattern, "i").test(tx.description);
+        try {
+          if (r.pattern_type === "contains")
+            return tx.description.toUpperCase().includes(r.pattern.toUpperCase());
+          if (r.pattern_type === "exact")
+            return tx.description.toUpperCase() === r.pattern.toUpperCase();
+          if (r.pattern_type === "regex")
+            return new RegExp(r.pattern, "i").test(tx.description);
+        } catch (_err) {
+          // Malformed regex or pattern: skip this rule, don't crash ingest.
+          return false;
+        }
         return false;
       });
       if (match) category = match.category_name;
@@ -252,27 +257,16 @@ Deno.serve(async (req: Request) => {
     return json({ error: "Method not allowed" }, 405);
   }
 
-  // --- Auth: require Authorization header with service_role key or X-API-Key ---
-  const authHeader = req.headers.get("Authorization");
-  const apiKey = req.headers.get("X-API-Key");
+  // --- Auth: service-role JWT only (OpenClaw / scripts / pg_cron) ---
   const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
   const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-  // Determine which key to use for the Supabase client
-  let clientKey: string;
-
-  if (authHeader?.startsWith("Bearer ")) {
-    clientKey = authHeader.replace("Bearer ", "");
-  } else if (apiKey) {
-    clientKey = apiKey;
-  } else {
-    return json({ error: "Missing authentication. Provide Authorization: Bearer <key> or X-API-Key header." }, 401);
-  }
-
-  // Create Supabase client with the provided key
-  const supabase = createClient(supabaseUrl, clientKey, {
+  const supabase = createClient(supabaseUrl, serviceRoleKey, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
+
+  const auth = await verifyAuth(req, supabase, { allow: ["service"] });
+  if (!auth) return json({ error: "unauthorized" }, 401);
 
   const logger = createLogger(supabase, "edge:ingest");
 

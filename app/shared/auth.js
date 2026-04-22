@@ -30,9 +30,8 @@ export async function requireAuth(supabase) {
   const { data: { session } } = await supabase.auth.getSession();
 
   if (!session) {
-    alert('Bitte zuerst einloggen.');
-    // Redirect once login page exists:
-    // window.location.href = 'login.html';
+    const here = location.pathname + location.search + location.hash;
+    location.href = 'login.html?redirect=' + encodeURIComponent(here);
     return null;
   }
 

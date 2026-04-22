@@ -19,6 +19,7 @@ import {
   createCalendarEvent,
   deleteCalendarEvent,
 } from "../_shared/google-calendar.ts";
+import { verifyAuth } from "../_shared/auth.ts";
 
 // ---------------------------------------------------------------------------
 // Entry type labels (German)
@@ -64,6 +65,10 @@ Deno.serve(async (req: Request) => {
     auth: { persistSession: false, autoRefreshToken: false },
   });
   const logger = createLogger(sb, "edge:notify-calendar");
+
+  // Auth: user JWT (browser) OR service-role JWT (GitHub Actions cron).
+  const auth = await verifyAuth(req, sb, { allow: ["user", "service"] });
+  if (!auth) return json({ error: "unauthorized" }, 401);
 
   let body: { action: string; entryId?: string };
   try {

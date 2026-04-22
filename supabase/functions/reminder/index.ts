@@ -4,10 +4,25 @@
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { createLogger } from "../_shared/logger.ts";
+import { verifyAuth } from "../_shared/auth.ts";
 
 const FORM_URL = "https://erichsfelde.farm/app/berichte.html#monat";
 
-Deno.serve(async (_req: Request) => {
+Deno.serve(async (req: Request) => {
+  // Auth: service-role only (cron-only endpoint)
+  const supabaseUrl0 = Deno.env.get("SUPABASE_URL")!;
+  const supabaseKey0 = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+  const adminForAuth = createClient(supabaseUrl0, supabaseKey0, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+  const auth = await verifyAuth(req, adminForAuth, { allow: ["service"] });
+  if (!auth) {
+    return new Response(JSON.stringify({ error: "unauthorized" }), {
+      status: 401,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+
   // Use Africa/Windhoek timezone for date checks (Namibia local time)
   const now = new Date();
   const formatter = new Intl.DateTimeFormat('en-CA', {
@@ -29,12 +44,10 @@ Deno.serve(async (_req: Request) => {
     );
   }
 
-  const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-  const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+  const supabaseUrl = supabaseUrl0;
+  const supabaseKey = supabaseKey0;
 
-  const supabaseForLog = createClient(supabaseUrl, supabaseKey, {
-    auth: { persistSession: false, autoRefreshToken: false },
-  });
+  const supabaseForLog = adminForAuth;
   const logger = createLogger(supabaseForLog, "edge:reminder");
 
   const telegramToken = Deno.env.get("TELEGRAM_BOT_TOKEN");

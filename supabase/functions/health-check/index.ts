@@ -3,6 +3,7 @@
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { createLogger } from "../_shared/logger.ts";
+import { verifyAuth } from "../_shared/auth.ts";
 
 function json(data: unknown, status = 200): Response {
   return new Response(JSON.stringify(data, null, 2), {
@@ -20,13 +21,17 @@ interface CheckResult {
   message: string;
 }
 
-Deno.serve(async (_req: Request) => {
+Deno.serve(async (req: Request) => {
   const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
   const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
   const supabase = createClient(supabaseUrl, serviceRoleKey, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
+
+  // Auth: service-role only (cron-only endpoint)
+  const auth = await verifyAuth(req, supabase, { allow: ["service"] });
+  if (!auth) return json({ error: "unauthorized" }, 401);
 
   const logger = createLogger(supabase, "edge:health-check");
   const now = new Date();
