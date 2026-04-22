@@ -29,6 +29,7 @@ const TYPE_LABELS: Record<string, string> = {
   business_trip: "Dienstreise",
   sick: "Krank",
   shareholder_visit: "Gesellschafter-Besuch",
+  private_block: "Block Privat",
 };
 
 // ---------------------------------------------------------------------------

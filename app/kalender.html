@@ -302,6 +302,12 @@
             border-color: #bfdbfe;
         }
 
+        .cal-badge.private {
+            background: #ede9fe;
+            color: #5b21b6;
+            border-color: #ddd6fe;
+        }
+
         /* Entries Table */
         .entries-table-wrap {
             overflow-x: auto;
@@ -583,6 +589,7 @@
                 <select id="cal-type">
                     <option value="leave">Urlaub</option>
                     <option value="shareholder_visit">Gesellschafter-Besuch</option>
+                    <option value="private_block">Block Privat</option>
                 </select>
             </div>
             <div class="form-group">
@@ -678,7 +685,8 @@ const ALL_HOLIDAYS = { ...HOLIDAYS_2025, ...HOLIDAYS_2026, ...HOLIDAYS_2027 };
 // ── Labels & Constants ──────────────────────────────────────────
 const CAL_TYPE_LABELS = {
     leave: 'Urlaub',
-    shareholder_visit: 'Gesellschafter-Besuch'
+    shareholder_visit: 'Gesellschafter-Besuch',
+    private_block: 'Block Privat'
 };
 
 const CAL_PERSON_ROLES = {
@@ -837,6 +845,8 @@ function renderGrid() {
             badge.className = 'cal-badge';
             if (e.entry_type === 'shareholder_visit') {
                 badge.classList.add('shareholder');
+            } else if (e.entry_type === 'private_block') {
+                badge.classList.add('private');
             } else if (e.entry_type === 'leave') {
                 if (e.status === 'approved') badge.classList.add('leave-approved');
                 else if (e.status === 'rejected') badge.classList.add('leave-rejected');
@@ -1088,7 +1098,7 @@ async function submitCalendarEntry() {
 
     // Determine status
     let status = 'requested';
-    if (entryType === 'shareholder_visit') {
+    if (entryType === 'shareholder_visit' || entryType === 'private_block') {
         status = 'approved';
     } else if (_userRole === 'owner') {
         status = 'approved';
