@@ -15,6 +15,7 @@
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { EXTRACTION_SYSTEM_PROMPT, PROMPT_VERSION } from "../_shared/extract-prompt.ts";
+import { CORS_HEADERS, handlePreflight } from "../_shared/cors.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -31,7 +32,7 @@ interface UploadRequest {
 function json(data: unknown, status = 200): Response {
   return new Response(JSON.stringify(data), {
     status,
-    headers: { "Content-Type": "application/json" },
+    headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
   });
 }
 
@@ -164,20 +165,22 @@ function validateMeatco(extracted: any, warnings: string[]): void {
 
 // ─── Main handler ──────────────────────────────────────────────────────────
 Deno.serve(async (req: Request) => {
+  const pre = handlePreflight(req);
+  if (pre) return pre;
   if (req.method !== "POST") return json({ error: "method not allowed" }, 405);
 
   const authHeader = req.headers.get("Authorization") || "";
   if (!authHeader.startsWith("Bearer ")) return json({ error: "auth required" }, 401);
   const userJwt = authHeader.replace("Bearer ", "");
 
-  // Client mit User-JWT: prüft auth und Rolle
-  const userClient = createClient(SUPABASE_URL, userJwt, {
+  // Service-Role Client für alles; User-JWT über getUser() validieren
+  const adminClient = createClient(SUPABASE_URL, SERVICE_ROLE, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
-  const { data: userRes } = await userClient.auth.getUser();
+  const { data: userRes } = await adminClient.auth.getUser(userJwt);
   if (!userRes?.user) return json({ error: "invalid auth" }, 401);
 
-  const { data: profile } = await userClient
+  const { data: profile } = await adminClient
     .from("profiles")
     .select("role")
     .eq("id", userRes.user.id)
@@ -194,11 +197,6 @@ Deno.serve(async (req: Request) => {
   if (!body.storage_path || !body.file_name) {
     return json({ error: "storage_path + file_name required" }, 400);
   }
-
-  // Service-Role Client: kann aus Storage laden und data_imports lesen
-  const adminClient = createClient(SUPABASE_URL, SERVICE_ROLE, {
-    auth: { persistSession: false, autoRefreshToken: false },
-  });
 
   // PDF laden
   const { data: blob, error: dlErr } = await adminClient.storage

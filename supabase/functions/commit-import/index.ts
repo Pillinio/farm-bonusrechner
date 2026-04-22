@@ -5,6 +5,7 @@
 // und führen alles in einer DB-Transaktion aus (via Stored Procedures).
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { CORS_HEADERS, handlePreflight } from "../_shared/cors.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -12,7 +13,7 @@ const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 function json(data: unknown, status = 200): Response {
   return new Response(JSON.stringify(data), {
     status,
-    headers: { "Content-Type": "application/json" },
+    headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
   });
 }
 
@@ -26,20 +27,22 @@ interface CommitRequest {
 }
 
 Deno.serve(async (req: Request) => {
+  const pre = handlePreflight(req);
+  if (pre) return pre;
   if (req.method !== "POST") return json({ error: "method not allowed" }, 405);
 
   const authHeader = req.headers.get("Authorization") || "";
   if (!authHeader.startsWith("Bearer ")) return json({ error: "auth required" }, 401);
   const userJwt = authHeader.replace("Bearer ", "");
 
-  const userClient = createClient(SUPABASE_URL, userJwt, {
+  const admin = createClient(SUPABASE_URL, SERVICE_ROLE, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
-  const { data: userRes } = await userClient.auth.getUser();
+  const { data: userRes } = await admin.auth.getUser(userJwt);
   if (!userRes?.user) return json({ error: "invalid auth" }, 401);
   const userId = userRes.user.id;
 
-  const { data: profile } = await userClient
+  const { data: profile } = await admin
     .from("profiles")
     .select("role")
     .eq("id", userId)
@@ -56,10 +59,6 @@ Deno.serve(async (req: Request) => {
   if (!body.storage_path || !body.file_hash || !body.document_type || !body.extracted_data) {
     return json({ error: "missing required fields" }, 400);
   }
-
-  const admin = createClient(SUPABASE_URL, SERVICE_ROLE, {
-    auth: { persistSession: false, autoRefreshToken: false },
-  });
 
   // Dedup-Check nochmals gegen DB (race-condition safety)
   const { data: existing } = await admin
