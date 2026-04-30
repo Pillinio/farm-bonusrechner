@@ -1,131 +1,77 @@
-# Farm Bonussystem - Namibia Rinderfarm
+# Farm Controlling Erichsfelde
 
-Ein integriertes Bonus-Analyse System für Rinderfarmen in Namibia mit EBIT-Berechnung, progressiver Bonusstaffelung und Produktivitätsindex.
+Digitales Steuerungssystem für die Rinderfarm *Erichsfelde* (Pommersche Farmgesellschaft, Namibia). Ersetzt Excel-Tabellen und manuelle Auswertungen durch ein einziges Dashboard: 10 Sekunden für den Direktor-Blick, 10 Minuten pro Monat für die Verwalter-Eingabe, Quartalsreport automatisch für Investoren.
 
-## 🚀 Live Demo
-
-**[Zum Tool →](https://pillinio.github.io/farm-bonusrechner/farm_bonussystem_komplett.html)**
-
-## 📊 Features
-
-### EBIT Berechnung
-- Herdenparameter (Größe, Schlachtgewicht, Verkaufsrate)
-- Preisberechnung pro kg Schlachtgewicht
-- Sonstige Einnahmen (Jagd, Pacht)
-- Automatische EBIT-Berechnung
-
-### Bonusberechnung (2-Säulen-Modell)
-
-#### Säule 1: EBIT Bonus (70% Gewichtung)
-Progressive Staffelung:
-- Stufe 1 (0-100k): 8%
-- Stufe 2 (100k-500k): 12%
-- Stufe 3 (500k-2M): 15%
-- Stufe 4 (2M+): 20%
-
-#### Säule 2: Produktivitätsbonus (30% Gewichtung)
-Basierend auf Produktivitätsindex (kg Schlachtgewicht pro 1.000 N$ Kosten):
-- < 15: Kritisch (Faktor 0×)
-- 15-20: Basis (Faktor 1×)
-- 20-25: Gut (Faktor 1,5×)
-- \> 25: Exzellent (Faktor 2×)
-
-### Zusatzfeatures
-- **Skin in the Game**: Investment-basierter Bonus-Multiplikator
-- **Auszahlungsstruktur**: Sofort-Auszahlung vs. 3-Jahres-Bonus-Bank
-- **Analyse Dashboard**: Interaktive Charts und Vergleichsszenarien
-
-## 💾 Datenverwaltung
-
-### Auto-Save
-Alle Eingaben werden automatisch im Browser gespeichert (LocalStorage) und beim nächsten Öffnen wiederhergestellt.
-
-### JSON Export/Import
-- **Export**: Speichert alle Parameter als JSON-Datei
-- **Import**: Lädt gespeicherte Szenarien
-- Perfekt für verschiedene Berechnungsszenarien (z.B. "Konservativ", "Aggressiv")
-
-### PDF Export
-Erstellt professionelle Berichte mit:
-- Herdenkennzahlen
-- EBIT Berechnung
-- Produktivitätsindex
-- Komplette Bonusberechnung
-- Auszahlungsstruktur
-
-## 🛠️ Verwendung
-
-### Online (Empfohlen)
-Öffnen Sie einfach die URL in Ihrem Browser - keine Installation erforderlich!
-
-### Lokal
-1. Repository klonen: `git clone https://github.com/Pillinio/farm-bonusrechner.git`
-2. HTML-Datei im Browser öffnen: `farm_bonussystem_komplett.html`
-
-## 📱 Browser-Kompatibilität
-
-- Chrome/Edge (empfohlen)
-- Firefox
-- Safari
-- Mobile Browser (iOS/Android)
-
-## 🔒 Datenschutz
-
-- Alle Daten bleiben lokal im Browser (LocalStorage)
-- Keine Server-Verbindung
-- Keine Datenübertragung an Dritte
-
-## 📝 Anleitung für Nutzer
-
-### Schritt 1: EBIT Berechnung
-1. Tab "EBIT Berechnung" öffnen
-2. Herdenparameter eingeben (Größe, Gewicht, Verkaufsrate, Preis)
-3. Optional: Sonstige Einnahmen hinzufügen
-4. Betriebskosten eingeben
-5. EBIT wird automatisch berechnet
-
-### Schritt 2: Bonusberechnung
-1. Tab "Bonusberechnung" öffnen
-2. EBIT wird automatisch übernommen
-3. Optional: Bonus-Staffelung anpassen
-4. Grundgehalt eingeben
-5. Optional: Investment eingeben (Skin in the Game)
-6. Auszahlungsstruktur festlegen
-7. Gesamtbonus wird berechnet
-
-### Schritt 3: Analyse
-1. Tab "Analyse Dashboard" öffnen
-2. Charts zeigen Bonus-Verläufe
-3. Vergleich verschiedener Szenarien
-4. Detaillierte Bonus-Tabelle
-
-### Daten speichern/exportieren
-- **Auto-Save**: Passiert automatisch bei jeder Änderung
-- **JSON Export**: Klick auf "💾 JSON Export" → Datei speichern
-- **JSON Import**: Klick auf "📁 JSON Import" → Datei auswählen
-- **PDF Export**: Klick auf "📄 PDF Export" → Bericht wird erstellt
-
-## 🔄 Updates
-
-Wenn Sie Änderungen am Tool vornehmen:
-```bash
-git add .
-git commit -m "Beschreibung der Änderung"
-git push
-```
-
-Nach 1-2 Minuten ist die neue Version für alle Nutzer live!
-
-## 📞 Support
-
-Bei Fragen oder Problemen:
-- GitHub Issues: [Issues erstellen](https://github.com/Pillinio/farm-bonusrechner/issues)
-- Oder direkter Kontakt
-
-## 📄 Lizenz
-
-Dieses Tool ist für den internen Gebrauch entwickelt.
+**Vollständiger Projektüberblick:** [`PROJEKTUEBERBLICK.md`](./PROJEKTUEBERBLICK.md)
+**Deployment:** [`DEPLOY.md`](./DEPLOY.md)
+**Status vor Go-Live:** [`CHECKLIST.md`](./CHECKLIST.md)
+**Offene Roadmap:** [`TODO.md`](./TODO.md)
 
 ---
 
-**Entwickelt mit ❤️ für Rinderfarmen in Namibia**
+## Aufbau
+
+```
+app/              12 HTML-Seiten (Cockpit, Finanzen, Herde, Weide, Markt, Operativ, Bonus, Admin, …)
+  shared/         Gemeinsame JS-Module (auth, nav, config, logger, states)
+shared/           bonus-engine.js (pure) + bonus-live-loader.js
+supabase/
+  migrations/     45 SQL-Migrations (RLS, PostGIS, Trigger, Views)
+  functions/      10 Edge Functions (ingest, alerts, report, health-check, …)
+scripts/          Parser (KML, Excel, Meatco-PDF, LPO) + Fetch-Jobs (FX, CHIRPS, Wetter)
+tests/            bonus-engine Golden-Master + Edge-Smoke + RLS-Regressionstests
+.github/workflows 6 Workflows: Wetter/FX/Saisonprognose täglich, Kalender-Reminder, Tests
+```
+
+## Technologie
+
+- **Supabase** — Postgres + Auth (Magic Link) + Edge Functions + Storage. Single-tenant today, multi-tenant schema (`farm_id` überall).
+- **Cloudflare Pages** — Hosting für das statische Frontend.
+- **GitHub Actions** — Tägliche Satelliten-/Wetter-/Forex-Syncs + CI.
+
+## Lokal entwickeln
+
+```bash
+# Tests (Node 20+)
+npm test
+
+# Edge-Function-Smoketest gegen Live-Projekt
+SUPABASE_URL=https://…  SUPABASE_ANON_KEY=… bash tests/edge-smoke.sh
+
+# Lokaler Webserver (nur statische Files)
+python3 -m http.server 3001 --directory .
+# → http://localhost:3001/app/cockpit.html
+```
+
+Alle Secrets (Supabase Service Key, Telegram, Resend) liegen in Supabase Function Secrets + GitHub Actions Secrets. Lokal: `.env` (gitignored). Der im Repo eingecheckte `app/shared/config.js` enthält nur die öffentliche `sb_publishable_*`-Anon-Key.
+
+## Sicherheit
+
+- Alle 26 Tabellen: RLS aktiv. 80 Policies, farm-scoped, rollenbasiert (`owner` / `manager` / `viewer`).
+- Edge Functions: Service-Role-Endpoints (`ingest`, `alerts`, `report`, `health-check`, `reminder`) validieren den Bearer-Token per constant-time-compare gegen `SUPABASE_SERVICE_ROLE_KEY`. User-Endpoints (`commit-import`, `rollback-import`, `process-upload`) verifizieren via Supabase Auth.
+- Sensible Datenordner (`Data_Input/`, `Private_Hub/`, `scripts/secrets/`) sind gitignored.
+
+## Roadmap-Phasen
+
+| Phase | Status |
+|-------|--------|
+| 0 — Datenbank + Stammdaten | ✅ |
+| 1 — Dashboard + Finanz-Ingest + Verwalter-Formular | ✅ |
+| 2 — Herden-Logik + Telegram-Reminder | ✅ |
+| 3 — Wetter + Satellit + Klima-Frühwarnung | ✅ (Sentinel NDVI pending Copernicus-Account) |
+| 4 — Betriebsmodul + Alerts + Quartalsberichte | 🚧 PDF-Report pending |
+| 5 — Bonus-Integration mit Live-Daten | ✅ |
+
+## Legacy: Standalone Bonusrechner
+
+Der eigenständige Bonusrechner (2-Säulen-Modell mit progressiver EBIT-Staffelung + Produktivitätsindex) ist weiterhin als einzelne HTML-Datei nutzbar:
+
+**Live-Tool:** https://pillinio.github.io/farm-bonusrechner/farm_bonussystem_komplett.html
+
+Features: EBIT-Berechnung, Bonusstaffelung, Skin-in-the-Game-Multiplikator, Auszahlungsstruktur (Sofort vs. 3-Jahres-Bank), LocalStorage Auto-Save, JSON Export/Import, PDF Export. Alle Daten bleiben lokal im Browser — keine Serververbindung.
+
+Innerhalb von Farmcockpit ist dieselbe Logik in [`app/bonus.html`](./app/bonus.html) + [`shared/bonus-engine.js`](./shared/bonus-engine.js) integriert und zieht Defaults aus Live-Farmdaten (Herdenbestand, Schlachterlöse, Betriebskosten).
+
+---
+
+**Entwickelt für Rinderfarmen in Namibia.**
