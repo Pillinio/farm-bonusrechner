@@ -36,7 +36,7 @@ call() {
     -X POST "$SUPABASE_URL/functions/v1/$fn" \
     -H "apikey: $SUPABASE_ANON_KEY" \
     -H "Content-Type: application/json" \
-    "${auth[@]}" \
+    ${auth[@]+"${auth[@]}"} \
     -d "$body"
 }
 
